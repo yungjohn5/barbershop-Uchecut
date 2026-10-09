@@ -1,0 +1,251 @@
+// Barbershop booking platform — see docs/ARCHITECTURE.md.
+// Conventions: money is integer kobo; every DateTime is timestamptz(3) holding UTC.
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum BookingType {
+  SHOP
+  HOME
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum AdminRole {
+  OWNER
+  STAFF
+}
+
+// ---------- Catalogue ----------
+
+model ServiceCategory {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  slug      String    @unique
+  sortOrder Int       @default(0)
+  services  Service[]
+}
+
+model Service {
+  id            Int              @id @default(autoincrement())
+  name          String
+  slug          String           @unique
+  description   String?
+  priceKobo     Int // 750000 = ₦7,500
+  durationMin   Int
+  homeAvailable Boolean          @default(true)
+  imageUrl      String?
+  sortOrder     Int              @default(0)
+  active        Boolean          @default(true)
+  categoryId    Int
+  category      ServiceCategory  @relation(fields: [categoryId], references: [id])
+  barbers       BarberService[]
+  bookings      BookingService[]
+  createdAt     DateTime         @default(now()) @db.Timestamptz(3)
+  updatedAt     DateTime         @updatedAt @db.Timestamptz(3)
+
+  @@index([categoryId])
+}
+
+// ---------- Staff & schedules ----------
+
+model Barber {
+  id              Int             @id @default(autoincrement())
+  name            String
+  slug            String          @unique
+  bio             String?
+  photoUrl        String?
+  specialties     String[]        @default([])
+  doesHomeService Boolean         @default(false)
+  active          Boolean         @default(true)
+  sortOrder       Int             @default(0)
+  services        BarberService[]
+  hours           WorkingHours[]
+  timeOff         TimeOff[]
+  bookings        Booking[]
+  gallery         GalleryItem[]
+  createdAt       DateTime        @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime        @updatedAt @db.Timestamptz(3)
+}
+
+// Which services each barber offers (explicit many-to-many).
+model BarberService {
+  barberId  Int
+  serviceId Int
+  barber    Barber  @relation(fields: [barberId], references: [id], onDelete: Cascade)
+  service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@id([barberId, serviceId])
+  @@index([serviceId])
+}
+
+// Weekly shift in Africa/Lagos wall-clock minutes.
+model WorkingHours {
+  id       Int    @id @default(autoincrement())
+  barberId Int
+  weekday  Int // 0 = Sunday … 6 = Saturday
+  startMin Int // minutes from midnight, 600 = 10:00
+  endMin   Int
+  barber   Barber @relation(fields: [barberId], references: [id], onDelete: Cascade)
+
+  @@unique([barberId, weekday, startMin])
+}
+
+model TimeOff {
+  id        Int      @id @default(autoincrement())
+  barberId  Int
+  startsAt  DateTime @db.Timestamptz(3)
+  endsAt    DateTime @db.Timestamptz(3)
+  reason    String?
+  barber    Barber   @relation(fields: [barberId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  @@index([barberId, startsAt, endsAt])
+}
+
+// ---------- Home service ----------
+
+model Zone {
+  id              Int       @id @default(autoincrement())
+  name            String    @unique // e.g. Lekki Phase 1
+  feeKobo         Int
+  travelBufferMin Int // added before AND after the visit
+  active          Boolean   @default(true)
+  sortOrder       Int       @default(0)
+  bookings        Booking[]
+}
+
+// ---------- Customers & bookings ----------
+
+model Customer {
+  id          Int       @id @default(autoincrement())
+  name        String
+  phone       String    @unique // normalised +234XXXXXXXXXX
+  email       String?
+  notes       String?
+  noShowCount Int       @default(0)
+  bookings    Booking[]
+  createdAt   DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime  @updatedAt @db.Timestamptz(3)
+}
+
+model Booking {
+  id            Int              @id @default(autoincrement())
+  reference     String           @unique // VB-7K3QX, shown to customer
+  type          BookingType
+  status        BookingStatus    @default(PENDING)
+  startsAt      DateTime         @db.Timestamptz(3) // service start
+  endsAt        DateTime         @db.Timestamptz(3) // service end
+  blockStartsAt DateTime         @db.Timestamptz(3) // startsAt - travel buffer (HOME)
+  blockEndsAt   DateTime         @db.Timestamptz(3) // endsAt + travel buffer (HOME)
+  address       String?
+  landmark      String?
+  subtotalKobo  Int
+  homeFeeKobo   Int              @default(0)
+  totalKobo     Int
+  notes         String?
+  manageToken   String           @unique // 32 random bytes, base64url
+  barberId      Int
+  customerId    Int
+  zoneId        Int?
+  barber        Barber           @relation(fields: [barberId], references: [id])
+  customer      Customer         @relation(fields: [customerId], references: [id])
+  zone          Zone?            @relation(fields: [zoneId], references: [id])
+  services      BookingService[]
+  confirmedAt   DateTime?        @db.Timestamptz(3)
+  cancelledAt   DateTime?        @db.Timestamptz(3)
+  cancelReason  String?
+  createdAt     DateTime         @default(now()) @db.Timestamptz(3)
+  updatedAt     DateTime         @updatedAt @db.Timestamptz(3)
+
+  // Overlap safety net: raw-SQL exclusion constraint "Booking_no_overlap"
+  // (see migrations/*_booking_exclusion).
+  @@index([barberId, blockStartsAt, blockEndsAt])
+  @@index([status, startsAt])
+  @@index([customerId])
+}
+
+// Price/duration snapshot at booking time.
+model BookingService {
+  bookingId   Int
+  serviceId   Int
+  name        String
+  priceKobo   Int
+  durationMin Int
+  booking     Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  service     Service @relation(fields: [serviceId], references: [id])
+
+  @@id([bookingId, serviceId])
+  @@index([serviceId])
+}
+
+// ---------- Admin & content ----------
+
+model Admin {
+  id               Int       @id @default(autoincrement())
+  email            String    @unique
+  name             String
+  passwordHash     String
+  role             AdminRole @default(STAFF)
+  active           Boolean   @default(true)
+  failedLoginCount Int       @default(0)
+  lockedUntil      DateTime? @db.Timestamptz(3)
+  lastLoginAt      DateTime? @db.Timestamptz(3)
+  createdAt        DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime  @updatedAt @db.Timestamptz(3)
+}
+
+model GalleryItem {
+  id        Int      @id @default(autoincrement())
+  imageUrl  String
+  caption   String?
+  sortOrder Int      @default(0)
+  visible   Boolean  @default(true)
+  barberId  Int?
+  barber    Barber?  @relation(fields: [barberId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+}
+
+model Product {
+  id          Int      @id @default(autoincrement())
+  name        String
+  slug        String   @unique
+  description String?
+  priceKobo   Int? // display only
+  imageUrl    String?
+  sortOrder   Int      @default(0)
+  visible     Boolean  @default(true)
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime @updatedAt @db.Timestamptz(3)
+}
+
+// Key/value shop settings (lead times, hours text, socials, hero copy…).
+model Setting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+}
+
+// connect-pg-simple store (createTableIfMissing: false). Modelled here so
+// Prisma migrations own the table and never report drift.
+model Session {
+  sid    String   @id @db.VarChar
+  sess   Json     @db.Json
+  expire DateTime @db.Timestamptz(3)
+
+  @@index([expire], map: "IDX_session_expire")
+  @@map("session")
+}

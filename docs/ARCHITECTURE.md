@@ -83,12 +83,12 @@ Business logic lives in `services/`, so routes stay thin and the availability en
 
 ## Data model
 
-Ten tables cover the catalogue, staff schedules, zones and bookings; a booking always belongs to one barber, one customer and one or more services.
+Fifteen Prisma models cover the catalogue, staff schedules, zones, bookings, content and sessions; a booking always belongs to one barber, one customer and one or more services.
 
 | Table | Purpose | Key relations |
 | --- | --- | --- |
 | `ServiceCategory` | Filter tabs: Cut & Craft, Beard & Grooming, Signature Rituals, Maintenance & Care | has many `Service` |
-| `Service` | Name, price (NGN, kobo), duration (min), image, `homeAvailable` flag | many-to-many `Barber`, via `BookingService` to `Booking` |
+| `Service` | Name, price (NGN, kobo), duration (min), image, `homeAvailable` flag | many-to-many `Barber` via `BarberService`, via `BookingService` to `Booking` |
 | `Barber` | Profile, photo, bio, specialties, active flag, `doesHomeService` | has many `WorkingHours`, `TimeOff`, `Booking` |
 | `WorkingHours` | Weekly shift per barber: weekday, start, end | belongs to `Barber` |
 | `TimeOff` | Holidays, breaks, blocked ranges | belongs to `Barber` |
@@ -96,9 +96,13 @@ Ten tables cover the catalogue, staff schedules, zones and bookings; a booking a
 | `Customer` | Name, phone (unique), email, notes, no-show count | has many `Booking` |
 | `Booking` | Date/time, type (SHOP/HOME), status, address, totals, manage token | belongs to `Barber`, `Customer`, optional `Zone` |
 | `BookingService` | Join table with price/duration snapshot at booking time | `Booking` × `Service` |
-| `Admin` | Dashboard users: email, password hash, role (OWNER/STAFF) | — |
+| `BarberService` | Explicit join: which services each barber offers | `Barber` × `Service` |
+| `Admin` | Dashboard users: email, password hash, role (OWNER/STAFF), lockout fields | — |
+| `Session` | `connect-pg-simple` store (table `session`), modelled in Prisma so migrations own it; the store runs with `createTableIfMissing: false` | — |
 
 Gallery images, products and shop settings (hours, address, socials) are three small extra tables (`GalleryItem`, `Product`, `Setting`) edited from the dashboard.
+
+Every `DateTime` column is `@db.Timestamptz(3)` and holds UTC; this also lets the exclusion constraint use `tstzrange` (an immutable expression).
 
 ```prisma
 enum BookingType   { SHOP HOME }
@@ -201,7 +205,7 @@ Travel buffers are allowed to fall outside shop hours for the first and last vis
 
 **Preventing double booking**
 
-Two customers can pick the same slot at the same moment. The create step runs in one Prisma transaction at `Serializable` isolation: it re-checks overlap with a query on `barberId` + `blockStartsAt < newEnd AND blockEndsAt > newStart`, then inserts. On a conflict the customer sees "That time was just taken" and fresh slots. For extra safety, add a PostgreSQL exclusion constraint on `(barberId, tstzrange(blockStartsAt, blockEndsAt))` for active statuses via a raw SQL migration.
+Two customers can pick the same slot at the same moment. The create step runs in one Prisma transaction at `Serializable` isolation: it re-checks overlap with a query on `barberId` + `blockStartsAt < newEnd AND blockEndsAt > newStart`, then inserts. On a conflict the customer sees "That time was just taken" and fresh slots. For extra safety, a raw SQL migration adds a `btree_gist` exclusion constraint `Booking_no_overlap` on `("barberId" WITH =, tstzrange("blockStartsAt", "blockEndsAt", '[)') WITH &&)` where status is PENDING or CONFIRMED. Its SQLSTATE `23P01` (read from the Prisma error meta) maps to `SlotTakenError`; Serializable conflicts (`P2034`) are retried up to 3 times with jittered backoff before giving up.
 
 **Pricing**
 
