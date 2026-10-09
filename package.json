@@ -12,7 +12,7 @@
     "start": "node src/server.js",
     "build:css": "tailwindcss -i src/styles/input.css -o public/css/app.css --minify",
     "watch:css": "tailwindcss -i src/styles/input.css -o public/css/app.css --watch",
-    "test": "jest",
+    "test": "jest --runInBand",
     "test:unit": "jest tests/unit",
     "test:integration": "jest tests/integration --runInBand",
     "lint": "eslint .",

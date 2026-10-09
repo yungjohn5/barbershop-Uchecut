@@ -207,6 +207,8 @@ Travel buffers are allowed to fall outside shop hours for the first and last vis
 
 Two customers can pick the same slot at the same moment. The create step runs in one Prisma transaction at `Serializable` isolation: it re-checks overlap with a query on `barberId` + `blockStartsAt < newEnd AND blockEndsAt > newStart`, then inserts. On a conflict the customer sees "That time was just taken" and fresh slots. For extra safety, a raw SQL migration adds a `btree_gist` exclusion constraint `Booking_no_overlap` on `("barberId" WITH =, tstzrange("blockStartsAt", "blockEndsAt", '[)') WITH &&)` where status is PENDING or CONFIRMED. Its SQLSTATE `23P01` (read from the Prisma error meta) maps to `SlotTakenError`; Serializable conflicts (`P2034`) are retried up to 3 times with jittered backoff before giving up.
 
+Just before inserting, the transaction takes `pg_advisory_xact_lock(7341, barberId)`, so concurrent inserts for one barber queue instead of waiting on each other inside the GiST index, which deadlocks (40P01). The next attempt in the queue then meets the committed row and fails cleanly as `SlotTakenError`. The integration suite forces this race (every attempt passes the availability check before any inserts) and asserts exactly one booking wins.
+
 **Pricing**
 
 - `subtotal` = sum of service prices; `homeFee` = zone fee for HOME, else 0; `total` = subtotal + homeFee.

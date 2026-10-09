@@ -13,6 +13,7 @@ const settingsService = require('./settings');
 const { computeDay, pickLeastBusy } = require('./availability');
 
 const MAX_SERIALIZATION_RETRIES = 3;
+const BOOKING_LOCK_NAMESPACE = 7341; // first key of pg_advisory_xact_lock(ns, barberId)
 const MIN = 60_000;
 
 const bookingInputSchema = z
@@ -78,7 +79,7 @@ const backoffMs = (attempt) => 10 + Math.floor(Math.random() * 50 * 2 ** attempt
 
 // ---------------------------------------------------------------------------
 
-async function attemptCreate(db, input, { now, settings, phone }) {
+async function attemptCreate(db, input, { now, settings, phone, hooks }) {
   return db.$transaction(
     async (tx) => {
       const date = toShopDate(input.startsAt);
@@ -135,6 +136,15 @@ async function attemptCreate(db, input, { now, settings, phone }) {
       });
       if (clash) throw new SlotTakenError();
 
+      // Test seam: lets the concurrency test hold every attempt here so they all insert at once.
+      if (hooks.beforeInsert) await hooks.beforeInsert();
+
+      // Queue inserts per barber. Without this, simultaneous conflicting inserts wait on each
+      // other inside the exclusion constraint's GiST index and deadlock (40P01). With it, the
+      // next attempt meets the committed row: 23P01 → SlotTakenError, or 40001 → retry → re-check.
+      // Released automatically at commit/rollback.
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(${BOOKING_LOCK_NAMESPACE}::int, ${barberId}::int)`;
+
       const customer = await tx.customer.upsert({
         where: { phone },
         update: {
@@ -189,7 +199,7 @@ async function attemptCreate(db, input, { now, settings, phone }) {
  * Create a booking. SHOP → CONFIRMED, HOME → PENDING.
  * Throws ValidationError (400), SlotTakenError (409) or HttpError 503 under heavy contention.
  */
-async function createBooking(rawInput, { now = new Date(), db = prisma } = {}) {
+async function createBooking(rawInput, { now = new Date(), db = prisma, hooks = {} } = {}) {
   const parsed = bookingInputSchema.safeParse(rawInput);
   if (!parsed.success) {
     throw new ValidationError(
@@ -210,14 +220,19 @@ async function createBooking(rawInput, { now = new Date(), db = prisma } = {}) {
   let refCollisions = 0;
   for (;;) {
     try {
-      return await attemptCreate(db, input, { now, settings, phone });
+      return await attemptCreate(db, input, { now, settings, phone, hooks });
     } catch (err) {
-      if (isExclusionViolation(err)) throw new SlotTakenError();
+      if (isExclusionViolation(err)) {
+        logger.debug('createBooking: exclusion constraint rejected overlapping insert');
+        throw new SlotTakenError();
+      }
       // Regenerate the reference (31^5 space, so collisions are rare); no backoff needed.
       if (isReferenceCollision(err) && ++refCollisions < 5) continue;
       if (isRetryableTxError(err) && retries < MAX_SERIALIZATION_RETRIES) {
         retries += 1;
-        logger.debug(`createBooking: serialization conflict, retry ${retries}`);
+        logger.debug(
+          `createBooking: serialization conflict (${err.code ?? pgErrorCode(err)}), retry ${retries}`,
+        );
         await sleep(backoffMs(retries));
         continue;
       }
