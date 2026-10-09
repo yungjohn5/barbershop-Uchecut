@@ -3,3 +3,4 @@ public/css
 prisma/migrations
 coverage
 package-lock.json
+*.md

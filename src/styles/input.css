@@ -9,7 +9,9 @@
   body {
     @apply font-sans text-base leading-relaxed;
   }
-  h1, h2, h3 {
+  h1,
+  h2,
+  h3 {
     @apply font-serif font-normal leading-[1.05] tracking-tight;
   }
 }

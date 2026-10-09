@@ -1,0 +1,36 @@
+<%# Placeholder home page. Phase 3 replaces this with the full editorial sections. %>
+<section class="mx-auto max-w-6xl px-4 pt-10 sm:px-6 sm:pt-20">
+  <p class="eyebrow">Barbershop · Lagos</p>
+  <h1 class="mt-4 max-w-4xl text-[2.5rem] sm:text-6xl lg:text-7xl">
+    Sharp Lines.<br />Quiet Confidence.<br />Timeless Craft.
+  </h1>
+  <div class="mt-10 flex flex-wrap gap-3">
+    <a href="/book?type=SHOP" class="btn-primary">Book in shop</a>
+    <a href="/book?type=HOME" class="btn-ghost">Book a home visit</a>
+  </div>
+</section>
+
+<section id="services" class="mx-auto mt-24 max-w-6xl px-4 sm:px-6">
+  <p class="eyebrow">Services</p>
+  <h2 class="mt-3 text-4xl sm:text-5xl">What we do</h2>
+  <div class="mt-10 grid gap-10 sm:grid-cols-2">
+    <% categories.forEach((cat) => { %>
+      <div>
+        <h3 class="border-b border-ink/15 pb-2 text-2xl"><%= cat.name %></h3>
+        <ul class="mt-3 divide-y divide-ink/10">
+          <% cat.services.forEach((s) => { %>
+            <li class="flex items-baseline justify-between gap-4 py-3">
+              <span>
+                <%= s.name %>
+                <% if (!s.homeAvailable) { %><span class="ml-1 text-sm text-ink/50">(in shop only)</span><% } %>
+              </span>
+              <span class="whitespace-nowrap text-ink/70">
+                ₦<%= (s.priceKobo / 100).toLocaleString('en-NG') %> · <%= s.durationMin %> min
+              </span>
+            </li>
+          <% }) %>
+        </ul>
+      </div>
+    <% }) %>
+  </div>
+</section>

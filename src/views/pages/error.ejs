@@ -1,0 +1,6 @@
+<section class="mx-auto max-w-3xl px-4 py-24 sm:px-6">
+  <p class="eyebrow">Error <%= status %></p>
+  <h1 class="mt-4 text-5xl"><%= status === 404 ? 'We couldn’t find that page.' : 'Something went wrong.' %></h1>
+  <p class="mt-6 text-ink/70"><%= message %></p>
+  <a href="/" class="btn-ghost mt-10">Back to home</a>
+</section>
