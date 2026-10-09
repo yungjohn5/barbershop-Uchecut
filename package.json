@@ -1,0 +1,73 @@
+{
+  "name": "uchecut",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Barbershop website and booking system (Lagos)",
+  "main": "src/server.js",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "concurrently -k -n server,css -c cyan,magenta \"nodemon src/server.js\" \"npm:watch:css\"",
+    "start": "node src/server.js",
+    "build:css": "tailwindcss -i src/styles/input.css -o public/css/app.css --minify",
+    "watch:css": "tailwindcss -i src/styles/input.css -o public/css/app.css --watch",
+    "test": "jest",
+    "test:unit": "jest tests/unit",
+    "test:integration": "jest tests/integration --runInBand",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:seed": "prisma db seed",
+    "db:reset": "prisma migrate reset"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  },
+  "nodemonConfig": {
+    "watch": [
+      "src"
+    ],
+    "ext": "js,json",
+    "ignore": [
+      "src/views/**"
+    ]
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.3",
+    "bcrypt": "^6.0.0",
+    "compression": "^1.8.2",
+    "connect-pg-simple": "^10.0.0",
+    "csrf-sync": "^4.2.1",
+    "date-fns": "^4.4.0",
+    "date-fns-tz": "^3.2.0",
+    "dotenv": "^18.0.6",
+    "ejs": "^7.0.1",
+    "express": "^4.22.3",
+    "express-ejs-layouts": "^2.5.1",
+    "express-rate-limit": "^8.7.1",
+    "express-session": "^1.19.0",
+    "helmet": "^8.3.0",
+    "morgan": "^1.12.1",
+    "multer": "^2.4.0",
+    "node-cron": "^4.6.0",
+    "nodemailer": "^10.0.16",
+    "pg": "^8.23.1",
+    "sharp": "^0.35.5",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "concurrently": "^10.0.6",
+    "eslint": "^9.39.5",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.13.0",
+    "jest": "^30.5.2",
+    "nodemon": "^3.1.14",
+    "prettier": "^3.9.9",
+    "prisma": "^6.19.3",
+    "supertest": "^7.3.1",
+    "tailwindcss": "^3.4.19"
+  }
+}
