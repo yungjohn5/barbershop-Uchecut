@@ -1,56 +1,80 @@
-<section id="top" class="relative overflow-hidden" data-hero>
-  <%# Giant outline wordmark peeking above the card, as in the reference. %>
-  <div aria-hidden="true" class="pointer-events-none absolute inset-x-0 top-0 flex select-none justify-center">
-    <span class="outline-word font-serif text-[27vw] leading-[0.8] lg:text-[24rem]" data-hero-word><%= shop.name.split(' ')[0] %></span>
+<%#
+  Hero: always exactly one screen tall.
+  --band  height of the strip where the outline wordmark peeks above the card; scales with
+          both width and height so short laptops and landscape phones keep the card in view.
+  Card    fills the rest of the viewport (minus the facts strip on lg+), full-bleed up to 150rem.
+%>
+<section id="top" class="relative [--band:clamp(3.25rem,min(10.5vw,15svh),15rem)] [--strip:0.75rem] lg:[--strip:4.75rem]" data-hero>
+  <div aria-hidden="true" class="pointer-events-none absolute inset-x-0 top-0 flex select-none justify-center overflow-hidden">
+    <span class="outline-word whitespace-nowrap font-serif text-[27.5vw] leading-[0.78]" data-hero-word><%= shop.name.split(' ')[0] %></span>
   </div>
 
-  <div class="relative mx-auto max-w-[88rem] px-3 pt-[15vw] sm:px-5 lg:pt-[12.5rem]">
-    <div class="relative flex min-h-[40rem] flex-col overflow-hidden bg-ink text-paper grain lg:h-[calc(100svh-4rem)] lg:max-h-[58rem]" data-hero-card>
-      <img
-        src="<%= src('/images/site/hero', [800, 1400, 2200]) %>"
-        srcset="<%= srcset('/images/site/hero', [800, 1400, 2200]) %>"
-        sizes="(min-width: 1408px) 1376px, 96vw"
-        alt="A barber shaping a client’s fade with a brush and clippers"
-        class="absolute inset-0 h-full w-full object-cover object-[62%_35%]"
-        fetchpriority="high"
-        data-hero-img
-      />
-      <div class="absolute inset-0 bg-gradient-to-t from-ink via-ink/35 to-ink/55" aria-hidden="true"></div>
+  <div class="relative mx-auto w-[calc(100%-1.5rem)] max-w-[150rem] pt-[var(--band)] sm:w-[calc(100%-2.5rem)]">
+    <div
+      class="relative flex h-[calc(100svh-var(--band)-var(--strip))] max-h-[75rem] min-h-[33rem] flex-col overflow-hidden bg-ink text-paper grain lg:min-h-[32rem] [@media(max-height:500px)]:min-h-[19rem]"
+      data-hero-card
+    >
+      <%# Phones: photo fills the top two-thirds and fades into solid ink under the type. %>
+      <div class="absolute -left-[3%] -right-[3%] -top-[3%] h-[70%] md:-inset-[3%] md:h-auto" data-hero-media>
+        <img
+          src="<%= src('/images/site/hero', [800, 1400, 2200]) %>"
+          srcset="<%= srcset('/images/site/hero', [800, 1400, 2200]) %>"
+          sizes="(max-width: 767px) 160vh, (max-width: 1279px) 110vw, calc(100vw - 2.5rem)"
+          alt="A barber shaping a client’s fade with a brush and clippers"
+          class="h-full w-full object-cover object-[58%_50%] md:object-[60%_34%]"
+          fetchpriority="high"
+          data-hero-img
+        />
+      </div>
+      <div class="hero-scrim absolute inset-0" aria-hidden="true"></div>
 
       <%- include('../nav', { variant: 'light' }) %>
+      <div class="relative mx-5 h-px origin-left bg-paper/15 sm:mx-8 lg:mx-12" data-hero-rule aria-hidden="true"></div>
 
-      <div class="relative z-10 mt-auto grid items-end gap-10 px-5 pb-6 pt-24 sm:px-8 sm:pb-10 lg:grid-cols-[1fr_auto] lg:px-10">
+      <%# Editorial meta row under the rule (desktop). %>
+      <div class="relative hidden items-center justify-between px-12 pt-4 text-[0.7rem] uppercase tracking-[0.28em] text-paper/45 lg:flex" data-hero-fade>
+        <span>Barbershop &amp; home visits</span>
+        <span>Lagos · 6.52° N, 3.38° E</span>
+      </div>
+
+      <%# Ring button: floats top-right below xl, joins the right column at xl. %>
+      <div class="absolute right-5 top-[5.25rem] z-10 sm:right-8 sm:top-24 lg:right-12 lg:top-32 xl:hidden">
+        <%- include('../ring-btn', { href: '/book', label: ['Book'], ring: 'Book appointment · Lagos · Book appointment · ', tone: 'light', id: 'hero-sm', size: 'h-[5.75rem] w-[5.75rem] sm:h-28 sm:w-28' }) %>
+      </div>
+
+      <div class="relative z-10 mt-auto px-5 pb-6 sm:px-8 sm:pb-9 lg:px-12 lg:pb-12 xl:grid xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end xl:gap-16">
         <div>
-          <h1 class="text-display" aria-label="<%= copy.heroLines.join(' ') %>">
+          <h1 class="text-[clamp(2.3rem,min(7.4vw,11.5svh),11rem)] leading-[0.96] tracking-[-0.022em]" aria-label="<%= copy.heroLines.join(' ') %>">
             <% copy.heroLines.forEach((line) => { %>
               <span class="split-line block" aria-hidden="true"><span class="block" data-hero-line><%= line %></span></span>
             <% }) %>
           </h1>
-          <div class="mt-8 flex flex-wrap gap-3" data-hero-fade>
-            <a href="/book?type=SHOP" class="btn-primary">Book in shop <span class="arrow" aria-hidden="true">→</span></a>
-            <a href="/book?type=HOME" class="btn-ghost-light">Book a home visit</a>
+          <p class="mt-5 max-w-[30rem] text-[0.95rem] leading-relaxed text-paper/80 sm:text-base xl:hidden [@media(max-height:500px)]:hidden" data-hero-fade><%= copy.heroText %></p>
+          <div class="mt-7 flex flex-wrap gap-2.5 sm:gap-3 lg:mt-9" data-hero-fade>
+            <a href="/book?type=SHOP" class="btn-primary max-sm:px-[1.1rem] max-sm:text-[0.88rem]">Book in shop <span class="arrow" aria-hidden="true">→</span></a>
+            <a href="/book?type=HOME" class="btn-ghost-light backdrop-blur-[2px] max-sm:px-[1.1rem] max-sm:text-[0.88rem]">Book a home visit</a>
           </div>
         </div>
-        <div class="flex flex-row-reverse items-end justify-between gap-6 lg:flex-col lg:items-end">
-          <p class="max-w-[17rem] text-[0.95rem] leading-relaxed text-paper/80 lg:mb-6 lg:text-right" data-hero-fade><%= copy.heroText %></p>
-          <%- include('../ring-btn', { href: '/book', label: ['Book', 'Appointment'], ring: 'Book appointment · Lagos · Book appointment · Lagos · ', tone: 'light', id: 'hero' }) %>
+        <div class="hidden flex-col items-end gap-9 xl:flex">
+          <p class="max-w-[17.5rem] text-right text-[0.95rem] leading-relaxed text-paper/80" data-hero-fade><%= copy.heroText %></p>
+          <%- include('../ring-btn', { href: '/book', label: ['Book', 'Appointment'], ring: 'Book appointment · Lagos · Book appointment · Lagos · ', tone: 'light', id: 'hero', size: 'h-36 w-36 2xl:h-40 2xl:w-40' }) %>
         </div>
       </div>
     </div>
 
-    <%# Facts strip under the card: all values derived from live data. %>
-    <dl class="grid grid-cols-1 border-x border-b border-ink/10 bg-paper-deep/60 sm:grid-cols-3">
-      <div class="flex items-baseline justify-between gap-4 border-b border-ink/10 px-5 py-5 sm:border-b-0 sm:border-r lg:px-8" data-reveal>
-        <dt class="text-sm text-ink/55">Open</dt>
-        <dd class="text-right font-medium"><%= shop.hoursText[0] %></dd>
+    <%# Facts strip: live data. Sits inside the first screen on lg+, flows below the card on smaller screens. %>
+    <dl class="grid grid-cols-1 border-x border-b border-ink/10 bg-paper-deep/70 sm:grid-cols-3 lg:h-[calc(var(--strip)-0.75rem)]">
+      <div class="flex items-center justify-between gap-4 border-b border-ink/10 px-5 py-4 sm:border-b-0 sm:border-r lg:px-8 lg:py-0" data-hero-fade>
+        <dt class="text-[0.7rem] uppercase tracking-[0.2em] text-ink/50">Open</dt>
+        <dd class="text-right text-[0.95rem] font-medium"><%= shop.hoursText[0] %></dd>
       </div>
-      <div class="flex items-baseline justify-between gap-4 border-b border-ink/10 px-5 py-5 sm:border-b-0 sm:border-r lg:px-8" data-reveal>
-        <dt class="text-sm text-ink/55">Services</dt>
-        <dd class="text-right font-medium"><%= facts.serviceCount %> services<% if (facts.fromPriceKobo) { %> · from <%= naira(facts.fromPriceKobo) %><% } %></dd>
+      <div class="flex items-center justify-between gap-4 border-b border-ink/10 px-5 py-4 sm:border-b-0 sm:border-r lg:px-8 lg:py-0" data-hero-fade>
+        <dt class="text-[0.7rem] uppercase tracking-[0.2em] text-ink/50">Services</dt>
+        <dd class="text-right text-[0.95rem] font-medium"><%= facts.serviceCount %> services<% if (facts.fromPriceKobo) { %> · from <%= naira(facts.fromPriceKobo) %><% } %></dd>
       </div>
-      <div class="flex items-baseline justify-between gap-4 px-5 py-5 lg:px-8" data-reveal>
-        <dt class="text-sm text-ink/55">Home visits</dt>
-        <dd class="text-right font-medium"><%= facts.zoneCount %> areas across Lagos</dd>
+      <div class="flex items-center justify-between gap-4 px-5 py-4 lg:px-8 lg:py-0" data-hero-fade>
+        <dt class="text-[0.7rem] uppercase tracking-[0.2em] text-ink/50">Home visits</dt>
+        <dd class="text-right text-[0.95rem] font-medium"><%= facts.zoneCount %> areas across Lagos</dd>
       </div>
     </dl>
   </div>
