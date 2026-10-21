@@ -44,10 +44,19 @@ function createApp({ sessionPool } = {}) {
   if (!env.isTest) app.use(morgan(env.isProd ? 'combined' : 'dev'));
 
   app.use(express.static(path.join(__dirname, '..', 'public'), { maxAge: env.isProd ? '7d' : 0 }));
+  // GSAP served from node_modules so the CSP can stay script-src 'self'.
+  app.use(
+    '/vendor/gsap',
+    express.static(path.join(__dirname, '..', 'node_modules', 'gsap', 'dist'), {
+      maxAge: env.isProd ? '30d' : 0,
+    }),
+  );
+  Object.assign(app.locals, require('./lib/viewHelpers'));
   app.use(express.urlencoded({ extended: false, limit: '50kb' }));
   app.use(express.json({ limit: '50kb' }));
 
   app.get('/healthz', (_req, res) => res.json({ ok: true }));
+  app.get('/favicon.ico', (_req, res) => res.redirect(301, '/favicon.svg'));
 
   // JSON API: read-only GETs, no session or CSRF needed.
   app.use('/api', require('./routes/api'));
@@ -75,6 +84,7 @@ function createApp({ sessionPool } = {}) {
     try {
       res.locals.shop = await settingsService.get('shop');
       res.locals.currentPath = req.path;
+      res.locals.page = null; // pages set their own, e.g. 'home'
       next();
     } catch (err) {
       next(err);

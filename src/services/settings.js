@@ -15,6 +15,8 @@ const INT_KEYS = [
   'slotStepMin',
 ];
 
+const isPlainObject = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+
 // Pure: merge stored rows over defaults, discarding malformed values.
 function resolveSettings(rows) {
   const merged = structuredClone(DEFAULT_SETTINGS);
@@ -25,8 +27,9 @@ function resolveSettings(rows) {
       if (Number.isInteger(value) && value >= 0) merged[key] = value;
     } else if (key === 'allowBufferOutsideShift') {
       if (typeof value === 'boolean') merged[key] = value;
-    } else if (key === 'shop') {
-      if (value && typeof value === 'object') merged.shop = { ...merged.shop, ...value };
+    } else if (isPlainObject(DEFAULT_SETTINGS[key])) {
+      // Object settings (shop, home): stored fields override defaults field by field.
+      if (isPlainObject(value)) merged[key] = { ...merged[key], ...value };
     } else {
       merged[key] = value;
     }

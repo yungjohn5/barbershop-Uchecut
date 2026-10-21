@@ -1,22 +1,44 @@
 <!doctype html>
-<html lang="en-NG">
+<html lang="en-NG" class="no-js">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title><%= title ? `${title} · ${shop.name}` : `${shop.name} · Lagos` %></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title><%= title ? `${title} · ${shop.name}` : `${shop.name} · Barbershop in Lagos` %></title>
     <meta name="description" content="<%= shop.tagline %>" />
+    <meta name="theme-color" content="#141414" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <meta name="csrf-token" content="<%= csrfToken %>" />
+    <script src="/js/boot.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Gloock&family=Inter:wght@400;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Gloock&family=Inter:wght@400;500;600;800;900&display=swap"
     />
     <link rel="stylesheet" href="/css/app.css" />
   </head>
-  <body class="min-h-screen flex flex-col">
-    <%- include('../partials/nav') %>
-    <main class="flex-1"><%- body %></main>
+  <body class="min-h-screen overflow-x-clip">
+    <a href="#main" class="sr-only z-[60] rounded-full bg-ink px-4 py-2 text-paper focus:not-sr-only focus:fixed focus:left-3 focus:top-3">Skip to content</a>
+
+    <%- include('../partials/sticky-nav') %>
+    <%- include('../partials/mobile-menu') %>
+    <% if (page !== 'home') { %><%- include('../partials/nav', { variant: 'dark' }) %><% } %>
+
+    <main id="main"><%- body %></main>
+
     <%- include('../partials/footer') %>
+
+    <div class="pointer-events-none fixed inset-x-0 bottom-0 z-40 translate-y-[140%] p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] transition-transform duration-500 ease-expo md:hidden [&.is-visible]:translate-y-0" data-book-pill>
+      <a href="/book" class="btn-primary pointer-events-auto w-full py-3.5 shadow-[0_18px_40px_-12px_rgba(20,20,20,0.55)]">
+        Book now <span class="arrow" aria-hidden="true">→</span>
+      </a>
+    </div>
+
+    <script src="/vendor/gsap/gsap.min.js" defer></script>
+    <script src="/vendor/gsap/ScrollTrigger.min.js" defer></script>
+    <script src="/vendor/gsap/SplitText.min.js" defer></script>
+    <script src="/vendor/gsap/Flip.min.js" defer></script>
+    <script src="/js/site.js" defer></script>
+    <% if (page === 'home') { %><script src="/js/home.js" defer></script><% } %>
   </body>
 </html>

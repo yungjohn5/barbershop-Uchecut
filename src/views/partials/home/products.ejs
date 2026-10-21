@@ -1,0 +1,48 @@
+<section id="products" class="relative overflow-hidden bg-paper lg:flex lg:h-[100svh] lg:min-h-[46rem] lg:flex-col lg:justify-center" data-products>
+  <div class="mx-auto grid w-full max-w-[88rem] gap-6 px-5 pt-24 sm:px-8 lg:grid-cols-12 lg:items-end lg:px-10 lg:pt-0">
+    <div class="lg:col-span-6">
+      <p class="eyebrow">Product</p>
+      <h2 class="mt-5 text-title" data-split><%= copy.productsTitle %></h2>
+    </div>
+    <div class="lg:col-span-4 lg:col-start-9" data-reveal>
+      <p class="text-[1.02rem] leading-relaxed text-ink/70"><%= copy.productsText %></p>
+      <p class="mt-4 text-sm text-ink/45">Display only · buy in the shop</p>
+    </div>
+  </div>
+
+  <div class="mt-12 pb-24 lg:mt-14 lg:pb-0">
+    <div class="no-scrollbar flex snap-x snap-mandatory items-end gap-4 overflow-x-auto px-5 sm:gap-6 sm:px-8 lg:px-10" data-rail>
+      <% products.forEach((p, i) => { %>
+        <figure class="w-[68vw] shrink-0 snap-start sm:w-[40vw] lg:w-[21rem]" data-reveal>
+          <div class="overflow-hidden bg-paper-deep">
+            <% if (p.imageUrl) { %>
+              <img
+                src="<%= src(p.imageUrl, [400, 800]) %>"
+                srcset="<%= srcset(p.imageUrl, [400, 800]) %>"
+                sizes="(min-width: 1024px) 21rem, 68vw"
+                alt="<%= p.name %>"
+                class="w-full object-cover transition-transform duration-[1.2s] ease-expo hover:scale-[1.05] <%= i % 2 ? 'aspect-[4/5] lg:aspect-auto lg:h-[44vh]' : 'aspect-[3/4] lg:aspect-auto lg:h-[54vh]' %>"
+                loading="lazy"
+              />
+            <% } %>
+          </div>
+          <figcaption class="mt-4">
+            <div class="flex items-baseline justify-between gap-3">
+              <span class="font-medium"><%= p.name %></span>
+              <% if (p.priceKobo) { %><span class="tabular-nums text-ink/60"><%= naira(p.priceKobo) %></span><% } %>
+            </div>
+            <% if (p.description) { %><p class="mt-1 text-sm leading-relaxed text-ink/60"><%= p.description %></p><% } %>
+          </figcaption>
+        </figure>
+      <% }) %>
+      <div class="flex w-[68vw] shrink-0 snap-start flex-col justify-end border border-ink/15 p-6 sm:w-[40vw] lg:h-[44vh] lg:w-[21rem]">
+        <p class="font-serif text-3xl leading-tight">Not sure what suits your hair?</p>
+        <p class="mt-3 text-sm text-ink/60">Ask in the chair; your barber will tell you honestly.</p>
+        <a href="/book" class="btn-ghost mt-6 self-start">Book a cut <span class="arrow" aria-hidden="true">→</span></a>
+      </div>
+    </div>
+    <div class="mx-auto mt-10 hidden max-w-[88rem] px-10 lg:block" aria-hidden="true">
+      <div class="h-px w-full bg-ink/10"><div class="h-px origin-left scale-x-0 bg-ink" data-rail-progress></div></div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,14 @@
+<%#
+  Circular CTA with a rotating text ring.
+  Params: href, label (array of lines), ring (text), tone ('light' | 'dark'), id (unique per page)
+%>
+<a href="<%= href %>" class="ring-btn group <%= tone === 'light' ? 'border-paper/40 text-paper hover:bg-paper hover:text-ink' : 'border-ink/25 text-ink hover:bg-ink hover:text-paper' %>" data-magnetic>
+  <svg viewBox="0 0 100 100" aria-hidden="true" data-ring>
+    <defs><path id="ring-path-<%= id %>" d="M50,50 m-41,0 a41,41 0 1,1 82,0 a41,41 0 1,1 -82,0" /></defs>
+    <text><textPath href="#ring-path-<%= id %>" textLength="255" lengthAdjust="spacing"><%= ring %></textPath></text>
+  </svg>
+  <span class="relative px-6">
+    <% label.forEach((line) => { %><span class="block"><%= line %></span><% }) %>
+    <span class="mt-1 block text-base transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true">→</span>
+  </span>
+</a>

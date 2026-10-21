@@ -30,6 +30,7 @@ function errorHandler(err, req, res, _next) {
   // Errors can fire before the locals middleware ran (e.g. CSRF rejection).
   res.locals.shop ??= DEFAULT_SETTINGS.shop;
   res.locals.csrfToken ??= '';
+  res.locals.page ??= null;
   res.render(
     'pages/error',
     { title: status === 404 ? 'Page not found' : 'Error', status, message },

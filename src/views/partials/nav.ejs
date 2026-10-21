@@ -1,10 +1,23 @@
-<header class="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-5 sm:px-6">
-  <a href="/" class="font-serif text-2xl"><%= shop.name.split(' ')[0] %></a>
-  <nav aria-label="Main" class="hidden gap-6 text-sm md:flex">
-    <a href="/#services" class="hover:text-amber-dark">Services</a>
-    <a href="/#barbers" class="hover:text-amber-dark">Barbers</a>
-    <a href="/#home-service" class="hover:text-amber-dark">Home visits</a>
-    <a href="/#visit" class="hover:text-amber-dark">Visit us</a>
-  </nav>
-  <a href="/book" class="btn-primary px-5 py-2 text-sm">Book now</a>
+<%#
+  Main navigation. variant: 'light' (inside the dark hero card) | 'dark' (on paper).
+%>
+<% const light = variant === 'light'; %>
+<% const links = [['About', '/#intro'], ['Services', '/#services'], ['Barbers', '/#barbers'], ['Home visits', '/#home-service'], ['Products', '/#products']]; %>
+<header class="relative z-20 <%= light ? 'text-paper' : 'text-ink' %>">
+  <div class="relative mx-auto flex max-w-[88rem] items-center justify-between gap-4 px-5 py-5 sm:px-8 lg:px-10" <%= light ? 'data-hero-nav' : '' %>>
+    <nav aria-label="Main" class="hidden items-center gap-7 text-[0.92rem] lg:flex">
+      <% links.forEach(([label, href]) => { %>
+        <a href="<%= href %>" class="opacity-80 transition-opacity hover:opacity-100"><%= label %></a>
+      <% }) %>
+    </nav>
+    <a href="/" class="font-serif text-[1.75rem] leading-none lg:absolute lg:left-1/2 lg:-translate-x-1/2" aria-label="<%= shop.name %> home"><%= shop.name.split(' ')[0] %></a>
+    <div class="flex items-center gap-3">
+      <a href="/#visit" class="hidden text-[0.92rem] opacity-80 transition-opacity hover:opacity-100 lg:inline">Visit Us</a>
+      <a href="/book" class="<%= light ? 'btn-light' : 'btn-primary' %> hidden !px-5 !py-2.5 text-sm sm:inline-flex">Book Now</a>
+      <button type="button" class="grid h-11 w-11 place-items-center rounded-full border <%= light ? 'border-paper/30' : 'border-ink/20' %> lg:hidden" aria-controls="mobile-menu" aria-expanded="false" data-menu-open>
+        <span class="sr-only">Open menu</span>
+        <svg width="18" height="10" viewBox="0 0 18 10" fill="none" aria-hidden="true"><path d="M0 1h18M6 9h12" stroke="currentColor" stroke-width="1.6"/></svg>
+      </button>
+    </div>
+  </div>
 </header>

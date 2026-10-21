@@ -1,0 +1,50 @@
+<section id="craft" class="relative overflow-hidden py-24 lg:py-24">
+  <div class="relative mx-auto max-w-[88rem] px-5 sm:px-8 lg:px-10">
+    <figure class="relative overflow-hidden lg:absolute lg:inset-y-0 lg:right-10 lg:w-[44%]" data-clip>
+      <img
+        src="<%= src('/images/site/craft-portrait', [700, 1300]) %>"
+        srcset="<%= srcset('/images/site/craft-portrait', [700, 1300]) %>"
+        sizes="(min-width: 1024px) 40vw, 92vw"
+        alt="A client smiling after a fresh cut, lit warm against a dark backdrop"
+        class="aspect-[4/5] h-full w-full object-cover lg:aspect-auto"
+        loading="lazy"
+        data-parallax-img
+      />
+    </figure>
+
+    <div class="relative z-10 -mt-20 bg-white p-6 shadow-[0_40px_90px_-50px_rgba(20,20,20,0.45)] sm:mx-6 sm:p-10 lg:mx-0 lg:my-16 lg:w-[66%] lg:p-14">
+      <p class="eyebrow">Craft comes first</p>
+      <h2 class="mt-5 max-w-2xl text-[clamp(2rem,3.6vw,3.5rem)] leading-[1.04]" data-split><%= copy.craftTitle %></h2>
+
+      <div class="mt-12 grid gap-10 md:grid-cols-[1fr_1.15fr_1fr] md:items-end">
+        <p class="text-sm leading-relaxed text-ink/65 md:pb-2" data-reveal><%= copy.craftNote %></p>
+        <div class="grid grid-cols-2 gap-3 md:grid-cols-1">
+          <figure class="overflow-hidden" data-speed="0.08">
+            <img
+              src="<%= src('/images/site/craft-a', [500, 900]) %>"
+              srcset="<%= srcset('/images/site/craft-a', [500, 900]) %>"
+              sizes="(min-width: 768px) 22vw, 42vw"
+              alt="Barber working a clipper over a client’s crown"
+              class="aspect-[4/3] w-full object-cover"
+              loading="lazy"
+            />
+          </figure>
+          <figure class="overflow-hidden" data-speed="-0.06">
+            <img
+              src="<%= src('/images/site/craft-b', [500, 900]) %>"
+              srcset="<%= srcset('/images/site/craft-b', [500, 900]) %>"
+              sizes="(min-width: 768px) 22vw, 42vw"
+              alt="The shop floor mid-afternoon, clients in the chair and waiting"
+              class="aspect-[4/3] w-full object-cover"
+              loading="lazy"
+            />
+          </figure>
+        </div>
+        <div class="flex flex-col items-start gap-8" data-reveal>
+          <p class="text-sm leading-relaxed text-ink/75"><%= copy.craftText %></p>
+          <%- include('../ring-btn', { href: '/book', label: ['Booking', 'now'], ring: 'Craft comes first · Book now · Craft comes first · ', tone: 'dark', id: 'craft' }) %>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

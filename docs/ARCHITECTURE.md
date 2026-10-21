@@ -32,7 +32,8 @@ Node 22 LTS (`.nvmrc`, `engines >=22`; Node 20 is end-of-life) + Express 4, EJS 
 | --- | --- | --- |
 | Server | `express`, `helmet`, `compression`, `morgan` | Security headers, gzip, request logs |
 | Views | `ejs`, `express-ejs-layouts` | Shared layout, partials per section |
-| Styling | `tailwindcss` (CLI build) | Serif display font + sans body via Google Fonts |
+| Styling | `tailwindcss` (CLI build) | Gloock headings, DM Serif Display italic accents, Inter body (Google Fonts) |
+| Motion | `gsap` 3.15 (ScrollTrigger, SplitText, Flip) | Added at the client's request. Served from `node_modules` at `/vendor/gsap` so the CSP stays `script-src 'self'`. Everything renders without JS; `prefers-reduced-motion` disables all animation |
 | Database | `prisma`, `@prisma/client` | Migrations + seed script |
 | Validation | `zod` | One schema per form/endpoint |
 | Admin auth | `express-session`, `connect-pg-simple`, `bcrypt` | Sessions stored in Postgres |
@@ -283,6 +284,14 @@ The home page follows the reference's six sections in order, adapted with a home
 | — | (new) | Home service: how it works in 3 steps + zone fee list | `partials/home-service.ejs` | `Zone` |
 | 5 | Products carousel | Product showcase, no cart | `partials/product-rail.ejs` | `Product` |
 | 6 | "Take the Chair" footer | Big image-clipped CTA, hours, address, socials, WhatsApp | `partials/footer.ejs` | `Setting` |
+
+**Implementation notes (home page)**
+
+- Section partials live in `views/partials/home/`; data comes from `services/content.js` (`getHomeContent`), copy from the `home` setting (code defaults in `config/constants.js` until the owner edits it).
+- Responsive images follow `${base}-${width}.webp` (e.g. `/images/site/svc-skin-fade-900.webp`); `Service.imageUrl`, `Barber.photoUrl` and `Product.imageUrl` store the base path. Admin uploads (Phase 4) must write the same widths with `sharp`.
+- Current photos are Pexels placeholders, listed in `public/images/site/CREDITS.md`.
+- Motion: `public/js/boot.js` (pre-paint flags + 2.5 s failsafe), `site.js` (menu, sticky nav, reveals, parallax, rings, fit-text), `home.js` (hero timeline, marquee, Flip service filter, step progress, pinned product rail on desktop).
+- Until the booking wizard ships, `/book` renders a holding page with WhatsApp and call links, so no CTA is dead.
 
 **Design system decisions**
 

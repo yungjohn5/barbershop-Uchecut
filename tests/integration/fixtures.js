@@ -12,6 +12,8 @@ const TABLES = [
   'ServiceCategory',
   'Zone',
   'Setting',
+  'Product',
+  'GalleryItem',
 ];
 
 async function resetDb() {

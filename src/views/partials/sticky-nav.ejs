@@ -1,0 +1,20 @@
+<%# Compact pill nav that slides in once the page header has scrolled away (public/js/site.js). %>
+<div class="pointer-events-none fixed inset-x-0 top-0 z-40 -translate-y-[130%] px-3 pt-[max(0.75rem,env(safe-area-inset-top))] transition-transform duration-500 ease-expo [&.is-visible]:translate-y-0" data-sticky-nav>
+  <div class="pointer-events-auto mx-auto flex max-w-[88rem] items-center justify-between gap-4 rounded-full border border-ink/10 bg-paper/85 py-2 pl-6 pr-2 shadow-[0_20px_50px_-30px_rgba(20,20,20,0.45)] backdrop-blur-md">
+    <a href="/" class="font-serif text-xl leading-none"><%= shop.name.split(' ')[0] %></a>
+    <nav aria-label="Sections" class="hidden items-center gap-6 text-sm text-ink/70 lg:flex">
+      <a href="/#services" class="hover:text-ink">Services</a>
+      <a href="/#barbers" class="hover:text-ink">Barbers</a>
+      <a href="/#home-service" class="hover:text-ink">Home visits</a>
+      <a href="/#products" class="hover:text-ink">Products</a>
+      <a href="/#visit" class="hover:text-ink">Visit</a>
+    </nav>
+    <div class="flex items-center gap-2">
+      <a href="/book" class="btn-primary !px-5 !py-2 text-sm">Book now</a>
+      <button type="button" class="grid h-10 w-10 place-items-center rounded-full border border-ink/15 lg:hidden" aria-controls="mobile-menu" aria-expanded="false" data-menu-open>
+        <span class="sr-only">Open menu</span>
+        <svg width="16" height="9" viewBox="0 0 18 10" fill="none" aria-hidden="true"><path d="M0 1h18M6 9h12" stroke="currentColor" stroke-width="1.6"/></svg>
+      </button>
+    </div>
+  </div>
+</div>

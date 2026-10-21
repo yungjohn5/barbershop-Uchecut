@@ -1,0 +1,59 @@
+<section id="home-service" class="relative overflow-hidden bg-ink text-paper grain">
+  <div class="relative mx-auto grid max-w-[88rem] gap-16 px-5 py-24 sm:px-8 lg:grid-cols-12 lg:gap-8 lg:px-10 lg:py-36">
+    <div class="lg:col-span-5">
+      <p class="eyebrow !text-paper/55">Home service</p>
+      <h2 class="mt-5 text-title" data-split><%= copy.homeTitle %></h2>
+      <p class="mt-6 max-w-md text-[1.02rem] leading-relaxed text-paper/75" data-reveal><%= copy.homeText %></p>
+      <figure class="mt-12 overflow-hidden" data-clip>
+        <img
+          src="<%= src('/images/site/home-visit', [700, 1300]) %>"
+          srcset="<%= srcset('/images/site/home-visit', [700, 1300]) %>"
+          sizes="(min-width: 1024px) 38vw, 92vw"
+          alt="A barber lining up a client’s hairline in soft window light"
+          class="aspect-[3/2] w-full object-cover"
+          loading="lazy"
+          data-parallax-img
+        />
+      </figure>
+    </div>
+
+    <div class="lg:col-span-6 lg:col-start-7">
+      <ol class="relative space-y-12 pl-12 sm:pl-16" data-steps>
+        <span class="absolute bottom-2 left-[0.9rem] top-2 w-px bg-paper/15 sm:left-[1.15rem]" aria-hidden="true">
+          <span class="absolute inset-0 origin-top bg-amber" data-progress></span>
+        </span>
+        <%
+          const steps = [
+            ['Choose your area', `Pick from ${facts.zoneCount} zones across Lagos. Each has a fixed travel fee, shown before you book.`],
+            ['Pick a service & time', `${facts.homeServiceCount} services travel well. We block travel time either side, so your barber is never rushed.`],
+            ['We confirm, then arrive', 'Your barber calls to confirm the visit and arrives with the full kit. You pay on the day: cash or transfer.'],
+          ];
+        %>
+        <% steps.forEach(([title, text], i) => { %>
+          <li class="relative" data-step>
+            <span class="step-num absolute -left-12 top-0 grid h-8 w-8 place-items-center rounded-full border border-paper/25 bg-ink font-accent text-sm italic text-paper/60 transition-colors duration-500 sm:-left-16 sm:h-10 sm:w-10"><%= i + 1 %></span>
+            <h3 class="text-[1.9rem] leading-tight sm:text-4xl"><%= title %></h3>
+            <p class="mt-3 max-w-md text-[1.02rem] leading-relaxed text-paper/70"><%= text %></p>
+          </li>
+        <% }) %>
+      </ol>
+
+      <div class="mt-16 border border-paper/15 p-6 sm:p-8" data-reveal>
+        <div class="flex items-baseline justify-between gap-4">
+          <h3 class="text-2xl">Zones &amp; travel fees</h3>
+          <span class="text-sm text-paper/50">Added to your total</span>
+        </div>
+        <ul class="mt-6 divide-y divide-paper/10">
+          <% zones.forEach((z) => { %>
+            <li class="flex items-baseline justify-between gap-4 py-3.5">
+              <span class="text-[1.05rem]"><%= z.name %></span>
+              <span class="tabular-nums text-amber-light">+ <%= naira(z.feeKobo) %></span>
+            </li>
+          <% }) %>
+        </ul>
+        <p class="mt-6 text-sm leading-relaxed text-paper/55">Home visits are confirmed by phone before your barber sets off. Not in a listed area? Message us; we may still be able to come to you.</p>
+        <a href="/book?type=HOME" class="btn-primary mt-8">Book a home visit <span class="arrow" aria-hidden="true">→</span></a>
+      </div>
+    </div>
+  </div>
+</section>

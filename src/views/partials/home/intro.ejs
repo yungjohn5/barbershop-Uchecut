@@ -1,0 +1,49 @@
+<section id="intro" class="relative mx-auto max-w-[88rem] px-5 py-24 sm:px-8 lg:px-10 lg:py-36">
+  <%# Hairline grid, drawn on scroll (reference: thin construction lines through the collage). %>
+  <div class="pointer-events-none absolute inset-y-16 left-1/3 hidden w-px origin-top hairline lg:block" data-line-y aria-hidden="true"></div>
+  <div class="pointer-events-none absolute inset-y-16 left-2/3 hidden w-px origin-top hairline lg:block" data-line-y aria-hidden="true"></div>
+
+  <div class="relative grid gap-10 lg:grid-cols-12 lg:grid-rows-[auto_1fr] lg:gap-x-8">
+    <div class="lg:col-span-4 lg:col-start-9 lg:row-start-1 lg:text-right">
+      <p class="eyebrow">Intro</p>
+      <h2 class="mt-5 text-title" data-split><%= copy.introTitle %></h2>
+    </div>
+
+    <figure class="relative overflow-hidden lg:col-span-4 lg:col-start-5 lg:row-span-2 lg:row-start-1" data-clip>
+      <img
+        src="<%= src('/images/site/intro-portrait', [600, 1100]) %>"
+        srcset="<%= srcset('/images/site/intro-portrait', [600, 1100]) %>"
+        sizes="(min-width: 1024px) 30vw, 92vw"
+        alt="Profile portrait of a young man with a full, shaped afro"
+        class="aspect-[3/4] h-full w-full object-cover"
+        loading="lazy"
+        data-parallax-img
+      />
+    </figure>
+
+    <div class="grid grid-cols-2 gap-4 lg:contents">
+      <figure class="overflow-hidden lg:col-span-3 lg:row-start-1 lg:mt-4" data-speed="0.12">
+        <img
+          src="<%= src('/images/site/intro-tools', [500, 900]) %>"
+          srcset="<%= srcset('/images/site/intro-tools', [500, 900]) %>"
+          sizes="(min-width: 1024px) 22vw, 45vw"
+          alt="Clippers, trimmers, scissors and a brush laid out on the station"
+          class="aspect-[4/5] w-full object-cover"
+          loading="lazy"
+        />
+      </figure>
+      <figure class="overflow-hidden lg:col-span-2 lg:col-start-11 lg:row-start-2 lg:self-end" data-speed="-0.1">
+        <img
+          src="<%= src('/images/site/intro-still', [400, 800]) %>"
+          srcset="<%= srcset('/images/site/intro-still', [400, 800]) %>"
+          sizes="(min-width: 1024px) 15vw, 45vw"
+          alt="Neck brush and tonic bottles at the barber’s station"
+          class="aspect-[4/5] w-full object-cover"
+          loading="lazy"
+        />
+      </figure>
+    </div>
+
+    <p class="max-w-sm text-[1.02rem] leading-relaxed text-ink/75 lg:col-span-3 lg:row-start-2 lg:self-end" data-reveal><%= copy.introText %></p>
+  </div>
+</section>

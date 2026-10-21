@@ -1,0 +1,57 @@
+<section id="top" class="relative overflow-hidden" data-hero>
+  <%# Giant outline wordmark peeking above the card, as in the reference. %>
+  <div aria-hidden="true" class="pointer-events-none absolute inset-x-0 top-0 flex select-none justify-center">
+    <span class="outline-word font-serif text-[27vw] leading-[0.8] lg:text-[24rem]" data-hero-word><%= shop.name.split(' ')[0] %></span>
+  </div>
+
+  <div class="relative mx-auto max-w-[88rem] px-3 pt-[15vw] sm:px-5 lg:pt-[12.5rem]">
+    <div class="relative flex min-h-[40rem] flex-col overflow-hidden bg-ink text-paper grain lg:h-[calc(100svh-4rem)] lg:max-h-[58rem]" data-hero-card>
+      <img
+        src="<%= src('/images/site/hero', [800, 1400, 2200]) %>"
+        srcset="<%= srcset('/images/site/hero', [800, 1400, 2200]) %>"
+        sizes="(min-width: 1408px) 1376px, 96vw"
+        alt="A barber shaping a client’s fade with a brush and clippers"
+        class="absolute inset-0 h-full w-full object-cover object-[62%_35%]"
+        fetchpriority="high"
+        data-hero-img
+      />
+      <div class="absolute inset-0 bg-gradient-to-t from-ink via-ink/35 to-ink/55" aria-hidden="true"></div>
+
+      <%- include('../nav', { variant: 'light' }) %>
+
+      <div class="relative z-10 mt-auto grid items-end gap-10 px-5 pb-6 pt-24 sm:px-8 sm:pb-10 lg:grid-cols-[1fr_auto] lg:px-10">
+        <div>
+          <h1 class="text-display" aria-label="<%= copy.heroLines.join(' ') %>">
+            <% copy.heroLines.forEach((line) => { %>
+              <span class="split-line block" aria-hidden="true"><span class="block" data-hero-line><%= line %></span></span>
+            <% }) %>
+          </h1>
+          <div class="mt-8 flex flex-wrap gap-3" data-hero-fade>
+            <a href="/book?type=SHOP" class="btn-primary">Book in shop <span class="arrow" aria-hidden="true">→</span></a>
+            <a href="/book?type=HOME" class="btn-ghost-light">Book a home visit</a>
+          </div>
+        </div>
+        <div class="flex flex-row-reverse items-end justify-between gap-6 lg:flex-col lg:items-end">
+          <p class="max-w-[17rem] text-[0.95rem] leading-relaxed text-paper/80 lg:mb-6 lg:text-right" data-hero-fade><%= copy.heroText %></p>
+          <%- include('../ring-btn', { href: '/book', label: ['Book', 'Appointment'], ring: 'Book appointment · Lagos · Book appointment · Lagos · ', tone: 'light', id: 'hero' }) %>
+        </div>
+      </div>
+    </div>
+
+    <%# Facts strip under the card: all values derived from live data. %>
+    <dl class="grid grid-cols-1 border-x border-b border-ink/10 bg-paper-deep/60 sm:grid-cols-3">
+      <div class="flex items-baseline justify-between gap-4 border-b border-ink/10 px-5 py-5 sm:border-b-0 sm:border-r lg:px-8" data-reveal>
+        <dt class="text-sm text-ink/55">Open</dt>
+        <dd class="text-right font-medium"><%= shop.hoursText[0] %></dd>
+      </div>
+      <div class="flex items-baseline justify-between gap-4 border-b border-ink/10 px-5 py-5 sm:border-b-0 sm:border-r lg:px-8" data-reveal>
+        <dt class="text-sm text-ink/55">Services</dt>
+        <dd class="text-right font-medium"><%= facts.serviceCount %> services<% if (facts.fromPriceKobo) { %> · from <%= naira(facts.fromPriceKobo) %><% } %></dd>
+      </div>
+      <div class="flex items-baseline justify-between gap-4 px-5 py-5 lg:px-8" data-reveal>
+        <dt class="text-sm text-ink/55">Home visits</dt>
+        <dd class="text-right font-medium"><%= facts.zoneCount %> areas across Lagos</dd>
+      </div>
+    </dl>
+  </div>
+</section>

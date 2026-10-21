@@ -68,10 +68,46 @@ describe('JSON API', () => {
     expect(home.body.error.code).toBe('HOME_NOT_AVAILABLE');
   });
 
-  test('home page renders', async () => {
+  test('home page renders every section from live data', async () => {
+    await prisma.product.create({
+      data: {
+        name: 'Matte Clay',
+        slug: 'matte-clay',
+        priceKobo: 950000,
+        imageUrl: '/images/site/prod-clay',
+      },
+    });
     const res = await request(app).get('/').expect(200);
+    for (const id of [
+      'top',
+      'intro',
+      'services',
+      'craft',
+      'barbers',
+      'home-service',
+      'products',
+      'visit',
+    ]) {
+      expect(res.text).toContain(`id="${id}"`);
+    }
     expect(res.text).toContain('Take the Chair');
-    expect(res.text).toContain('Book a home visit');
+    expect(res.text).toContain('Home Barber'); // barbers from DB
+    expect(res.text).toContain('Does home visits');
+    expect(res.text).toContain('+ ₦3,000'); // zone fee
+    expect(res.text).toContain('₦7,500'); // service price
+    expect(res.text).toContain('In shop only'); // shave is shop-only
+    expect(res.text).toContain('Matte Clay');
+    expect(res.text).toContain('2 services · from ₦6,000');
+  });
+
+  test('GET /book keeps CTAs working until the wizard ships', async () => {
+    const res = await request(app).get('/book?type=HOME').expect(200);
+    expect(res.text).toContain('Online booking opens shortly');
+    expect(res.text).toContain('a home visit');
+  });
+
+  test('GSAP is served locally', async () => {
+    await request(app).get('/vendor/gsap/ScrollTrigger.min.js').expect(200);
   });
 
   test('POST without a CSRF token is rejected', async () => {

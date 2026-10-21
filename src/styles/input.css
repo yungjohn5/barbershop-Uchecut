@@ -5,6 +5,7 @@
 @layer base {
   html {
     @apply bg-paper text-ink antialiased;
+    scroll-behavior: smooth;
   }
   body {
     @apply font-sans text-base leading-relaxed;
@@ -12,21 +13,167 @@
   h1,
   h2,
   h3 {
-    @apply font-serif font-normal leading-[1.05] tracking-tight;
+    @apply font-serif font-normal leading-[1.02] tracking-tight;
+  }
+  /* The `hidden` attribute must win over display utilities like `flex`. */
+  [hidden] {
+    display: none !important;
+  }
+  ::selection {
+    @apply bg-amber text-ink;
+  }
+  :focus-visible {
+    @apply outline-none ring-2 ring-amber ring-offset-2 ring-offset-paper;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
   }
 }
 
 @layer components {
+  /* ---------- Buttons ---------- */
   .btn {
-    @apply inline-flex items-center justify-center rounded-full px-6 py-3 text-base font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-amber focus-visible:ring-offset-2;
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-[0.95rem] font-medium transition-colors duration-300;
   }
   .btn-primary {
-    @apply btn bg-amber text-ink hover:bg-amber-dark hover:text-paper;
+    @apply btn bg-amber text-ink hover:bg-ink hover:text-paper;
+  }
+  .btn-light {
+    @apply btn bg-paper text-ink hover:bg-amber;
   }
   .btn-ghost {
-    @apply btn border border-current hover:bg-ink hover:text-paper;
+    @apply btn border border-current hover:bg-ink hover:text-paper hover:border-ink;
   }
+  .btn-ghost-light {
+    @apply btn border border-paper/50 text-paper hover:bg-paper hover:text-ink;
+  }
+  .btn .arrow {
+    @apply transition-transform duration-300;
+  }
+  .btn:hover .arrow {
+    transform: translateX(4px);
+  }
+
+  /* Circular "Book" button with rotating text ring */
+  .ring-btn {
+    @apply relative inline-grid h-32 w-32 shrink-0 place-items-center rounded-full border text-center text-[0.8rem] font-medium leading-tight transition-colors duration-500 sm:h-36 sm:w-36;
+  }
+  .ring-btn svg {
+    @apply pointer-events-none absolute inset-0 h-full w-full;
+  }
+  .ring-btn text {
+    @apply fill-current text-[9.5px] uppercase tracking-[0.32em];
+  }
+
   .eyebrow {
-    @apply text-sm uppercase tracking-[0.18em] text-ink/60;
+    @apply inline-flex items-center gap-2 text-[0.78rem] font-medium uppercase tracking-[0.22em] text-ink/60;
   }
+  .eyebrow::before {
+    content: '';
+    @apply h-1.5 w-1.5 rounded-full bg-amber;
+  }
+
+  .hairline {
+    @apply bg-ink/10;
+  }
+
+  /* Huge outline wordmark behind the hero */
+  .outline-word {
+    color: transparent;
+    -webkit-text-stroke: 1.5px rgb(20 20 20 / 0.16);
+  }
+
+  /* Image-filled display type ("Take the Chair") */
+  .clip-text {
+    background-size: cover;
+    background-position: 50% 40%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Marquee */
+  .marquee {
+    @apply flex w-max;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .no-gsap .marquee {
+      animation: marquee 40s linear infinite;
+    }
+  }
+  @keyframes marquee {
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  /* Services grid stagger (classes recomputed by JS after filtering) */
+  .svc-card.offset-sm {
+    margin-top: 3rem;
+  }
+  @media (min-width: 768px) {
+    .svc-card.offset-sm {
+      margin-top: 0;
+    }
+    .svc-card.offset-md {
+      margin-top: 7rem;
+    }
+  }
+
+  .tab {
+    @apply relative flex items-center gap-2 whitespace-nowrap py-2 text-[0.95rem] text-ink/50 transition-colors hover:text-ink;
+  }
+  .tab[aria-pressed='true'] {
+    @apply text-ink;
+  }
+  .tab .dot {
+    @apply h-1.5 w-1.5 rounded-full bg-amber opacity-0 transition-opacity;
+  }
+  .tab[aria-pressed='true'] .dot {
+    @apply opacity-100;
+  }
+
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Film grain over dark sections */
+  .grain::after {
+    content: '';
+    @apply pointer-events-none absolute inset-0 opacity-[0.07] mix-blend-overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+}
+
+/* ---------- Motion: initial states only when JS + GSAP will animate them ---------- */
+.motion-ok [data-reveal],
+.motion-ok [data-hero-fade] {
+  opacity: 0;
+}
+.motion-ok [data-split],
+.motion-ok [data-hero-line] {
+  visibility: hidden;
+}
+.split-line {
+  overflow: hidden;
+  padding-bottom: 0.08em;
+  margin-bottom: -0.08em;
+}
+
+/* Photo inside the footer's display type */
+.bg-chair {
+  background-image: url('/images/site/chair-1800.webp');
+}
+
+/* Home-visit steps light up as they reach the reading line */
+[data-step].is-active .step-num,
+.no-gsap [data-step] .step-num {
+  border-color: #b8833e;
+  background-color: #b8833e;
+  color: #141414;
 }

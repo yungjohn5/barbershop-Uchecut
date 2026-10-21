@@ -96,16 +96,57 @@ const barbers = [
     name: 'Tunde A.',
     doesHomeService: true,
     sortOrder: 1,
-    bio: 'Fades and sharp line-ups. Does home visits.',
-    specialties: ['Skin fades', 'Line-ups'],
+    photoUrl: '/images/site/barber-tunde',
+    bio: 'Precise fades and razor-sharp line-ups. Calm, quick, and the barber who brings the chair to you on home visits.',
+    specialties: ['Skin fades', 'Line-ups', 'Home visits'],
   },
   {
     slug: 'emeka',
     name: 'Emeka O.',
     doesHomeService: false,
     sortOrder: 2,
-    bio: 'Scissor work and classic shaves.',
-    specialties: ['Scissor cuts', 'Hot towel shaves'],
+    photoUrl: '/images/site/barber-emeka',
+    bio: 'Two decades behind the chair. Patient scissor work, classic hot-towel shaves, and the steadiest hand for kids’ first cuts.',
+    specialties: ['Scissor cuts', 'Hot towel shaves', 'Kids'],
+  },
+];
+
+// Display-only products (no cart). Images: public/images/site/prod-*-{400,800}.webp
+const products = [
+  {
+    slug: 'matte-clay',
+    name: 'Matte Clay',
+    price: 9500,
+    image: 'prod-clay',
+    description: 'Strong hold, zero shine. Built for short, textured cuts.',
+  },
+  {
+    slug: 'beard-oil',
+    name: 'Beard Oil',
+    price: 8000,
+    image: 'prod-beard-oil',
+    description: 'Light oil that softens and tames without the grease.',
+  },
+  {
+    slug: 'scalp-tonic',
+    name: 'Scalp Tonic',
+    price: 7000,
+    image: 'prod-tonic',
+    description: 'A cooling tonic for a clean, healthy scalp after a fresh cut.',
+  },
+  {
+    slug: 'grooming-set',
+    name: 'The Grooming Set',
+    price: 22000,
+    image: 'prod-kit',
+    description: 'Clay, oil and tonic together: the full routine.',
+  },
+  {
+    slug: 'straight-razor',
+    name: 'Straight Razor',
+    price: 15000,
+    image: 'prod-razor',
+    description: 'The razor we finish every line-up with.',
   },
 ];
 
@@ -141,6 +182,7 @@ async function main() {
       priceKobo: naira(s.price),
       durationMin: s.duration,
       homeAvailable: s.home,
+      imageUrl: `/images/site/svc-${s.slug}`,
       sortOrder: i + 1,
       categoryId: catIds[s.category],
     };
@@ -187,8 +229,25 @@ async function main() {
     });
   }
 
+  for (const [i, p] of products.entries()) {
+    const data = {
+      name: p.name,
+      description: p.description,
+      priceKobo: naira(p.price),
+      imageUrl: `/images/site/${p.image}`,
+      sortOrder: i + 1,
+    };
+    await prisma.product.upsert({
+      where: { slug: p.slug },
+      update: data,
+      create: { slug: p.slug, ...data },
+    });
+  }
+
   // Settings: create missing keys only, never overwrite values the owner has edited.
+  // `home` copy is left to code defaults until the owner edits it in the dashboard.
   for (const [key, value] of Object.entries(DEFAULT_SETTINGS)) {
+    if (key === 'home') continue;
     await prisma.setting.upsert({ where: { key }, update: {}, create: { key, value } });
   }
 
@@ -217,7 +276,7 @@ async function main() {
 
   console.log(
     `Seeded ${categories.length} categories, ${services.length} services, ` +
-      `${barbers.length} barbers, ${zones.length} zones.`,
+      `${barbers.length} barbers, ${zones.length} zones, ${products.length} products.`,
   );
 }
 

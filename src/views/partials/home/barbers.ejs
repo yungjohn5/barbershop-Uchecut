@@ -1,0 +1,49 @@
+<section id="barbers" class="relative bg-paper-deep">
+  <div class="mx-auto max-w-[88rem] px-5 py-24 sm:px-8 lg:px-10 lg:py-32">
+    <div class="grid gap-8 lg:grid-cols-12 lg:items-end">
+      <div class="lg:col-span-7">
+        <p class="eyebrow">The barbers</p>
+        <h2 class="mt-5 text-title" data-split>The Hands Behind The Cut.</h2>
+      </div>
+      <p class="max-w-md text-[1.02rem] leading-relaxed text-ink/70 lg:col-span-4 lg:col-start-9" data-reveal>
+        Book a specific barber, or choose “any barber” and we’ll match you with whoever is free at your time.
+      </p>
+    </div>
+
+    <div class="mt-16 grid gap-14 md:grid-cols-2 md:gap-8 lg:gap-12">
+      <% barbers.forEach((b, i) => { %>
+        <article class="group <%= i % 2 === 1 ? 'md:mt-28' : '' %>" data-reveal>
+          <div class="relative overflow-hidden bg-ink/5">
+            <% if (b.photoUrl) { %>
+              <img
+                src="<%= src(b.photoUrl, [500, 900]) %>"
+                srcset="<%= srcset(b.photoUrl, [500, 900]) %>"
+                sizes="(min-width: 768px) 44vw, 92vw"
+                alt="Portrait of <%= b.name %>"
+                class="aspect-[4/5] w-full object-cover object-top"
+                loading="lazy"
+                data-parallax-img
+              />
+            <% } else { %>
+              <div class="aspect-[4/5] w-full"></div>
+            <% } %>
+            <% if (b.doesHomeService) { %>
+              <span class="absolute left-4 top-4 rounded-full bg-paper/90 px-3 py-1.5 text-xs font-medium backdrop-blur">Does home visits</span>
+            <% } %>
+          </div>
+          <div class="mt-5 flex items-baseline justify-between gap-4">
+            <h3 class="text-[2.2rem] leading-none"><%= b.name %></h3>
+            <span class="tabular-nums text-sm text-ink/45"><%= pad2(i + 1) %>/</span>
+          </div>
+          <% if (b.specialties && b.specialties.length) { %>
+            <p class="mt-2 text-sm uppercase tracking-[0.14em] text-stone"><%= b.specialties.join(' · ') %></p>
+          <% } %>
+          <% if (b.bio) { %><p class="mt-4 max-w-md text-[1.02rem] leading-relaxed text-ink/75"><%= b.bio %></p><% } %>
+          <a href="/book?barber=<%= b.id %>" class="mt-6 inline-flex items-center gap-2 border-b border-ink/30 pb-1 text-[0.95rem] font-medium transition-colors hover:border-amber hover:text-amber-dark">
+            Book with <%= b.name.split(' ')[0] %> <span aria-hidden="true">→</span>
+          </a>
+        </article>
+      <% }) %>
+    </div>
+  </div>
+</section>
