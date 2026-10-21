@@ -316,3 +316,4 @@ Stop the other process, or set `PORT` in `.env`.
 
 Proprietary. All rights reserved. Placeholder photography is from [Pexels](https://www.pexels.com/license/)
 and must be replaced with the client's own images before launch.
+# barbershop-Uchecut
