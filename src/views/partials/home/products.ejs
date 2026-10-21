@@ -1,8 +1,8 @@
 <section id="products" class="relative overflow-hidden bg-paper lg:flex lg:h-[100svh] lg:min-h-[46rem] lg:flex-col lg:justify-center" data-products>
   <div class="mx-auto grid w-full max-w-[88rem] gap-6 px-5 pt-24 sm:px-8 lg:grid-cols-12 lg:items-end lg:px-10 lg:pt-0">
     <div class="lg:col-span-6">
-      <p class="eyebrow">Product</p>
-      <h2 class="mt-5 text-title" data-split><%= copy.productsTitle %></h2>
+      <p class="eyebrow"><span class="eyebrow-num">06</span>Product</p>
+      <h2 class="mt-5 text-title" data-split><%- rich(copy.productsTitle) %></h2>
     </div>
     <div class="lg:col-span-4 lg:col-start-9" data-reveal>
       <p class="text-[1.02rem] leading-relaxed text-ink/70"><%= copy.productsText %></p>
@@ -42,7 +42,10 @@
       </div>
     </div>
     <div class="mx-auto mt-10 hidden max-w-[88rem] px-10 lg:block" aria-hidden="true">
-      <div class="h-px w-full bg-ink/10"><div class="h-px origin-left scale-x-0 bg-ink" data-rail-progress></div></div>
+      <div class="flex items-center gap-6">
+        <div class="h-px flex-1 bg-ink/10"><div class="h-px origin-left scale-x-0 bg-ink" data-rail-progress></div></div>
+        <span class="font-accent text-lg italic tabular-nums text-ink/60"><span data-rail-index>01</span> / <%= pad2(products.length) %></span>
+      </div>
     </div>
   </div>
 </section>

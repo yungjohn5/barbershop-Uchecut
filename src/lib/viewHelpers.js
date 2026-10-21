@@ -27,4 +27,18 @@ function src(base, widths) {
 
 const pad2 = (n) => String(n).padStart(2, '0');
 
-module.exports = { naira, duration, srcset, src, pad2 };
+const escapeHtml = (s) =>
+  String(s).replace(
+    /[&<>"']/g,
+    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c],
+  );
+
+// Editable copy may mark one accent word with *asterisks*; output is escaped HTML.
+function rich(text) {
+  return escapeHtml(text).replace(/\*([^*]+)\*/g, '<em class="accent">$1</em>');
+}
+
+// Plain version of the same copy (for aria-labels, titles).
+const plain = (text) => String(text).replace(/\*/g, '');
+
+module.exports = { naira, duration, srcset, src, pad2, rich, plain };

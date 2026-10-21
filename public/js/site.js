@@ -10,6 +10,7 @@
 
   if (hasGsap) {
     gsap.registerPlugin(window.ScrollTrigger, window.SplitText, window.Flip);
+    if (window.ScrollSmoother) gsap.registerPlugin(window.ScrollSmoother);
     window.__motionReady = true;
   } else {
     root.classList.remove('motion-ok');
@@ -22,6 +23,51 @@
   var $$ = function (sel, ctx) {
     return Array.prototype.slice.call((ctx || document).querySelectorAll(sel));
   };
+
+  // ------------------------------------------------- smooth scrolling (desktop)
+  // Must exist before any ScrollTrigger is created. Touch devices keep native scrolling.
+  // Created and destroyed with the breakpoint, so resizing a window down to phone
+  // width hands control back to native scrolling (and the mobile menu).
+  var smoother = null;
+  var finePointer = window.matchMedia('(pointer: fine)').matches;
+  if (motion && window.ScrollSmoother) {
+    gsap.matchMedia().add('(min-width: 1024px) and (pointer: fine)', function () {
+      smoother = window.ScrollSmoother.create({
+        wrapper: '#smooth-wrapper',
+        content: '#smooth-content',
+        smooth: 1.1,
+        effects: false,
+        smoothTouch: false,
+      });
+      root.classList.add('has-smoother');
+      if (window.Site) window.Site.smoother = smoother;
+      return function () {
+        smoother.kill();
+        smoother = null;
+        root.classList.remove('has-smoother');
+        if (window.Site) window.Site.smoother = null;
+      };
+    });
+  }
+
+  // Same-page anchors (/#services, #main) glide through the smoother when it is active.
+  function scrollToHash(hash) {
+    var target = hash && hash.length > 1 ? document.getElementById(hash.slice(1)) : null;
+    if (!target) return false;
+    if (smoother) smoother.scrollTo(target, true, 'top 72px');
+    else target.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth' });
+    return true;
+  }
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest && e.target.closest('a[href]');
+    if (!a || e.defaultPrevented || e.metaKey || e.ctrlKey) return;
+    var url = new URL(a.getAttribute('href'), window.location.href);
+    if (url.pathname !== window.location.pathname || !url.hash) return;
+    if (scrollToHash(url.hash)) {
+      e.preventDefault();
+      history.replaceState(null, '', url.hash);
+    }
+  });
 
   // ---------------------------------------------------------------- mobile menu
   var menu = $('[data-menu]');
@@ -39,6 +85,7 @@
     lastFocus = document.activeElement;
     menu.hidden = false;
     document.body.style.overflow = 'hidden';
+    if (smoother) smoother.paused(true);
     setExpanded(true);
     if (motion) {
       gsap.fromTo(
@@ -61,6 +108,7 @@
     var done = function () {
       menu.hidden = true;
       document.body.style.overflow = '';
+      if (smoother) smoother.paused(false);
       setExpanded(false);
       if (lastFocus) lastFocus.focus();
     };
@@ -290,8 +338,44 @@
     }
   }
 
+  // ------------------------------------------------------- cursor companion
+  // A small dot trailing the pointer; grows into a labelled disc over [data-cursor]
+  // targets and steps aside over round buttons ([data-magnetic]) so they keep their own feel.
+  function initCursor() {
+    if (!motion || !finePointer) return;
+    var cursor = document.createElement('div');
+    cursor.className = 'cursor is-hidden';
+    cursor.setAttribute('aria-hidden', 'true');
+    cursor.innerHTML = '<span class="cursor-label"></span>';
+    document.body.appendChild(cursor);
+    var label = cursor.firstChild;
+    var xTo = gsap.quickTo(cursor, 'x', { duration: 0.5, ease: 'power3' });
+    var yTo = gsap.quickTo(cursor, 'y', { duration: 0.5, ease: 'power3' });
+
+    window.addEventListener('mousemove', function (e) {
+      xTo(e.clientX);
+      yTo(e.clientY);
+      var t = e.target.closest ? e.target : null;
+      var overRound = t && t.closest('[data-magnetic], input, select, textarea, [data-menu]');
+      var labelled = t && t.closest('[data-cursor]');
+      cursor.classList.toggle('is-hidden', !!overRound);
+      cursor.classList.toggle('is-label', !!labelled && !overRound);
+      if (labelled) label.textContent = labelled.getAttribute('data-cursor');
+    });
+    document.addEventListener('mouseleave', function () {
+      cursor.classList.add('is-hidden');
+    });
+  }
+
   // Exposed for page scripts (home.js).
-  window.Site = { $: $, $$: $$, motion: motion, hasGsap: hasGsap, reduce: reduce };
+  window.Site = {
+    $: $,
+    $$: $$,
+    motion: motion,
+    hasGsap: hasGsap,
+    reduce: reduce,
+    smoother: smoother,
+  };
 
   // Wait for web fonts (bounded) so line splits and fit-text measure real glyphs.
   var fontsReady =
@@ -302,6 +386,8 @@
   window.Site.ready = Promise.race([fontsReady, timeout]).then(function () {
     fitText();
     initMotion();
+    initCursor();
+    if (window.location.hash) scrollToHash(window.location.hash);
   });
 
   var resizeTimer;

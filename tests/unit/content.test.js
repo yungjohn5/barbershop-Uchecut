@@ -67,3 +67,35 @@ describe('home copy settings', () => {
     expect(resolveSettings([{ key: 'home', value: ['nope'] }]).home).toEqual(DEFAULT_SETTINGS.home);
   });
 });
+
+describe('shopStatus', () => {
+  const { shopStatus } = require('../../src/services/content');
+  const { rich, plain } = require('../../src/lib/viewHelpers');
+  // Mon–Fri 10:00–20:00, Sat 10:00–18:00 (Lagos), Sunday closed.
+  const hours = [
+    ...[1, 2, 3, 4, 5].map((weekday) => ({ weekday, startMin: 600, endMin: 1200 })),
+    { weekday: 6, startMin: 600, endMin: 1080 },
+  ];
+  const at = (iso) => shopStatus({ now: new Date(iso), hours });
+
+  test('open during a shift (Lagos time, UTC+1)', () => {
+    expect(at('2026-10-12T12:00:00Z')).toEqual({ open: true, label: 'Open now · until 20:00' }); // Mon 13:00
+    expect(at('2026-10-17T16:59:00Z')).toEqual({ open: true, label: 'Open now · until 18:00' }); // Sat 17:59
+  });
+
+  test('closed before opening, after closing, and on Sunday', () => {
+    expect(at('2026-10-12T07:30:00Z').label).toBe('Closed · opens today 10:00'); // Mon 08:30
+    expect(at('2026-10-12T19:00:00Z').label).toBe('Closed · opens tomorrow 10:00'); // Mon 20:00 sharp
+    expect(at('2026-10-17T18:00:00Z').label).toBe('Closed · opens Mon 10:00'); // Sat 19:00
+    expect(at('2026-10-18T12:00:00Z').label).toBe('Closed · opens tomorrow 10:00'); // Sun
+  });
+
+  test('no hours configured', () => {
+    expect(shopStatus({ now: new Date(), hours: [] }).open).toBe(false);
+  });
+
+  test('rich() escapes HTML and turns *word* into an accent', () => {
+    expect(rich('The *Ritual* <b>')).toBe('The <em class="accent">Ritual</em> &lt;b&gt;');
+    expect(plain('The *Ritual*')).toBe('The Ritual');
+  });
+});

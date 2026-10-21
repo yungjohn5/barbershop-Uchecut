@@ -27,20 +27,21 @@ const DEFAULT_SETTINGS = {
     heroLines: ['Sharp Lines.', 'Quiet Confidence.', 'Timeless Craft.'],
     heroText:
       'A Lagos grooming house built on precision. Clean lines, considered details, and a calm room where the craft speaks louder than the noise.',
-    introTitle: 'The Modern Ritual of Grooming',
+    introTitle: 'The Modern *Ritual* of Grooming',
     introText:
       'The barbershop has always been where Lagos men talk, trust and transform. We keep that ritual (a proper consultation, an unhurried cut, a hot-towel finish) and bring it up to date with modern technique and a room that respects your time.',
-    servicesTitle: 'We Provide A Variety Of Services',
+    servicesTitle: 'We Provide A *Variety* Of Services',
     servicesText:
       'Every service starts with a short consultation. Prices are fixed and shown upfront, and you pay on the day, in the shop or when we arrive.',
-    craftTitle: 'We Don’t Follow Trends Blindly. We Adapt Them, Carefully.',
+    craftTitle: 'We Don’t Follow Trends Blindly. We Adapt Them, *Carefully*.',
     craftText:
       'Our barbers are trained professionals with a deep respect for the discipline. Each brings their own eye; all work to one standard: quality without compromise.',
     craftNote: 'Book ahead and your chair is ready when you walk in. No waiting on the bench.',
-    homeTitle: 'The Chair Comes To You.',
+    homeTitle: 'The Chair *Comes* To You.',
+    barbersTitle: 'The Hands Behind *The Cut*.',
     homeText:
       'Busy week? We bring the full kit to your home or office across Lagos. Pick your area, choose a service and time, and we confirm before we set off.',
-    productsTitle: 'Only What Works',
+    productsTitle: 'Only What *Works*',
     productsText:
       'We use and stock a short list of grooming products, chosen for performance, not hype. Everything here is available in the shop; ask your barber what suits your hair.',
     footerText: 'Book your session. Step into a room where time slows down and details matter.',

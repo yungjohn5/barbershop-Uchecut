@@ -24,9 +24,22 @@
     <%- include('../partials/mobile-menu') %>
     <% if (page !== 'home') { %><%- include('../partials/nav', { variant: 'dark' }) %><% } %>
 
-    <main id="main"><%- body %></main>
+    <% if (page === 'home') { %>
+      <%# First-visit intro (shown by boot.js only when motion is allowed). %>
+      <div class="loader fixed inset-0 z-[70] place-items-center bg-ink text-paper" aria-hidden="true" data-loader>
+        <div class="overflow-hidden"><span class="block font-serif text-[22vw] leading-[0.9] lg:text-[16vw]" data-loader-word><%= shop.name.split(' ')[0] %></span></div>
+        <span class="absolute bottom-6 left-6 text-[0.7rem] uppercase tracking-[0.3em] text-paper/45 sm:bottom-10 sm:left-10">Barbershop · Lagos</span>
+        <span class="absolute bottom-4 right-6 font-accent text-6xl italic tabular-nums text-amber-light sm:bottom-8 sm:right-10 sm:text-8xl" data-loader-count>0</span>
+      </div>
+    <% } %>
 
-    <%- include('../partials/footer') %>
+    <%# Desktop smooth scrolling wraps page content; fixed UI stays outside. %>
+    <div id="smooth-wrapper">
+      <div id="smooth-content">
+        <main id="main"><%- body %></main>
+        <%- include('../partials/footer') %>
+      </div>
+    </div>
 
     <div class="pointer-events-none fixed inset-x-0 bottom-0 z-40 translate-y-[140%] p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] transition-transform duration-500 ease-expo md:hidden [&.is-visible]:translate-y-0" data-book-pill>
       <a href="/book" class="btn-primary pointer-events-auto w-full py-3.5 shadow-[0_18px_40px_-12px_rgba(20,20,20,0.55)]">
@@ -38,6 +51,7 @@
     <script src="/vendor/gsap/ScrollTrigger.min.js" defer></script>
     <script src="/vendor/gsap/SplitText.min.js" defer></script>
     <script src="/vendor/gsap/Flip.min.js" defer></script>
+    <script src="/vendor/gsap/ScrollSmoother.min.js" defer></script>
     <script src="/js/site.js" defer></script>
     <% if (page === 'home') { %><script src="/js/home.js" defer></script><% } %>
   </body>

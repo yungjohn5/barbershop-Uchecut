@@ -1,6 +1,13 @@
 <footer id="visit" class="relative overflow-hidden bg-ink text-paper grain">
   <div class="relative mx-auto max-w-[88rem] px-5 pb-28 pt-20 sm:px-8 md:pb-10 lg:px-10 lg:pt-28">
-    <p class="eyebrow !text-paper/50">Visit &amp; book</p>
+    <div class="flex flex-wrap items-center justify-between gap-4">
+      <p class="eyebrow !text-paper/50"><span class="eyebrow-num">07</span>Visit &amp; book</p>
+      <% if (locals.status) { %>
+        <p class="inline-flex items-center gap-2.5 rounded-full border border-paper/15 px-4 py-2 text-sm text-paper/80">
+          <span class="status-dot <%= status.open ? 'is-open' : '' %>" aria-hidden="true"></span><%= status.label %>
+        </p>
+      <% } %>
+    </div>
 
     <div class="mt-6 overflow-hidden">
       <h2 class="clip-text bg-chair inline-block whitespace-nowrap font-sans text-[9.4vw] font-black uppercase leading-[0.84] tracking-[-0.045em]" data-chair data-fit>Take the Chair</h2>

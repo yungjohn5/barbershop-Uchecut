@@ -33,7 +33,7 @@ Node 22 LTS (`.nvmrc`, `engines >=22`; Node 20 is end-of-life) + Express 4, EJS 
 | Server | `express`, `helmet`, `compression`, `morgan` | Security headers, gzip, request logs |
 | Views | `ejs`, `express-ejs-layouts` | Shared layout, partials per section |
 | Styling | `tailwindcss` (CLI build) | Gloock headings, DM Serif Display italic accents, Inter body (Google Fonts) |
-| Motion | `gsap` 3.15 (ScrollTrigger, SplitText, Flip) | Added at the client's request. Served from `node_modules` at `/vendor/gsap` so the CSP stays `script-src 'self'`. Everything renders without JS; `prefers-reduced-motion` disables all animation |
+| Motion | `gsap` 3.15 (ScrollTrigger, SplitText, Flip, ScrollSmoother) | Added at the client's request. Served from `node_modules` at `/vendor/gsap` so the CSP stays `script-src 'self'`. Everything renders without JS; `prefers-reduced-motion` disables all animation |
 | Database | `prisma`, `@prisma/client` | Migrations + seed script |
 | Validation | `zod` | One schema per form/endpoint |
 | Admin auth | `express-session`, `connect-pg-simple`, `bcrypt` | Sessions stored in Postgres |
@@ -291,6 +291,8 @@ The home page follows the reference's six sections in order, adapted with a home
 - Responsive images follow `${base}-${width}.webp` (e.g. `/images/site/svc-skin-fade-900.webp`); `Service.imageUrl`, `Barber.photoUrl` and `Product.imageUrl` store the base path. Admin uploads (Phase 4) must write the same widths with `sharp`.
 - Current photos are Pexels placeholders, listed in `public/images/site/CREDITS.md`.
 - Motion: `public/js/boot.js` (pre-paint flags + 2.5 s failsafe), `site.js` (menu, sticky nav, reveals, parallax, rings, fit-text), `home.js` (hero timeline, marquee, Flip service filter, step progress, pinned product rail on desktop).
+- Premium layer: first-visit intro loader (once per session, `sessionStorage`), desktop-only ScrollSmoother (created/destroyed with the `(min-width:1024px) and (pointer:fine)` breakpoint; fixed UI lives outside `#smooth-wrapper`), cursor companion that labels `[data-cursor]` targets and hides over round buttons, `*accent*` words in copy rendered by `rich()`, live open/closed status from barbers' `WorkingHours` (`shopStatus`), and a home-visit price estimator.
+- The hero's rotating "Book Appointment" ring button (`partials/ring-btn.ejs`, `.ring-btn`) is signed off by the client: do not change its look, size, position or hover.
 - Until the booking wizard ships, `/book` renders a holding page with WhatsApp and call links, so no CTA is dead.
 
 **Design system decisions**

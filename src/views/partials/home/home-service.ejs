@@ -1,8 +1,8 @@
 <section id="home-service" class="relative overflow-hidden bg-ink text-paper grain">
   <div class="relative mx-auto grid max-w-[88rem] gap-16 px-5 py-24 sm:px-8 lg:grid-cols-12 lg:gap-8 lg:px-10 lg:py-36">
     <div class="lg:col-span-5">
-      <p class="eyebrow !text-paper/55">Home service</p>
-      <h2 class="mt-5 text-title" data-split><%= copy.homeTitle %></h2>
+      <p class="eyebrow !text-paper/55"><span class="eyebrow-num">05</span>Home service</p>
+      <h2 class="mt-5 text-title" data-split><%- rich(copy.homeTitle) %></h2>
       <p class="mt-6 max-w-md text-[1.02rem] leading-relaxed text-paper/75" data-reveal><%= copy.homeText %></p>
       <figure class="mt-12 overflow-hidden" data-clip>
         <img
@@ -51,8 +51,33 @@
             </li>
           <% }) %>
         </ul>
+        <% const homeServices = services.filter((s) => s.homeAvailable); %>
+        <% if (homeServices.length && zones.length) { %>
+          <div class="mt-8 border-t border-paper/10 pt-7" data-estimator hidden>
+            <p class="eyebrow !text-paper/55">Estimate your visit</p>
+            <div class="mt-5 grid gap-4 sm:grid-cols-2">
+              <label class="block text-sm text-paper/60">Service
+                <select class="field mt-2" data-est-service>
+                  <% homeServices.forEach((s) => { %><option value="<%= s.id %>" data-price="<%= s.priceKobo %>"><%= s.name %> · <%= naira(s.priceKobo) %></option><% }) %>
+                </select>
+              </label>
+              <label class="block text-sm text-paper/60">Area
+                <select class="field mt-2" data-est-zone>
+                  <% zones.forEach((z) => { %><option value="<%= z.id %>" data-fee="<%= z.feeKobo %>"><%= z.name %></option><% }) %>
+                </select>
+              </label>
+            </div>
+            <div class="mt-6 flex items-end justify-between gap-6">
+              <dl class="space-y-1 text-sm text-paper/60">
+                <div class="flex gap-3"><dt>Service</dt><dd class="tabular-nums text-paper" data-est-subtotal></dd></div>
+                <div class="flex gap-3"><dt>Travel</dt><dd class="tabular-nums text-paper" data-est-fee></dd></div>
+              </dl>
+              <p class="text-right"><span class="block text-xs uppercase tracking-[0.2em] text-paper/50">Total, paid on the day</span><span class="font-serif text-4xl tabular-nums text-amber-light sm:text-5xl" data-est-total></span></p>
+            </div>
+          </div>
+        <% } %>
         <p class="mt-6 text-sm leading-relaxed text-paper/55">Home visits are confirmed by phone before your barber sets off. Not in a listed area? Message us; we may still be able to come to you.</p>
-        <a href="/book?type=HOME" class="btn-primary mt-8">Book a home visit <span class="arrow" aria-hidden="true">→</span></a>
+        <a href="/book?type=HOME" class="btn-primary mt-8" data-est-link>Book a home visit <span class="arrow" aria-hidden="true">→</span></a>
       </div>
     </div>
   </div>

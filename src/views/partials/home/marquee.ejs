@@ -1,11 +1,26 @@
+<%#
+  Two counter-moving bands: solid serif names, then outlined italic accents.
+  Each track holds two identical copies so a -50% loop is seamless.
+%>
 <% const items = [...categories.map((c) => c.name), 'Home visits', 'Lagos']; %>
-<div class="relative mt-20 overflow-hidden border-y border-ink/10 py-6 lg:mt-28" aria-hidden="true">
+<% const notes = ['Precision cuts', 'Hot towels', 'Sharp lines', 'Unhurried craft', 'Pay on the day']; %>
+<div class="relative mt-20 overflow-hidden border-y border-ink/10 py-7 lg:mt-28 lg:py-9" aria-hidden="true">
   <div class="marquee" data-marquee>
     <% for (let copyIdx = 0; copyIdx < 2; copyIdx += 1) { %>
       <div class="flex shrink-0 items-center">
         <% items.forEach((item) => { %>
-          <span class="whitespace-nowrap px-6 font-serif text-[2.2rem] leading-none sm:text-5xl lg:px-10 lg:text-6xl"><%= item %></span>
+          <span class="whitespace-nowrap px-6 font-serif text-[2.2rem] leading-none sm:text-5xl lg:px-10 lg:text-[4.25rem]"><%= item %></span>
           <span class="text-xl text-amber sm:text-2xl">✦</span>
+        <% }) %>
+      </div>
+    <% } %>
+  </div>
+  <div class="marquee mt-4 lg:mt-6" data-marquee="reverse">
+    <% for (let copyIdx = 0; copyIdx < 2; copyIdx += 1) { %>
+      <div class="flex shrink-0 items-center">
+        <% notes.forEach((note) => { %>
+          <span class="outline-word-strong whitespace-nowrap px-6 font-accent text-[1.9rem] italic leading-none sm:text-4xl lg:px-10 lg:text-[3.25rem]"><%= note %></span>
+          <span class="h-px w-10 bg-ink/25 lg:w-16"></span>
         <% }) %>
       </div>
     <% } %>
