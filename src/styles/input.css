@@ -58,7 +58,7 @@
 
   /* Circular "Book" button with rotating text ring */
   .ring-btn {
-    @apply relative inline-grid shrink-0 place-items-center rounded-full border text-center text-[0.8rem] font-medium leading-tight transition-colors duration-500;
+    @apply relative inline-grid h-32 w-32 shrink-0 place-items-center rounded-full border text-center text-[0.8rem] font-medium leading-tight transition-colors duration-500 sm:h-36 sm:w-36;
   }
   .ring-btn svg {
     @apply pointer-events-none absolute inset-0 h-full w-full;
@@ -176,29 +176,4 @@
   border-color: #b8833e;
   background-color: #b8833e;
   color: #141414;
-}
-
-/* Hero scrim: dark where the type sits (bottom/left), clearer over the subject's face. */
-.hero-scrim {
-  background:
-    linear-gradient(
-      to top,
-      rgb(20 20 20 / 0.94) 0%,
-      rgb(20 20 20 / 0.62) 30%,
-      rgb(20 20 20 / 0.12) 58%,
-      rgb(20 20 20 / 0.5) 100%
-    ),
-    linear-gradient(to right, rgb(20 20 20 / 0.5) 0%, rgb(20 20 20 / 0) 55%);
-}
-@media (max-width: 767px) {
-  .hero-scrim {
-    background: linear-gradient(
-      to top,
-      rgb(20 20 20) 0%,
-      rgb(20 20 20) 33%,
-      rgb(20 20 20 / 0.55) 46%,
-      rgb(20 20 20 / 0.05) 66%,
-      rgb(20 20 20 / 0.5) 100%
-    );
-  }
 }

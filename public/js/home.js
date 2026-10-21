@@ -117,12 +117,11 @@
       tl.from('[data-hero-word]', { yPercent: 35, opacity: 0, duration: 1.8 }, 0)
         .from(
           '[data-hero-card]',
-          { clipPath: 'inset(10% 6% 0% 6%)', duration: 1.7, ease: 'expo.inOut' },
+          { clipPath: 'inset(12% 7% 0% 7%)', duration: 1.7, ease: 'expo.inOut' },
           0.05,
         )
         .from('[data-hero-img]', { scale: 1.3, duration: 2.4 }, 0.05)
         .from('[data-hero-nav] > *', { y: -24, opacity: 0, duration: 1.1, stagger: 0.08 }, 0.75)
-        .from('[data-hero-rule]', { scaleX: 0, duration: 1.6, ease: 'expo.inOut' }, 0.7)
         .from('[data-hero-line]', { yPercent: 115, duration: 1.4, stagger: 0.12 }, 0.8)
         .to('[data-hero-fade]', { opacity: 1, duration: 1.2, stagger: 0.12 }, 1.2)
         .from(
@@ -131,24 +130,9 @@
           1.15,
         );
 
-      // Pointer depth on desktop: the photo drifts gently against the cursor.
-      var media = $('[data-hero-media]');
-      if (media && window.matchMedia('(pointer: fine)').matches) {
-        var mx = gsap.quickTo(media, 'x', { duration: 1.4, ease: 'power3' });
-        var my = gsap.quickTo(media, 'y', { duration: 1.4, ease: 'power3' });
-        hero.addEventListener('mousemove', function (e) {
-          mx((e.clientX / window.innerWidth - 0.5) * -22);
-          my((e.clientY / window.innerHeight - 0.5) * -14);
-        });
-        hero.addEventListener('mouseleave', function () {
-          mx(0);
-          my(0);
-        });
-      }
-
       // Scroll: photo sinks, wordmark lifts away.
       gsap.to('[data-hero-img]', {
-        yPercent: 10,
+        yPercent: 14,
         ease: 'none',
         scrollTrigger: {
           trigger: '[data-hero-card]',
