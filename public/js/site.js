@@ -143,10 +143,11 @@
   var footer = $('#visit');
   var pastHeader = false;
   var footerInView = false;
+  var ctasInView = 0; // in-page CTAs that the pill would cover
 
   function syncChrome() {
     if (sticky) sticky.classList.toggle('is-visible', pastHeader);
-    if (pill) pill.classList.toggle('is-visible', pastHeader && !footerInView);
+    if (pill) pill.classList.toggle('is-visible', pastHeader && !footerInView && ctasInView === 0);
   }
 
   if ('IntersectionObserver' in window) {
@@ -159,6 +160,17 @@
         { rootMargin: '-80px 0px 0px 0px' },
       ).observe(sentinel);
     }
+    var ctaObserver = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        ctasInView += entry.isIntersecting ? 1 : entry.target.__seen ? -1 : 0;
+        entry.target.__seen = entry.isIntersecting;
+      });
+      ctasInView = Math.max(0, ctasInView);
+      syncChrome();
+    });
+    $$('[data-hide-pill]').forEach(function (el) {
+      ctaObserver.observe(el);
+    });
     if (footer) {
       new IntersectionObserver(function (entries) {
         footerInView = entries[0].isIntersecting;

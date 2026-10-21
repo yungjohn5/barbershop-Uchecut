@@ -39,18 +39,19 @@
 
       <div class="relative z-10 mt-auto grid items-end gap-8 px-5 pb-6 pt-10 sm:px-8 sm:pb-9 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-10 lg:px-12 lg:pb-12">
         <div>
-          <h1 class="text-[clamp(2.3rem,min(7.4vw,11.5svh),11rem)] leading-[0.96] tracking-[-0.022em]" aria-label="<%= copy.heroLines.join(' ') %>">
+          <h1 class="text-[clamp(2.3rem,min(7.4vw,11.5svh),11rem)] leading-[0.96] tracking-[-0.022em] lg:text-[clamp(2.3rem,min(6.1vw,11.5svh),11rem)]" aria-label="<%= copy.heroLines.join(' ') %>">
             <% copy.heroLines.forEach((line) => { %>
               <span class="split-line block" aria-hidden="true"><span class="block" data-hero-line><%= line %></span></span>
             <% }) %>
           </h1>
+          <p class="mt-5 max-w-[30rem] text-[0.95rem] leading-relaxed text-paper/80 sm:hidden [@media(max-height:500px)]:hidden" data-hero-fade><%= copy.heroText %></p>
           <div class="mt-7 flex flex-wrap gap-2.5 sm:gap-3 lg:mt-9" data-hero-fade>
             <a href="/book?type=SHOP" class="btn-primary max-sm:px-[1.1rem] max-sm:text-[0.88rem]">Book in shop <span class="arrow" aria-hidden="true">→</span></a>
             <a href="/book?type=HOME" class="btn-ghost-light backdrop-blur-[2px] max-sm:px-[1.1rem] max-sm:text-[0.88rem]">Book a home visit</a>
           </div>
         </div>
-        <div class="flex flex-row-reverse items-end justify-between gap-6 lg:flex-col lg:items-end">
-          <p class="max-w-[17rem] text-[0.95rem] leading-relaxed text-paper/80 lg:mb-6 lg:text-right [@media(max-height:500px)]:hidden" data-hero-fade><%= copy.heroText %></p>
+        <div class="flex flex-row-reverse items-end justify-between gap-6 max-sm:flex-row lg:flex-col lg:items-end">
+          <p class="max-w-[17rem] text-[0.95rem] leading-relaxed text-paper/80 max-sm:hidden lg:mb-6 lg:text-right [@media(max-height:500px)]:hidden" data-hero-fade><%= copy.heroText %></p>
           <%- include('../ring-btn', { href: '/book', label: ['Book', 'Appointment'], ring: 'Book appointment · Lagos · Book appointment · Lagos · ', tone: 'light', id: 'hero' }) %>
         </div>
       </div>
@@ -58,17 +59,17 @@
 
     <%# Facts strip: live data. Sits inside the first screen on lg+, flows below the card on smaller screens. %>
     <dl class="grid grid-cols-1 border-x border-b border-ink/10 bg-paper-deep/70 sm:grid-cols-3 lg:h-[calc(var(--strip)-0.75rem)]">
-      <div class="flex items-center justify-between gap-4 border-b border-ink/10 px-5 py-4 sm:border-b-0 sm:border-r lg:px-8 lg:py-0" data-hero-fade>
+      <div class="flex items-center justify-between gap-4 border-b border-ink/10 px-5 py-4 sm:flex-col sm:items-start sm:justify-center sm:gap-1 sm:border-b-0 sm:border-r xl:flex-row xl:items-center xl:justify-between xl:gap-4 lg:px-8 lg:py-0" data-hero-fade>
         <dt class="text-[0.7rem] uppercase tracking-[0.2em] text-ink/50">Open</dt>
-        <dd class="text-right text-[0.95rem] font-medium"><%= shop.hoursText[0] %></dd>
+        <dd class="text-right text-[0.95rem] font-medium sm:text-left xl:text-right"><%= shop.hoursText[0] %></dd>
       </div>
-      <div class="flex items-center justify-between gap-4 border-b border-ink/10 px-5 py-4 sm:border-b-0 sm:border-r lg:px-8 lg:py-0" data-hero-fade>
+      <div class="flex items-center justify-between gap-4 border-b border-ink/10 px-5 py-4 sm:flex-col sm:items-start sm:justify-center sm:gap-1 sm:border-b-0 sm:border-r xl:flex-row xl:items-center xl:justify-between xl:gap-4 lg:px-8 lg:py-0" data-hero-fade>
         <dt class="text-[0.7rem] uppercase tracking-[0.2em] text-ink/50">Services</dt>
-        <dd class="text-right text-[0.95rem] font-medium"><%= facts.serviceCount %> services<% if (facts.fromPriceKobo) { %> · from <%= naira(facts.fromPriceKobo) %><% } %></dd>
+        <dd class="text-right text-[0.95rem] font-medium sm:text-left xl:text-right"><%= facts.serviceCount %> services<% if (facts.fromPriceKobo) { %> · from <%= naira(facts.fromPriceKobo) %><% } %></dd>
       </div>
-      <div class="flex items-center justify-between gap-4 px-5 py-4 lg:px-8 lg:py-0" data-hero-fade>
+      <div class="flex items-center justify-between gap-4 px-5 py-4 sm:flex-col sm:items-start sm:justify-center sm:gap-1 xl:flex-row xl:items-center xl:justify-between xl:gap-4 lg:px-8 lg:py-0" data-hero-fade>
         <dt class="text-[0.7rem] uppercase tracking-[0.2em] text-ink/50">Home visits</dt>
-        <dd class="text-right text-[0.95rem] font-medium"><%= facts.zoneCount %> areas across Lagos</dd>
+        <dd class="text-right text-[0.95rem] font-medium sm:text-left xl:text-right"><%= facts.zoneCount %> areas across Lagos</dd>
       </div>
     </dl>
   </div>

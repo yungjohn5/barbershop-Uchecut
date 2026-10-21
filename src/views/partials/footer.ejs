@@ -13,8 +13,8 @@
       <h2 class="clip-text bg-chair inline-block whitespace-nowrap font-sans text-[9.4vw] font-black uppercase leading-[0.84] tracking-[-0.045em]" data-chair data-fit>Take the Chair</h2>
     </div>
 
-    <div class="mt-14 grid gap-12 md:grid-cols-12">
-      <div class="md:col-span-5" data-reveal>
+    <div class="mt-14 grid gap-12 sm:grid-cols-2 lg:grid-cols-12">
+      <div class="sm:col-span-2 lg:col-span-5" data-reveal>
         <p class="max-w-sm text-lg leading-snug text-paper/85"><%= (locals.copy && copy.footerText) || 'Book your session. Step into a room where time slows down and details matter.' %></p>
         <div class="mt-8 flex flex-wrap gap-3">
           <a href="/book?type=SHOP" class="btn-primary">Book in shop <span class="arrow" aria-hidden="true">→</span></a>
@@ -26,14 +26,14 @@
         </a>
       </div>
 
-      <div class="md:col-span-3 md:col-start-7" data-reveal>
+      <div class="lg:col-span-3 lg:col-start-7" data-reveal>
         <p class="eyebrow !text-paper/50">Hours</p>
         <ul class="mt-4 space-y-1.5 text-[0.98rem]">
           <% shop.hoursText.forEach((line) => { %><li><%= line %></li><% }) %>
         </ul>
       </div>
 
-      <div class="md:col-span-3" data-reveal>
+      <div class="lg:col-span-3" data-reveal>
         <p class="eyebrow !text-paper/50">Find us</p>
         <address class="mt-4 space-y-1.5 text-[0.98rem] not-italic">
           <% shop.address.forEach((line) => { %><span class="block"><%= line %></span><% }) %>

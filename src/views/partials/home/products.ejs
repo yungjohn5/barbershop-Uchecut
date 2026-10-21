@@ -1,4 +1,4 @@
-<section id="products" class="relative overflow-hidden bg-paper lg:flex lg:h-[100svh] lg:min-h-[46rem] lg:flex-col lg:justify-center" data-products>
+<section id="products" class="relative overflow-hidden bg-paper lg:flex lg:h-[100svh] lg:min-h-[40rem] lg:flex-col lg:justify-center lg:pb-8 lg:pt-28" data-products>
   <div class="mx-auto grid w-full max-w-[88rem] gap-6 px-5 pt-24 sm:px-8 lg:grid-cols-12 lg:items-end lg:px-10 lg:pt-0">
     <div class="lg:col-span-6">
       <p class="eyebrow"><span class="eyebrow-num">06</span>Product</p>
@@ -10,7 +10,7 @@
     </div>
   </div>
 
-  <div class="mt-12 pb-24 lg:mt-14 lg:pb-0">
+  <div class="mt-12 pb-24 lg:mt-8 lg:pb-0">
     <div class="no-scrollbar flex snap-x snap-mandatory items-end gap-4 overflow-x-auto px-5 sm:gap-6 sm:px-8 lg:px-10" data-rail>
       <% products.forEach((p, i) => { %>
         <figure class="w-[68vw] shrink-0 snap-start sm:w-[40vw] lg:w-[21rem]" data-reveal>
@@ -21,7 +21,7 @@
                 srcset="<%= srcset(p.imageUrl, [400, 800]) %>"
                 sizes="(min-width: 1024px) 21rem, 68vw"
                 alt="<%= p.name %>"
-                class="w-full object-cover transition-transform duration-[1.2s] ease-expo hover:scale-[1.05] <%= i % 2 ? 'aspect-[4/5] lg:aspect-auto lg:h-[44vh]' : 'aspect-[3/4] lg:aspect-auto lg:h-[54vh]' %>"
+                class="w-full object-cover transition-transform duration-[1.2s] ease-expo hover:scale-[1.05] <%= i % 2 ? 'aspect-[4/5] lg:aspect-auto lg:h-[min(27svh,22rem)]' : 'aspect-[3/4] lg:aspect-auto lg:h-[min(36svh,29rem)]' %>"
                 loading="lazy"
               />
             <% } %>
@@ -35,13 +35,13 @@
           </figcaption>
         </figure>
       <% }) %>
-      <div class="flex w-[68vw] shrink-0 snap-start flex-col justify-end border border-ink/15 p-6 sm:w-[40vw] lg:h-[44vh] lg:w-[21rem]">
+      <div class="flex w-[68vw] shrink-0 snap-start flex-col justify-end border border-ink/15 p-6 sm:w-[40vw] lg:h-[min(27svh,22rem)] lg:w-[21rem]">
         <p class="font-serif text-3xl leading-tight">Not sure what suits your hair?</p>
         <p class="mt-3 text-sm text-ink/60">Ask in the chair; your barber will tell you honestly.</p>
         <a href="/book" class="btn-ghost mt-6 self-start">Book a cut <span class="arrow" aria-hidden="true">→</span></a>
       </div>
     </div>
-    <div class="mx-auto mt-10 hidden max-w-[88rem] px-10 lg:block" aria-hidden="true">
+    <div class="mx-auto mt-6 hidden max-w-[88rem] px-10 lg:block" aria-hidden="true">
       <div class="flex items-center gap-6">
         <div class="h-px flex-1 bg-ink/10"><div class="h-px origin-left scale-x-0 bg-ink" data-rail-progress></div></div>
         <span class="font-accent text-lg italic tabular-nums text-ink/60"><span data-rail-index>01</span> / <%= pad2(products.length) %></span>

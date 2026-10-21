@@ -6,7 +6,7 @@
         srcset="<%= srcset('/images/site/craft-portrait', [700, 1300]) %>"
         sizes="(min-width: 1024px) 40vw, 92vw"
         alt="A client smiling after a fresh cut, lit warm against a dark backdrop"
-        class="aspect-[4/5] h-full w-full object-cover lg:aspect-auto"
+        class="aspect-[4/5] h-full w-full object-cover sm:aspect-[16/11] lg:aspect-auto"
         loading="lazy"
         data-parallax-img
       />
@@ -16,7 +16,7 @@
       <p class="eyebrow"><span class="eyebrow-num">03</span>Craft comes first</p>
       <h2 class="mt-5 max-w-2xl text-[clamp(2rem,3.6vw,3.5rem)] leading-[1.04]" data-split><%- rich(copy.craftTitle) %></h2>
 
-      <div class="mt-12 grid gap-10 md:grid-cols-[1fr_1.15fr_1fr] md:items-end">
+      <div class="mt-12 grid gap-10 md:grid-cols-[1fr_1.15fr_1fr] md:items-end lg:grid-cols-[1fr_1.1fr] xl:grid-cols-[1fr_1.15fr_1fr]">
         <p class="text-sm leading-relaxed text-ink/65 md:pb-2" data-reveal><%= copy.craftNote %></p>
         <div class="grid grid-cols-2 gap-3 md:grid-cols-1">
           <figure class="overflow-hidden" data-speed="0.08">
@@ -40,8 +40,8 @@
             />
           </figure>
         </div>
-        <div class="flex flex-col items-start gap-8" data-reveal>
-          <p class="text-sm leading-relaxed text-ink/75"><%= copy.craftText %></p>
+        <div class="flex flex-col items-start gap-8 lg:col-span-2 lg:flex-row lg:items-end lg:justify-between xl:col-span-1 xl:flex-col xl:items-start" data-reveal>
+          <p class="max-w-md text-sm leading-relaxed text-ink/75"><%= copy.craftText %></p>
           <%- include('../ring-btn', { href: '/book', label: ['Booking', 'now'], ring: 'Craft comes first · Book now · Craft comes first · ', tone: 'dark', id: 'craft' }) %>
         </div>
       </div>

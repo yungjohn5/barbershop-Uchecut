@@ -41,11 +41,11 @@
             <% } %>
             <span class="absolute bottom-3 left-3 translate-y-2 rounded-full bg-paper px-3 py-1.5 text-xs font-medium opacity-0 transition-all duration-500 ease-expo group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100">Book this →</span>
           </div>
-          <div class="mt-3 flex items-baseline justify-between gap-3 text-[0.92rem]">
+          <div class="mt-3 flex items-baseline gap-2 text-[0.92rem] sm:justify-between sm:gap-3">
             <span class="tabular-nums text-ink/45"><%= pad2(i + 1) %>/</span>
-            <span class="text-right font-medium"><%= s.name %></span>
+            <span class="font-medium leading-snug sm:text-right"><%= s.name %></span>
           </div>
-          <div class="mt-1 flex flex-wrap items-baseline justify-between gap-x-3 text-sm text-ink/60">
+          <div class="mt-1 flex flex-col gap-0.5 text-sm text-ink/60 sm:flex-row sm:flex-wrap sm:items-baseline sm:justify-between sm:gap-x-3">
             <span class="tabular-nums"><%= naira(s.priceKobo) %> · <%= duration(s.durationMin) %></span>
             <span><%= s.homeAvailable ? 'Shop or home' : 'In shop only' %></span>
           </div>

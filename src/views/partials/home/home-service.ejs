@@ -55,7 +55,7 @@
         <% if (homeServices.length && zones.length) { %>
           <div class="mt-8 border-t border-paper/10 pt-7" data-estimator hidden>
             <p class="eyebrow !text-paper/55">Estimate your visit</p>
-            <div class="mt-5 grid gap-4 sm:grid-cols-2">
+            <div class="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
               <label class="block text-sm text-paper/60">Service
                 <select class="field mt-2" data-est-service>
                   <% homeServices.forEach((s) => { %><option value="<%= s.id %>" data-price="<%= s.priceKobo %>"><%= s.name %> · <%= naira(s.priceKobo) %></option><% }) %>
@@ -67,17 +67,17 @@
                 </select>
               </label>
             </div>
-            <div class="mt-6 flex items-end justify-between gap-6">
+            <div class="mt-6 flex flex-col items-start gap-4 sm:flex-row sm:items-end sm:justify-between sm:gap-6">
               <dl class="space-y-1 text-sm text-paper/60">
                 <div class="flex gap-3"><dt>Service</dt><dd class="tabular-nums text-paper" data-est-subtotal></dd></div>
                 <div class="flex gap-3"><dt>Travel</dt><dd class="tabular-nums text-paper" data-est-fee></dd></div>
               </dl>
-              <p class="text-right"><span class="block text-xs uppercase tracking-[0.2em] text-paper/50">Total, paid on the day</span><span class="font-serif text-4xl tabular-nums text-amber-light sm:text-5xl" data-est-total></span></p>
+              <p class="sm:text-right"><span class="block text-xs uppercase tracking-[0.2em] text-paper/50">Total, paid on the day</span><span class="font-serif text-4xl tabular-nums text-amber-light sm:text-5xl" data-est-total></span></p>
             </div>
           </div>
         <% } %>
         <p class="mt-6 text-sm leading-relaxed text-paper/55">Home visits are confirmed by phone before your barber sets off. Not in a listed area? Message us; we may still be able to come to you.</p>
-        <a href="/book?type=HOME" class="btn-primary mt-8" data-est-link>Book a home visit <span class="arrow" aria-hidden="true">→</span></a>
+        <a href="/book?type=HOME" class="btn-primary mt-8" data-est-link data-hide-pill>Book a home visit <span class="arrow" aria-hidden="true">→</span></a>
       </div>
     </div>
   </div>
