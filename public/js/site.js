@@ -350,6 +350,77 @@
     }
   }
 
+  // ------------------------------------------------------------ pill buttons
+  // Adds the rolling label + sliding arrow markup to every .btn, and points the hover fill
+  // at the spot where the pointer enters (and leaves). Round ring buttons are not .btn and
+  // are deliberately left alone. Works without GSAP; the soft magnetic pull needs it.
+  var BTN = '.btn, .btn-primary, .btn-light, .btn-ghost, .btn-ghost-light';
+  function enhanceButtons() {
+    $$(BTN).forEach(function (btn) {
+      if (btn.hasAttribute('data-btn-ready')) return;
+      btn.setAttribute('data-btn-ready', '');
+      var hasArrow = !!btn.querySelector('.arrow');
+      var label = Array.prototype.filter
+        .call(btn.childNodes, function (n) {
+          return !(n.nodeType === 1 && n.classList.contains('arrow'));
+        })
+        .map(function (n) {
+          return n.textContent;
+        })
+        .join('')
+        .replace(/\s+/g, ' ')
+        .trim();
+      if (!label) return;
+      btn.textContent = '';
+      var roll = document.createElement('span');
+      roll.className = 'btn-roll';
+      var a = document.createElement('span');
+      a.className = 'btn-roll-a';
+      a.textContent = label;
+      var b = document.createElement('span');
+      b.className = 'btn-roll-b';
+      b.setAttribute('aria-hidden', 'true');
+      b.textContent = label;
+      roll.appendChild(a);
+      roll.appendChild(b);
+      btn.appendChild(roll);
+      if (hasArrow) {
+        var arrow = document.createElement('span');
+        arrow.className = 'btn-arrow';
+        arrow.setAttribute('aria-hidden', 'true');
+        arrow.innerHTML = '<span>→</span><span>→</span>';
+        btn.appendChild(arrow);
+      }
+
+      var aim = function (e) {
+        var r = btn.getBoundingClientRect();
+        btn.style.setProperty('--x', e.clientX - r.left + 'px');
+        btn.style.setProperty('--y', e.clientY - r.top + 'px');
+        btn.style.setProperty('--d', Math.hypot(r.width, r.height) * 2.1 + 'px');
+      };
+      btn.addEventListener('pointerenter', aim);
+      btn.addEventListener('pointerleave', aim);
+    });
+
+    // Soft magnetic pull on desktop pointers (full-width buttons stay put).
+    if (!motion || !finePointer) return;
+    $$(BTN).forEach(function (btn) {
+      if (btn.offsetWidth > 420 || btn.closest('[data-menu]')) return;
+      var xTo = gsap.quickTo(btn, 'x', { duration: 0.7, ease: 'power3' });
+      var yTo = gsap.quickTo(btn, 'y', { duration: 0.7, ease: 'power3' });
+      btn.addEventListener('pointermove', function (e) {
+        var r = btn.getBoundingClientRect();
+        xTo((e.clientX - (r.left + r.width / 2)) * 0.18);
+        yTo((e.clientY - (r.top + r.height / 2)) * 0.28);
+      });
+      btn.addEventListener('pointerleave', function () {
+        xTo(0);
+        yTo(0);
+      });
+    });
+  }
+  enhanceButtons();
+
   // ------------------------------------------------------- cursor companion
   // A small dot trailing the pointer; grows into a labelled disc over [data-cursor]
   // targets and steps aside over round buttons ([data-magnetic]) so they keep their own feel.
@@ -368,7 +439,9 @@
       xTo(e.clientX);
       yTo(e.clientY);
       var t = e.target.closest ? e.target : null;
-      var overRound = t && t.closest('[data-magnetic], input, select, textarea, [data-menu]');
+      var overRound =
+        t &&
+        t.closest('[data-magnetic], ' + BTN + ', .icon-btn, input, select, textarea, [data-menu]');
       var labelled = t && t.closest('[data-cursor]');
       cursor.classList.toggle('is-hidden', !!overRound);
       cursor.classList.toggle('is-label', !!labelled && !overRound);

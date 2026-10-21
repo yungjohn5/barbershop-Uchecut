@@ -30,8 +30,9 @@
             <% if (b.doesHomeService) { %>
               <span class="absolute left-4 top-4 rounded-full bg-paper/90 px-3 py-1.5 text-xs font-medium backdrop-blur">Does home visits</span>
             <% } %>
-            <span class="absolute inset-x-0 bottom-0 flex translate-y-full items-center justify-between bg-ink/85 px-5 py-4 text-sm text-paper backdrop-blur transition-transform duration-700 ease-expo group-hover:translate-y-0" aria-hidden="true">
-              <span>Book with <%= b.name.split(' ')[0] %></span><span>→</span>
+            <span class="card-shade" aria-hidden="true"></span>
+            <span class="absolute inset-x-3 bottom-3 hidden translate-y-[130%] items-center justify-between rounded-full bg-paper/90 py-2 pl-5 pr-2 text-sm font-medium text-ink backdrop-blur transition-transform duration-700 ease-expo group-hover:translate-y-0 [@media(hover:hover)]:flex" aria-hidden="true">
+              <span>Book with <%= b.name.split(' ')[0] %></span><span class="card-chip-arrow h-8 w-8">→</span>
             </span>
           </a>
           <div class="mt-5 flex items-baseline justify-between gap-4">
@@ -42,8 +43,8 @@
             <p class="mt-2 text-sm uppercase tracking-[0.14em] text-stone"><%= b.specialties.join(' · ') %></p>
           <% } %>
           <% if (b.bio) { %><p class="mt-4 max-w-md text-[1.02rem] leading-relaxed text-ink/75"><%= b.bio %></p><% } %>
-          <a href="/book?barber=<%= b.id %>" class="mt-6 inline-flex items-center gap-2 border-b border-ink/30 pb-1 text-[0.95rem] font-medium transition-colors hover:border-amber hover:text-amber-dark">
-            Book with <%= b.name.split(' ')[0] %> <span aria-hidden="true">→</span>
+          <a href="/book?barber=<%= b.id %>" class="link-line mt-4 text-[0.95rem]">
+            Book with <%= b.name.split(' ')[0] %> <span class="link-arrow" aria-hidden="true">→</span>
           </a>
         </article>
       <% }) %>

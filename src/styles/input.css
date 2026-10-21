@@ -33,27 +33,297 @@
 }
 
 @layer components {
-  /* ---------- Buttons ---------- */
+  /* ---------- Buttons ----------
+     Pill buttons: a fill grows from where the pointer enters (--x/--y set by site.js),
+     the label rolls up and the arrow slides through. Hover effects only on devices that
+     can hover; touch gets a press response. Without JS the fill grows from the centre. */
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-[0.95rem] font-medium transition-colors duration-300;
+    @apply relative isolate inline-flex min-h-[2.75rem] select-none items-center justify-center gap-2 overflow-hidden rounded-full px-6 py-3 text-[0.95rem] font-medium leading-none;
+    --fill: #141414;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+      color 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+      background-color 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+      border-color 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+      scale 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .btn::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    left: var(--x, 50%);
+    top: var(--y, 50%);
+    width: var(--d, 260%);
+    aspect-ratio: 1 / 1;
+    border-radius: 9999px;
+    background: var(--fill);
+    transform: translate(-50%, -50%) scale(0);
+    transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+  }
+  .btn:active {
+    scale: 0.97;
+  }
+  .btn:focus-visible::before {
+    transform: translate(-50%, -50%) scale(1);
   }
   .btn-primary {
-    @apply btn bg-amber text-ink hover:bg-ink hover:text-paper;
+    @apply btn bg-amber text-ink;
+    --fill: #141414;
   }
   .btn-light {
-    @apply btn bg-paper text-ink hover:bg-amber;
+    @apply btn bg-paper text-ink;
+    --fill: #b8833e;
   }
   .btn-ghost {
-    @apply btn border border-current hover:bg-ink hover:text-paper hover:border-ink;
+    @apply btn border border-ink/25 text-ink;
+    --fill: #141414;
   }
   .btn-ghost-light {
-    @apply btn border border-paper/50 text-paper hover:bg-paper hover:text-ink;
+    @apply btn border border-paper/40 text-paper;
+    --fill: #f4f1ec;
   }
-  .btn .arrow {
-    @apply transition-transform duration-300;
+  .btn-primary:focus-visible,
+  .btn-ghost:focus-visible {
+    @apply text-paper;
   }
-  .btn:hover .arrow {
-    transform: translateX(4px);
+  .btn-ghost-light:focus-visible {
+    @apply text-ink;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .btn:hover::before {
+      transform: translate(-50%, -50%) scale(1);
+    }
+    .btn-primary:hover {
+      @apply text-paper;
+      box-shadow: 0 18px 38px -18px rgb(20 20 20 / 0.55);
+    }
+    .btn-light:hover {
+      @apply text-ink;
+      box-shadow: 0 18px 38px -18px rgb(184 131 62 / 0.65);
+    }
+    .btn-ghost:hover {
+      @apply border-ink text-paper;
+    }
+    .btn-ghost-light:hover {
+      @apply border-paper text-ink;
+    }
+  }
+  /* Touch: a quick tone shift while pressed instead of hover. */
+  @media (hover: none) {
+    .btn-primary:active {
+      @apply bg-amber-dark;
+    }
+    .btn-ghost:active,
+    .btn-ghost-light:active {
+      @apply bg-ink/10;
+    }
+  }
+
+  /* Rolling label (markup added by site.js) */
+  .btn-roll {
+    position: relative;
+    display: inline-flex;
+    overflow: hidden;
+    line-height: 1.3;
+  }
+  .btn-roll > span {
+    display: block;
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .btn-roll-b {
+    position: absolute;
+    left: 0;
+    top: 0;
+    transform: translateY(110%);
+  }
+  /* Arrow that slides out and back in */
+  .btn-arrow {
+    position: relative;
+    display: inline-flex;
+    width: 1em;
+    height: 1.3em;
+    overflow: hidden;
+    align-items: center;
+  }
+  .btn-arrow > span {
+    position: absolute;
+    left: 0;
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .btn-arrow > span + span {
+    transform: translateX(-120%);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .btn:hover .btn-roll-a,
+    .btn:focus-visible .btn-roll-a {
+      transform: translateY(-110%);
+    }
+    .btn:hover .btn-roll-b,
+    .btn:focus-visible .btn-roll-b {
+      transform: translateY(0);
+    }
+    .btn:hover .btn-arrow > span:first-child {
+      transform: translateX(120%);
+    }
+    .btn:hover .btn-arrow > span + span {
+      transform: translateX(0);
+      transition-delay: 0.08s;
+    }
+  }
+
+  /* ---------- Text links ---------- */
+  /* Underline that draws in from the left */
+  .link-u {
+    background: linear-gradient(currentColor, currentColor) 0 100% / 0 1px no-repeat;
+    padding-bottom: 2px;
+    transition:
+      background-size 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+      color 0.3s,
+      opacity 0.3s;
+  }
+  .link-u:hover,
+  .link-u:focus-visible {
+    background-size: 100% 1px;
+  }
+  /* Resting hairline with an amber line drawing over it; the arrow nudges forward */
+  .link-line {
+    --line: rgb(20 20 20 / 0.25);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    background:
+      linear-gradient(#b8833e, #b8833e) 0 calc(100% - 0.55rem) / 0 1px no-repeat,
+      linear-gradient(var(--line), var(--line)) 0 calc(100% - 0.55rem) / 100% 1px no-repeat;
+    font-weight: 500;
+    transition:
+      background-size 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+      color 0.35s;
+  }
+  .link-line .link-arrow {
+    display: inline-block;
+    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .link-line:hover,
+  .link-line:focus-visible {
+    @apply text-amber-dark;
+    background-size:
+      100% 1px,
+      100% 1px;
+  }
+  .link-line:hover .link-arrow,
+  .link-line:focus-visible .link-arrow {
+    transform: translateX(5px);
+  }
+  .bg-ink .link-line,
+  footer .link-line {
+    --line: rgb(244 241 236 / 0.3);
+  }
+  .bg-ink .link-line:hover,
+  footer .link-line:hover {
+    @apply text-amber-light;
+  }
+
+  /* ---------- Icon buttons (menu / close) ---------- */
+  .icon-btn {
+    @apply grid h-11 w-11 place-items-center rounded-full border transition-colors duration-500;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .icon-btn-light {
+    @apply icon-btn border-paper/30 text-paper;
+  }
+  .icon-btn-dark {
+    @apply icon-btn border-ink/20 text-ink;
+  }
+  .burger {
+    display: grid;
+    width: 18px;
+    gap: 6px;
+  }
+  .burger i {
+    display: block;
+    height: 1.6px;
+    background: currentColor;
+    justify-self: end;
+    transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .burger i:first-child {
+    width: 100%;
+  }
+  .burger i:last-child {
+    width: 62%;
+  }
+  .close-x {
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .icon-btn-light:hover {
+      @apply border-paper bg-paper text-ink;
+    }
+    .icon-btn-dark:hover {
+      @apply border-ink bg-ink text-paper;
+    }
+    .icon-btn:hover .burger i:first-child {
+      width: 62%;
+    }
+    .icon-btn:hover .burger i:last-child {
+      width: 100%;
+    }
+    .icon-btn:hover .close-x {
+      transform: rotate(90deg);
+    }
+  }
+  .icon-btn:active {
+    scale: 0.94;
+  }
+
+  /* ---------- Card call-to-action chip (services) ---------- */
+  .card-chip {
+    @apply absolute bottom-3 left-3 inline-flex items-center gap-2 rounded-full bg-paper/90 py-1.5 pl-3.5 pr-1.5 text-xs font-medium text-ink backdrop-blur;
+    opacity: 0;
+    transform: translateY(10px);
+    transition:
+      opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+      transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .card-chip-arrow {
+    @apply grid h-6 w-6 place-items-center rounded-full bg-amber text-ink;
+    transition:
+      transform 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+      background-color 0.4s;
+  }
+  .card-shade {
+    @apply pointer-events-none absolute inset-0 bg-gradient-to-t from-ink/45 via-ink/0 to-ink/0;
+    opacity: 0;
+    transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .group:hover .card-chip,
+    .group:focus-visible .card-chip {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .group:hover .card-chip-arrow {
+      transform: rotate(-45deg);
+    }
+    .group:hover .card-shade {
+      opacity: 1;
+    }
+  }
+  /* Touch screens can't hover: show just the arrow so cards still read as tappable. */
+  @media (hover: none) {
+    .card-chip {
+      opacity: 1;
+      transform: none;
+      background: transparent;
+      backdrop-filter: none;
+      padding: 0;
+    }
+    .card-chip-label {
+      display: none;
+    }
   }
 
   /* Circular "Book" button with rotating text ring */
@@ -127,6 +397,23 @@
   }
   .tab[aria-pressed='true'] {
     @apply text-ink;
+  }
+  .tab::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 1px;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .tab:hover::after,
+  .tab[aria-pressed='true']::after {
+    transform: scaleX(1);
+    transform-origin: left;
   }
   .tab .dot {
     @apply h-1.5 w-1.5 rounded-full bg-amber opacity-0 transition-opacity;
@@ -273,6 +560,19 @@ footer .accent {
   padding: 0.7rem 2.2rem 0.7rem 0.85rem;
   color: #f4f1ec;
   font-size: 1rem;
+  min-height: 2.75rem;
+  cursor: pointer;
+  transition:
+    border-color 0.4s,
+    background-color 0.4s;
+}
+.field:hover {
+  border-color: rgb(244 241 236 / 0.45);
+}
+.field:focus-visible {
+  border-color: #d9a863;
+  outline: none;
+  box-shadow: 0 0 0 3px rgb(217 168 99 / 0.25);
 }
 
 /* First-visit loader (home page only, motion allowed) */
@@ -336,4 +636,46 @@ footer .accent {
 /* Smooth scrolling owns the scroll position on desktop */
 .has-smoother {
   scroll-behavior: auto;
+}
+
+/* Mobile menu links: slide forward, number turns amber */
+.menu-link {
+  transition:
+    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+    color 0.35s;
+}
+.menu-link > span {
+  transition: color 0.35s;
+}
+.menu-link:hover,
+.menu-link:focus-visible {
+  transform: translateX(0.6rem);
+  color: #d9a863;
+}
+.menu-link:hover > span,
+.menu-link:focus-visible > span {
+  color: #d9a863;
+}
+
+/* Gold buttons on dark backgrounds fill with cream instead of ink, so they never vanish. */
+[data-hero] .btn-primary,
+.bg-ink .btn-primary,
+footer .btn-primary,
+[data-menu] .btn-primary {
+  --fill: #f4f1ec;
+}
+@media (hover: hover) and (pointer: fine) {
+  [data-hero] .btn-primary:hover,
+  .bg-ink .btn-primary:hover,
+  footer .btn-primary:hover,
+  [data-menu] .btn-primary:hover {
+    color: #141414;
+    box-shadow: 0 18px 44px -16px rgb(217 168 99 / 0.55);
+  }
+}
+[data-hero] .btn-primary:focus-visible,
+.bg-ink .btn-primary:focus-visible,
+footer .btn-primary:focus-visible,
+[data-menu] .btn-primary:focus-visible {
+  color: #141414;
 }
