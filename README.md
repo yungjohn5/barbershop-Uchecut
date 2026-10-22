@@ -45,6 +45,8 @@ the owner's dashboard.
 - Editorial home page: hero, intro collage, services with category filters, craft section, barbers, home-visit steps with a live price estimator, products, and a "Take the Chair" footer.
 - Animation with GSAP: intro loader, smooth scrolling on desktop, line-by-line heading reveals, a Flip-animated services filter, and a pinned horizontal product row.
 - Premium hover and press states for every button, with touch-friendly fallbacks.
+- **Light and dark mode:** follows the OS until the visitor picks, the choice is remembered, and there is no flash on load. The sun/moon toggle reveals the new theme in a circle growing from the button. Text meets WCAG AA contrast in both themes.
+- **Back-to-top button:** a frosted disc with a scroll-progress ring and a rolling arrow. It glides to the top and sits above the mobile "Book now" pill.
 - Live "Open now / Closed" status computed from the barbers' working hours.
 - Responsive from 360 px phones to 2560 px monitors. Content stays visible without JavaScript, and `prefers-reduced-motion` turns animation off.
 
@@ -219,6 +221,11 @@ bookings impossible even if the application has a bug.
   - [boot.js](public/js/boot.js) sets pre-paint flags, with a 2.5 s failsafe.
   - [site.js](public/js/site.js) handles the menu, sticky nav, smooth scrolling, reveals, cursor and buttons.
   - [home.js](public/js/home.js) handles the loader, hero, marquee, filters, estimator and product row.
+- **Theming:**
+  - Colours are CSS variables (`--paper`, `--ink`, `--surface`, …) that Tailwind reads, so `bg-paper` and `text-ink/60` follow the theme.
+  - `night` and `cream` never change; use them for dark text on amber and for shades over photos.
+  - Wrap always-dark sections in `.keep-dark`.
+  - `boot.js` sets `data-theme` before first paint, from the saved `vb-theme` value or the OS setting.
 - **Buttons:** `.btn-primary`, `.btn-light`, `.btn-ghost` and `.btn-ghost-light` get the rolling-label hover markup at runtime. Use them for any new button. Text links use `.link-u` or `.link-line`.
 - **Client sign-off:** the hero's rotating **"Book Appointment"** ring button (`partials/ring-btn.ejs`, `.ring-btn`) is approved as is. Do not change its look, size, position or hover.
 - **CSP:** scripts load only from `'self'`, so GSAP is served from `node_modules` at `/vendor/gsap`. Inline `<script>` tags and `style` attributes are blocked; use classes.

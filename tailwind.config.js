@@ -1,13 +1,21 @@
 /** @type {import('tailwindcss').Config} */
+// Theme colours are CSS variables (space-separated RGB) set in src/styles/input.css, so
+// `bg-paper`, `text-ink/60` etc. follow light/dark mode. `night` and `cream` never change:
+// use them where a colour must stay put (dark text on amber, shades over photos).
+const themed = (name) => `rgb(var(--${name}) / <alpha-value>)`;
+
 module.exports = {
   content: ['./src/views/**/*.ejs', './public/js/**/*.js'],
   theme: {
     extend: {
       colors: {
-        paper: { DEFAULT: '#F4F1EC', deep: '#EAE4DA' },
-        ink: { DEFAULT: '#141414', soft: '#2A2622' },
-        amber: { DEFAULT: '#B8833E', dark: '#9A6C31', light: '#D9A863' },
-        stone: { DEFAULT: '#8B7662' },
+        paper: { DEFAULT: themed('paper'), deep: themed('paper-deep') },
+        ink: { DEFAULT: themed('ink'), soft: themed('ink-soft') },
+        surface: themed('surface'),
+        amber: { DEFAULT: '#B8833E', dark: themed('amber-dark'), light: '#D9A863' },
+        stone: { DEFAULT: themed('stone') },
+        night: '#141414',
+        cream: '#F4F1EC',
       },
       fontFamily: {
         serif: ['Gloock', '"DM Serif Display"', 'Georgia', 'serif'],

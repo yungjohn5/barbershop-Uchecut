@@ -1,8 +1,8 @@
-<section id="services" class="relative bg-white">
+<section id="services" class="relative bg-surface">
   <div class="mx-auto max-w-[88rem] px-5 py-24 sm:px-8 lg:px-10 lg:py-32">
     <div class="grid gap-8 lg:grid-cols-12 lg:items-end">
       <div class="lg:col-span-7">
-        <p class="eyebrow"><span class="eyebrow-num">02</span>Service <span class="text-ink/35">· <%= services.length %> on the menu</span></p>
+        <p class="eyebrow"><span class="eyebrow-num">02</span>Service <span class="text-ink/65">· <%= services.length %> on the menu</span></p>
         <h2 class="mt-5 text-title" data-split><%- rich(copy.servicesTitle) %></h2>
       </div>
       <p class="max-w-md text-[1.02rem] leading-relaxed text-ink/70 lg:col-span-4 lg:col-start-9" data-reveal><%= copy.servicesText %></p>
@@ -43,14 +43,14 @@
             <span class="card-chip" aria-hidden="true"><span class="card-chip-label">Book this</span><span class="card-chip-arrow">→</span></span>
           </div>
           <div class="mt-3 flex items-baseline gap-2 text-[0.92rem] sm:justify-between sm:gap-3">
-            <span class="tabular-nums text-ink/45"><%= pad2(i + 1) %>/</span>
+            <span class="tabular-nums text-ink/65"><%= pad2(i + 1) %>/</span>
             <span class="font-medium leading-snug sm:text-right"><%= s.name %></span>
           </div>
-          <div class="mt-1 flex flex-col gap-0.5 text-sm text-ink/60 sm:flex-row sm:flex-wrap sm:items-baseline sm:justify-between sm:gap-x-3">
+          <div class="mt-1 flex flex-col gap-0.5 text-sm text-ink/65 sm:flex-row sm:flex-wrap sm:items-baseline sm:justify-between sm:gap-x-3">
             <span class="tabular-nums"><%= naira(s.priceKobo) %> · <%= duration(s.durationMin) %></span>
             <span><%= s.homeAvailable ? 'Shop or home' : 'In shop only' %></span>
           </div>
-          <% if (s.description) { %><p class="mt-2 hidden max-w-[22rem] text-sm leading-relaxed text-ink/50 sm:block"><%= s.description %></p><% } %>
+          <% if (s.description) { %><p class="mt-2 hidden max-w-[22rem] text-sm leading-relaxed text-ink/65 sm:block"><%= s.description %></p><% } %>
         </a>
       <% }) %>
     </div>

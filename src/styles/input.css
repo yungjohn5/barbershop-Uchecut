@@ -2,6 +2,79 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ---------- Theme palettes (space-separated RGB for Tailwind alpha) ----------
+   Light is the default; boot.js sets data-theme before first paint (saved choice, else
+   the OS setting). .keep-dark marks sections that stay dark in both themes. */
+:root {
+  --paper: 244 241 236;
+  --paper-deep: 234 228 218;
+  --ink: 20 20 20;
+  --ink-soft: 42 38 34;
+  --surface: 255 255 255;
+  --stone: 107 88 70;
+  --amber-dark: 154 108 49;
+  --accent: #9a6c31;
+  color-scheme: light;
+}
+:root[data-theme='dark'] {
+  --paper: 16 15 14;
+  --paper-deep: 26 24 22;
+  --ink: 239 233 224;
+  --ink-soft: 214 206 195;
+  --surface: 22 21 19;
+  --stone: 176 156 134;
+  --amber-dark: 217 168 99;
+  --accent: #d9a863;
+  color-scheme: dark;
+}
+/* No-JS fallback: follow the OS unless a theme was set explicitly. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --paper: 16 15 14;
+    --paper-deep: 26 24 22;
+    --ink: 239 233 224;
+    --ink-soft: 214 206 195;
+    --surface: 22 21 19;
+    --stone: 176 156 134;
+    --amber-dark: 217 168 99;
+    --accent: #d9a863;
+    color-scheme: dark;
+  }
+}
+/* Always-dark sections: pin the light-theme roles back (ink = dark, paper = light).
+   In dark mode the dark is lifted a touch so these sections still stand apart. */
+.keep-dark {
+  --paper: 244 241 236;
+  --ink: 20 20 20;
+  --accent: #d9a863;
+  color-scheme: dark;
+}
+:root[data-theme='dark'] .keep-dark {
+  --ink: 28 26 24;
+}
+
+/* Theme switch: briefly animate colours when the View Transitions API is unavailable. */
+.theme-anim,
+.theme-anim *,
+.theme-anim *::before,
+.theme-anim *::after {
+  transition:
+    background-color 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+    color 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+    fill 0.6s,
+    stroke 0.6s !important;
+}
+/* With View Transitions, site.js reveals the new theme in a circle from the toggle. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+::view-transition-new(root) {
+  z-index: 2;
+}
+
 @layer base {
   html {
     @apply bg-paper text-ink antialiased;
@@ -20,7 +93,7 @@
     display: none !important;
   }
   ::selection {
-    @apply bg-amber text-ink;
+    @apply bg-amber text-night;
   }
   :focus-visible {
     @apply outline-none ring-2 ring-amber ring-offset-2 ring-offset-paper;
@@ -39,7 +112,7 @@
      can hover; touch gets a press response. Without JS the fill grows from the centre. */
   .btn {
     @apply relative isolate inline-flex min-h-[2.75rem] select-none items-center justify-center gap-2 overflow-hidden rounded-full px-6 py-3 text-[0.95rem] font-medium leading-none;
-    --fill: #141414;
+    --fill: rgb(var(--ink));
     -webkit-tap-highlight-color: transparent;
     transition:
       color 0.55s cubic-bezier(0.16, 1, 0.3, 1),
@@ -69,8 +142,8 @@
     transform: translate(-50%, -50%) scale(1);
   }
   .btn-primary {
-    @apply btn bg-amber text-ink;
-    --fill: #141414;
+    @apply btn bg-amber text-night;
+    --fill: rgb(var(--ink));
   }
   .btn-light {
     @apply btn bg-paper text-ink;
@@ -78,7 +151,7 @@
   }
   .btn-ghost {
     @apply btn border border-ink/25 text-ink;
-    --fill: #141414;
+    --fill: rgb(var(--ink));
   }
   .btn-ghost-light {
     @apply btn border border-paper/40 text-paper;
@@ -97,7 +170,7 @@
     }
     .btn-primary:hover {
       @apply text-paper;
-      box-shadow: 0 18px 38px -18px rgb(20 20 20 / 0.55);
+      box-shadow: 0 18px 38px -18px rgb(var(--ink) / 0.45);
     }
     .btn-light:hover {
       @apply text-ink;
@@ -189,7 +262,7 @@
   }
   /* Resting hairline with an amber line drawing over it; the arrow nudges forward */
   .link-line {
-    --line: rgb(20 20 20 / 0.25);
+    --line: rgb(var(--ink) / 0.25);
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
@@ -289,13 +362,13 @@
       transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
   }
   .card-chip-arrow {
-    @apply grid h-6 w-6 place-items-center rounded-full bg-amber text-ink;
+    @apply grid h-6 w-6 place-items-center rounded-full bg-amber text-night;
     transition:
       transform 0.6s cubic-bezier(0.16, 1, 0.3, 1),
       background-color 0.4s;
   }
   .card-shade {
-    @apply pointer-events-none absolute inset-0 bg-gradient-to-t from-ink/45 via-ink/0 to-ink/0;
+    @apply pointer-events-none absolute inset-0 bg-gradient-to-t from-night/45 via-night/0 to-night/0;
     opacity: 0;
     transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1);
   }
@@ -338,7 +411,7 @@
   }
 
   .eyebrow {
-    @apply inline-flex items-center gap-2 text-[0.78rem] font-medium uppercase tracking-[0.22em] text-ink/60;
+    @apply inline-flex items-center gap-2 text-[0.78rem] font-medium uppercase tracking-[0.22em] text-ink/65;
   }
   .eyebrow::before {
     content: '';
@@ -352,7 +425,7 @@
   /* Huge outline wordmark behind the hero */
   .outline-word {
     color: transparent;
-    -webkit-text-stroke: 1.5px rgb(20 20 20 / 0.16);
+    -webkit-text-stroke: 1.5px rgb(var(--ink) / 0.16);
   }
 
   /* Image-filled display type ("Take the Chair") */
@@ -393,7 +466,7 @@
   }
 
   .tab {
-    @apply relative flex items-center gap-2 whitespace-nowrap py-2 text-[0.95rem] text-ink/50 transition-colors hover:text-ink;
+    @apply relative flex items-center gap-2 whitespace-nowrap py-2 text-[0.95rem] text-ink/65 transition-colors hover:text-ink;
   }
   .tab[aria-pressed='true'] {
     @apply text-ink;
@@ -496,11 +569,7 @@
 .accent {
   font-family: 'DM Serif Display', Georgia, serif;
   font-style: italic;
-  color: var(--accent, #9a6c31);
-}
-.bg-ink .accent,
-footer .accent {
-  --accent: #d9a863;
+  color: var(--accent);
 }
 
 .eyebrow-num {
@@ -545,7 +614,7 @@ footer .accent {
 
 .outline-word-strong {
   color: transparent;
-  -webkit-text-stroke: 1px rgb(20 20 20 / 0.55);
+  -webkit-text-stroke: 1px rgb(var(--ink) / 0.55);
 }
 
 /* Form fields on dark */
@@ -678,4 +747,163 @@ footer .btn-primary,
 footer .btn-primary:focus-visible,
 [data-menu] .btn-primary:focus-visible {
   color: #141414;
+}
+
+/* ---------- Theme toggle: sun morphs into a moon ---------- */
+.theme-icon {
+  overflow: visible;
+}
+.theme-core,
+.theme-cut,
+.theme-rays {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition:
+    transform 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.theme-rays {
+  transform-box: view-box;
+}
+:root[data-theme='dark'] .theme-core {
+  transform: scale(1.7);
+}
+:root[data-theme='dark'] .theme-cut {
+  transform: translateX(-8.5px);
+}
+:root[data-theme='dark'] .theme-rays {
+  opacity: 0;
+  transform: rotate(-60deg) scale(0.5);
+}
+@media (hover: hover) and (pointer: fine) {
+  .theme-toggle:hover .theme-rays {
+    transform: rotate(45deg);
+  }
+  :root[data-theme='dark'] .theme-toggle:hover .theme-core {
+    transform: scale(1.7) rotate(-18deg);
+  }
+}
+
+/* ---------- Back to top: frosted disc, scroll-progress ring, rolling arrow ---------- */
+.to-top {
+  position: fixed;
+  right: max(1rem, env(safe-area-inset-right));
+  /* phones: sits above the "Book now" pill */
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 5.25rem);
+  z-index: 45;
+  display: grid;
+  place-items: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 9999px;
+  isolation: isolate;
+  overflow: hidden;
+  color: rgb(var(--ink));
+  background: rgb(var(--paper) / 0.78);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 18px 40px -22px rgb(0 0 0 / 0.55);
+  -webkit-tap-highlight-color: transparent;
+  opacity: 0;
+  translate: 0 1.25rem;
+  scale: 0.8;
+  pointer-events: none;
+  transition:
+    opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+    translate 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+    scale 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+    color 0.5s;
+}
+@media (min-width: 768px) {
+  .to-top {
+    right: max(1.5rem, env(safe-area-inset-right));
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 1.5rem);
+    width: 3.5rem;
+    height: 3.5rem;
+  }
+}
+.to-top.is-visible {
+  opacity: 1;
+  translate: 0 0;
+  scale: 1;
+  pointer-events: auto;
+}
+.to-top:active {
+  scale: 0.92;
+}
+.to-top::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: #b8833e;
+  transform: scale(0);
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.to-top-ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+  pointer-events: none;
+}
+.to-top-ring circle {
+  fill: none;
+  stroke-width: 1.5;
+}
+.to-top-track {
+  stroke: rgb(var(--ink) / 0.14);
+}
+.to-top-progress {
+  stroke: #b8833e;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: calc(1 - var(--progress, 0));
+}
+.to-top-arrow {
+  position: relative;
+  display: inline-flex;
+  width: 1em;
+  height: 1.4em;
+  overflow: hidden;
+  justify-content: center;
+  font-size: 1.05rem;
+  line-height: 1.4;
+}
+.to-top-arrow > span {
+  position: absolute;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.to-top-arrow > span + span {
+  transform: translateY(130%);
+}
+@media (hover: hover) and (pointer: fine) {
+  .to-top:hover {
+    color: #141414;
+  }
+  .to-top:hover::before {
+    transform: scale(1);
+  }
+  .to-top:hover .to-top-progress {
+    stroke: #141414;
+  }
+  .to-top:hover .to-top-arrow > span:first-child {
+    transform: translateY(-130%);
+  }
+  .to-top:hover .to-top-arrow > span + span {
+    transform: translateY(0);
+    transition-delay: 0.06s;
+  }
+}
+.to-top:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 3px rgb(var(--paper)),
+    0 0 0 5px #b8833e;
+}
+
+#main:focus {
+  outline: none;
 }

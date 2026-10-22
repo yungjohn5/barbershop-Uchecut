@@ -350,6 +350,124 @@
     }
   }
 
+  // ------------------------------------------------------------- light / dark
+  // boot.js already set data-theme before paint. Toggling saves the choice and reveals the
+  // new theme in a circle growing from the toggle (View Transitions), with a colour
+  // cross-fade as the fallback. Without a saved choice the site follows the OS live.
+  var themeMeta = $('meta[data-theme-color]');
+  var toggles = $$('[data-theme-toggle]');
+
+  function currentTheme() {
+    return root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+  }
+
+  function applyTheme(theme) {
+    root.setAttribute('data-theme', theme);
+    if (themeMeta) themeMeta.setAttribute('content', theme === 'dark' ? '#100F0E' : '#F4F1EC');
+    toggles.forEach(function (t) {
+      t.setAttribute('aria-checked', String(theme === 'dark'));
+      t.setAttribute('title', theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
+    });
+  }
+
+  function switchTheme(theme, origin) {
+    try {
+      window.localStorage.setItem('vb-theme', theme);
+    } catch {
+      /* storage blocked: the choice lasts for this page only */
+    }
+    if (reduce) return applyTheme(theme);
+
+    if (document.startViewTransition) {
+      var r = origin ? origin.getBoundingClientRect() : null;
+      var x = r ? r.left + r.width / 2 : window.innerWidth / 2;
+      var y = r ? r.top + r.height / 2 : 0;
+      var radius = Math.hypot(
+        Math.max(x, window.innerWidth - x),
+        Math.max(y, window.innerHeight - y),
+      );
+      document
+        .startViewTransition(function () {
+          applyTheme(theme);
+        })
+        .ready.then(function () {
+          root.animate(
+            {
+              clipPath: [
+                'circle(0px at ' + x + 'px ' + y + 'px)',
+                'circle(' + radius + 'px at ' + x + 'px ' + y + 'px)',
+              ],
+            },
+            {
+              duration: 750,
+              easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+              pseudoElement: '::view-transition-new(root)',
+            },
+          );
+        })
+        .catch(function () {});
+      return;
+    }
+    root.classList.add('theme-anim');
+    applyTheme(theme);
+    setTimeout(function () {
+      root.classList.remove('theme-anim');
+    }, 700);
+  }
+
+  applyTheme(currentTheme());
+  toggles.forEach(function (t) {
+    t.addEventListener('click', function () {
+      switchTheme(currentTheme() === 'dark' ? 'light' : 'dark', t);
+    });
+  });
+  var osDark = window.matchMedia('(prefers-color-scheme: dark)');
+  var onOsChange = function (e) {
+    var saved = null;
+    try {
+      saved = window.localStorage.getItem('vb-theme');
+    } catch {
+      /* ignore */
+    }
+    if (!saved) applyTheme(e.matches ? 'dark' : 'light');
+  };
+  if (osDark.addEventListener) osDark.addEventListener('change', onOsChange);
+
+  // ------------------------------------------------------------- back to top
+  // Appears after the first screen; the ring fills with scroll progress.
+  var toTop = $('[data-to-top]');
+  if (toTop) {
+    var ticking = false;
+    var updateToTop = function () {
+      ticking = false;
+      var max = document.documentElement.scrollHeight - window.innerHeight;
+      var y = window.scrollY;
+      toTop.style.setProperty('--progress', max > 0 ? Math.min(1, y / max).toFixed(4) : 0);
+      toTop.classList.toggle('is-visible', y > window.innerHeight * 0.8);
+    };
+    window.addEventListener(
+      'scroll',
+      function () {
+        if (!ticking) {
+          ticking = true;
+          window.requestAnimationFrame(updateToTop);
+        }
+      },
+      { passive: true },
+    );
+    updateToTop();
+    toTop.addEventListener('click', function () {
+      if (smoother) smoother.scrollTo(0, true);
+      else window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
+      // Keep keyboard users oriented: focus moves to the top of the content.
+      var main = $('#main');
+      if (main) {
+        if (!main.hasAttribute('tabindex')) main.setAttribute('tabindex', '-1');
+        main.focus({ preventScroll: true });
+      }
+    });
+  }
+
   // ------------------------------------------------------------ pill buttons
   // Adds the rolling label + sliding arrow markup to every .btn, and points the hover fill
   // at the spot where the pointer enters (and leaves). Round ring buttons are not .btn and

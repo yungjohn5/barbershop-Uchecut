@@ -13,6 +13,7 @@
     <a href="/" class="font-serif text-[1.75rem] leading-none xl:absolute xl:left-1/2 xl:-translate-x-1/2" aria-label="<%= shop.name %> home"><%= shop.name.split(' ')[0] %></a>
     <div class="flex items-center gap-3">
       <a href="/#visit" class="link-u hidden text-[0.92rem] opacity-80 hover:opacity-100 xl:inline">Visit Us</a>
+      <%- include('theme-toggle', { tone: light ? 'light' : 'dark', id: light ? 'hero' : 'nav' }) %>
       <a href="/book" class="<%= light ? 'btn-light' : 'btn-primary' %> hidden !px-5 !py-2.5 text-sm sm:inline-flex">Book Now</a>
       <button type="button" class="<%= light ? 'icon-btn-light' : 'icon-btn-dark' %> xl:hidden" aria-controls="mobile-menu" aria-expanded="false" data-menu-open>
         <span class="sr-only">Open menu</span>

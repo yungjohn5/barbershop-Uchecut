@@ -11,7 +11,7 @@
 
   <div class="relative mx-auto w-[calc(100%-1.5rem)] max-w-[150rem] pt-[var(--band)] sm:w-[calc(100%-2.5rem)]">
     <div
-      class="relative flex h-[calc(100svh-var(--band)-var(--strip))] max-h-[75rem] min-h-[33rem] flex-col overflow-hidden bg-ink text-paper grain lg:min-h-[32rem] [@media(max-height:500px)]:min-h-[19rem]"
+      class="relative flex h-[calc(100svh-var(--band)-var(--strip))] max-h-[75rem] min-h-[33rem] flex-col overflow-hidden bg-ink text-paper grain keep-dark lg:min-h-[32rem] [@media(max-height:500px)]:min-h-[19rem]"
       data-hero-card
     >
       <%# Phones: photo fills the top two-thirds and fades into solid ink under the type. %>
@@ -32,7 +32,7 @@
       <div class="relative mx-5 h-px origin-left bg-paper/15 sm:mx-8 lg:mx-12" data-hero-rule aria-hidden="true"></div>
 
       <%# Editorial meta row under the rule (desktop). %>
-      <div class="relative hidden items-center justify-between px-12 pt-4 text-[0.7rem] uppercase tracking-[0.28em] text-paper/45 lg:flex" data-hero-fade>
+      <div class="relative hidden items-center justify-between px-12 pt-4 text-[0.7rem] uppercase tracking-[0.28em] text-paper/60 lg:flex" data-hero-fade>
         <span>Barbershop &amp; home visits</span>
         <span class="inline-flex items-center gap-2.5"><span class="status-dot <%= status.open ? 'is-open' : '' %>" aria-hidden="true"></span><%= status.label %></span>
       </div>
@@ -60,15 +60,15 @@
     <%# Facts strip: live data. Sits inside the first screen on lg+, flows below the card on smaller screens. %>
     <dl class="grid grid-cols-1 border-x border-b border-ink/10 bg-paper-deep/70 sm:grid-cols-3 lg:h-[calc(var(--strip)-0.75rem)]">
       <div class="flex items-center justify-between gap-4 border-b border-ink/10 px-5 py-4 sm:flex-col sm:items-start sm:justify-center sm:gap-1 sm:border-b-0 sm:border-r xl:flex-row xl:items-center xl:justify-between xl:gap-4 lg:px-8 lg:py-0" data-hero-fade>
-        <dt class="text-[0.7rem] uppercase tracking-[0.2em] text-ink/50">Open</dt>
+        <dt class="text-[0.7rem] uppercase tracking-[0.2em] text-ink/65">Open</dt>
         <dd class="text-right text-[0.95rem] font-medium sm:text-left xl:text-right"><%= shop.hoursText[0] %></dd>
       </div>
       <div class="flex items-center justify-between gap-4 border-b border-ink/10 px-5 py-4 sm:flex-col sm:items-start sm:justify-center sm:gap-1 sm:border-b-0 sm:border-r xl:flex-row xl:items-center xl:justify-between xl:gap-4 lg:px-8 lg:py-0" data-hero-fade>
-        <dt class="text-[0.7rem] uppercase tracking-[0.2em] text-ink/50">Services</dt>
+        <dt class="text-[0.7rem] uppercase tracking-[0.2em] text-ink/65">Services</dt>
         <dd class="text-right text-[0.95rem] font-medium sm:text-left xl:text-right"><%= facts.serviceCount %> services<% if (facts.fromPriceKobo) { %> · from <%= naira(facts.fromPriceKobo) %><% } %></dd>
       </div>
       <div class="flex items-center justify-between gap-4 px-5 py-4 sm:flex-col sm:items-start sm:justify-center sm:gap-1 xl:flex-row xl:items-center xl:justify-between xl:gap-4 lg:px-8 lg:py-0" data-hero-fade>
-        <dt class="text-[0.7rem] uppercase tracking-[0.2em] text-ink/50">Home visits</dt>
+        <dt class="text-[0.7rem] uppercase tracking-[0.2em] text-ink/65">Home visits</dt>
         <dd class="text-right text-[0.95rem] font-medium sm:text-left xl:text-right"><%= facts.zoneCount %> areas across Lagos</dd>
       </div>
     </dl>

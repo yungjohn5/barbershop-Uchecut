@@ -10,6 +10,7 @@
       <a href="/#visit" class="link-u hover:text-ink">Visit</a>
     </nav>
     <div class="flex items-center gap-2">
+      <%- include('theme-toggle', { tone: 'dark', id: 'sticky' }) %>
       <a href="/book" class="btn-primary !px-5 !py-2 text-sm">Book now</a>
       <button type="button" class="icon-btn-dark lg:hidden" aria-controls="mobile-menu" aria-expanded="false" data-menu-open>
         <span class="sr-only">Open menu</span>
