@@ -95,7 +95,7 @@ Fifteen Prisma models cover the catalogue, staff schedules, zones, bookings, con
 | `TimeOff` | Holidays, breaks, blocked ranges | belongs to `Barber` |
 | `Zone` | Home-service area: name, fee, travel buffer (min), active | has many `Booking` |
 | `Customer` | Name, phone (unique), email, notes, no-show count | has many `Booking` |
-| `Booking` | Date/time, type (SHOP/HOME), status, address, totals, manage token | belongs to `Barber`, `Customer`, optional `Zone` |
+| `Booking` | Date/time, type (SHOP/HOME), status, address, totals, manage token, `source` (WEB/STAFF), `staffNotes` (admin only) | belongs to `Barber`, `Customer`, optional `Zone` |
 | `BookingService` | Join table with price/duration snapshot at booking time | `Booking` × `Service` |
 | `BarberService` | Explicit join: which services each barber offers | `Barber` × `Service` |
 | `Admin` | Dashboard users: email, password hash, role (OWNER/STAFF), lockout fields | — |
@@ -272,7 +272,8 @@ Wizard state is kept in the session between steps, so a refresh never loses the 
 **Admin** (behind `requireAdmin`, all under `/admin`)
 
 - `/admin/login`, `/admin/logout`
-- `/admin` dashboard, `/admin/bookings` (list, filters, detail, status actions), `/admin/calendar`
+- `/admin` Today; `/admin/bookings` (list with scope chips, search and filters), `/admin/bookings/new` (staff booking), `/admin/bookings/:id` (detail), `POST /admin/bookings/:id/status` (`confirm | complete | noShow | cancel | undo`), `POST /admin/bookings/:id/notes`, `/admin/bookings/:id/reschedule`, `/admin/calendar?date=&barber=`
+- Admin JSON: `GET /admin/api/slots` (staff rules: no lead time), `GET /admin/api/customer?phone=` (returning-customer lookup). Signed-out requests get 401 JSON; pages redirect to `/admin/login?next=`.
 - CRUD: `/admin/services`, `/admin/categories`, `/admin/barbers` (+ hours and time off), `/admin/zones`, `/admin/gallery`, `/admin/products`, `/admin/settings`, `/admin/users` (OWNER only)
 
 ## Page map from the design
@@ -326,6 +327,24 @@ The owner runs the whole shop from `/admin`: today's schedule first, then everyt
 | Reports | Bookings and revenue (expected vs completed) by week, barber, service, zone | OWNER |
 
 Staff accounts can be linked to a `Barber` later, so each barber sees only their own schedule; that is a v1.1 toggle, not a v1 requirement.
+
+**Status rules** (`services/adminBookings.js`, `allowedActions`):
+
+| Action | From | When |
+| --- | --- | --- |
+| Confirm | PENDING | any time |
+| Complete, No-show | CONFIRMED | once the appointment has started |
+| Reschedule | PENDING, CONFIRMED | before it starts |
+| Cancel | PENDING, CONFIRMED | any time; optional reason |
+| Undo | COMPLETED, NO_SHOW | within 7 days, back to CONFIRMED |
+
+A no-show adds 1 to `Customer.noShowCount`; undoing it takes 1 off. Every change runs in a transaction.
+
+**Staff overrides.** Staff bookings and staff reschedules go through the same `createBooking` / `rescheduleBooking` path (same transaction, advisory lock and exclusion constraint) with three differences: no lead time, no customer cancellation cutoff, and home visits are CONFIRMED straight away. Staff bookings are stored with `source = STAFF`.
+
+**Sign-in.** bcrypt (cost 12). Unknown emails are compared against a dummy hash so timing does not reveal which accounts exist. Five wrong passwords lock the account for 15 minutes. The session id is regenerated on sign-in, and `?next=` only accepts `/admin` paths.
+
+**Build waves.** A: sign-in, Today, bookings, booking detail, staff booking, reschedule, calendar. B (OWNER): services and categories, barbers (hours, time off, photos), zones, products, gallery. C: customers, reports, settings, users.
 
 ## Notifications, security and deployment
 

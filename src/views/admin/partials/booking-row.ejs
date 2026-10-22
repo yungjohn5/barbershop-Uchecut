@@ -1,0 +1,22 @@
+<%# Compact booking card used in lists. Params: b, showDate (bool), actions (array, optional) %>
+<article class="a-booking <%= b.status === 'CANCELLED' || b.status === 'NO_SHOW' ? 'is-muted' : '' %>">
+  <a href="/admin/bookings/<%= b.id %>" class="a-booking-time">
+    <span class="font-serif text-2xl leading-none tabular-nums"><%= formatTime(b.startsAt) %></span>
+    <% if (locals.showDate) { %><span class="mt-1 block text-xs text-ink/65"><%= formatShort(b.startsAt) %></span><% } %>
+  </a>
+  <a href="/admin/bookings/<%= b.id %>" class="min-w-0 flex-1">
+    <span class="flex flex-wrap items-center gap-2">
+      <span class="truncate font-medium"><%= b.customer.name %></span>
+      <span class="a-type a-type-<%= b.type.toLowerCase() %>"><%= b.type === 'HOME' ? 'Home' : 'Shop' %></span>
+      <% if (b.source === 'STAFF') { %><span class="a-type">Walk-in</span><% } %>
+    </span>
+    <span class="mt-0.5 block truncate text-sm text-ink/65"><%= b.services.map((s) => s.name).join(', ') %><%= b.zone ? ` · ${b.zone.name}` : '' %></span>
+  </a>
+  <div class="a-booking-meta flex shrink-0 flex-col items-end gap-2">
+    <%- include('status', { status: b.status }) %>
+    <span class="text-sm tabular-nums text-ink/70"><%= naira(b.totalKobo) %></span>
+  </div>
+  <% if (locals.actions && actions.length) { %>
+    <div class="a-booking-actions"><%- include('actions', { booking: b, actions, size: 'sm' }) %></div>
+  <% } %>
+</article>

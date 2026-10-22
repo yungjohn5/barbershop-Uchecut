@@ -5,8 +5,9 @@ Customers book an in-shop appointment or a home visit without creating an accoun
 and pay on the day. One Node.js app serves the site, the booking engine and (soon)
 the owner's dashboard.
 
-> **Status:** Phases 1–3 complete: foundation, booking engine, public site, booking wizard,
-> confirmation and manage link. The admin dashboard and notifications are next. See [Roadmap](#roadmap).
+> **Status:** Phases 1–3 complete (foundation, booking engine, public site, booking wizard,
+> confirmation and manage link). Phase 4 in progress: the admin dashboard's daily screens are
+> done; catalogue, staff and settings screens are next. See [Roadmap](#roadmap).
 > "Victory" and all copy, prices, zones and photos are **placeholders** until the client signs off.
 
 **Contents:**
@@ -49,6 +50,15 @@ the owner's dashboard.
 - **Back-to-top button:** a frosted disc with a scroll-progress ring and a rolling arrow. It glides to the top and sits above the mobile "Book now" pill.
 - Live "Open now / Closed" status computed from the barbers' working hours.
 - Responsive from 360 px phones to 2560 px monitors. Content stays visible without JavaScript, and `prefers-reduced-motion` turns animation off.
+
+**Admin dashboard** (`/admin`)
+- **Today:** a greeting, four stat cards (bookings, requests awaiting confirmation, expected and taken revenue, this week), each barber's schedule with one-tap Complete / No-show, and the home-visit request queue with Confirm / Cancel.
+- **Bookings:** Upcoming / Today / Pending / Past / All, search by name, phone or reference, filters for barber, type, status and dates. A table on desktop that becomes cards on phones.
+- **Booking detail:** all the facts, status actions, cancel with a reason, staff-only notes, the customer's history and no-show count, Call / WhatsApp buttons, and the customer's manage link to copy.
+- **New booking:** for walk-ins and phone bookings. Free times load live, returning customers are filled in from their phone number, and the total includes the travel fee. No lead time, and home visits are confirmed straight away.
+- **Reschedule:** the same barber, date and time picker as the public wizard, with staff rules applied.
+- **Calendar:** a week per barber with travel buffers, closed hours and time off shaded, a red "now" line, and sideways scrolling on phones.
+- **Sign-in:** bcrypt with a 15-minute lockout after 5 wrong passwords. Dark sidebar on desktop, slide-in drawer on phones, light and dark mode.
 
 ---
 
@@ -100,6 +110,10 @@ npm run dev                   # http://localhost:3000
 
 `npm run dev` runs the server (nodemon) and the Tailwind watcher together. Edits under
 `src/` restart the server, and template and CSS changes show on refresh.
+
+The admin dashboard is at <http://localhost:3000/admin>. Sign in with the `ADMIN_EMAIL` and
+`ADMIN_PASSWORD` you set in `.env` before seeding. The seed creates that OWNER account once
+and never changes its password afterwards.
 
 To generate a session secret:
 
@@ -160,15 +174,15 @@ uchecut/
 │   └── seed.js               # idempotent placeholder data
 ├── public/
 │   ├── css/app.css           # built (git-ignored)
-│   ├── js/                   # boot.js, site.js (shared), home.js (home page)
+│   ├── js/                   # boot.js, site.js (shared), home.js, booking.js (wizard), admin.js
 │   └── images/site/          # responsive WebP placeholders + CREDITS.md
 ├── src/
 │   ├── app.js / server.js    # Express app, graceful shutdown
 │   ├── config/               # env validation, constants and default settings
 │   ├── lib/                  # prisma, logger, errors, phone, time, ids, sms, mailer, view helpers
 │   ├── middleware/           # csrf, rate limits, zod validate(), error handler
-│   ├── services/             # business logic: availability, booking, content, settings
-│   ├── routes/               # public pages, JSON API (admin to come)
+│   ├── services/             # business logic: availability, booking, bookingFlow, adminAuth, adminBookings, content, settings
+│   ├── routes/               # public pages, booking wizard, JSON API, admin/
 │   ├── styles/input.css      # Tailwind source + component styles
 │   └── views/                # layouts, partials (home sections), pages
 └── tests/
@@ -271,6 +285,7 @@ npm test
   - a forced race (every attempt passes the availability check before inserting, and exactly one wins)
   - a direct insert that the exclusion constraint must reject
   - the JSON API and the home page
+  - admin sign-in and lockout, route guards, status actions, staff bookings, reschedule, the week calendar
 
 ---
 
@@ -318,7 +333,7 @@ Stop the other process, or set `PORT` in `.env`.
 | 1 | Foundation: app shell, schema, migrations, seed | ✅ Done |
 | 2 | Booking engine, transactional create, JSON API, tests | ✅ Done |
 | 3 | Public site and booking wizard, confirmation, manage link | ✅ Done |
-| 4 | Admin dashboard: bookings, calendar, CRUD, settings, home-visit confirmation | ⬜ |
+| 4 | Admin dashboard: Today, bookings, staff booking, calendar ✅ · catalogue and staff CRUD, customers, reports, settings, users | 🟡 In progress |
 | 5 | Email/SMS notifications, reminders, auto-cancel job, deployment | ⬜ |
 
 **Needed from the client:**

@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en-NG" class="no-js">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title><%= title ? `${title} · Admin` : 'Admin' %> · <%= shop.name %></title>
+    <meta name="theme-color" content="#F4F1EC" data-theme-color />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta name="csrf-token" content="<%= csrfToken %>" />
+    <script src="/js/boot.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Gloock&family=Inter:wght@400;500;600&display=swap" />
+    <link rel="stylesheet" href="/css/app.css" />
+  </head>
+  <body class="admin-body min-h-screen bg-paper" data-no-smoother>
+    <a href="#main" class="sr-only z-[60] rounded-full bg-ink px-4 py-2 text-paper focus:not-sr-only focus:fixed focus:left-3 focus:top-3">Skip to content</a>
+    <% if (locals.admin) { %>
+      <% const isOwner = admin.role === 'OWNER'; %>
+      <% const groups = [
+        { label: 'Daily', items: [
+          { key: 'today', href: '/admin', label: 'Today', icon: 'today' },
+          { key: 'bookings', href: '/admin/bookings', label: 'Bookings', icon: 'bookings', badge: locals.pendingCount },
+          { key: 'calendar', href: '/admin/calendar', label: 'Calendar', icon: 'calendar' },
+        ] },
+      ]; %>
+      <div class="a-shell">
+        <aside id="admin-nav" class="a-sidebar keep-dark" aria-label="Admin" data-a-nav>
+          <div class="flex items-center justify-between px-6 pb-6 pt-7">
+            <a href="/admin" class="flex items-baseline gap-2">
+              <span class="font-serif text-2xl text-paper"><%= shop.name.split(' ')[0] %></span>
+              <span class="text-[0.65rem] uppercase tracking-[0.28em] text-paper/55">Admin</span>
+            </a>
+            <button type="button" class="icon-btn-light lg:hidden" data-a-nav-close aria-label="Close menu">
+              <svg class="close-x" width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" stroke-width="1.6"/></svg>
+            </button>
+          </div>
+          <div class="px-4">
+            <a href="/admin/bookings/new" class="btn-primary w-full justify-center <%= nav === 'new' ? 'ring-2 ring-amber-light/60' : '' %>">New booking <span class="arrow" aria-hidden="true">→</span></a>
+          </div>
+          <nav class="mt-8 flex-1 overflow-y-auto px-3 pb-6">
+            <% groups.forEach((g) => { %>
+              <p class="a-nav-group"><%= g.label %></p>
+              <ul class="space-y-1">
+                <% g.items.forEach((it) => { %>
+                  <li>
+                    <a href="<%= it.href %>" class="a-nav-link <%= nav === it.key ? 'is-active' : '' %>" <%- nav === it.key ? 'aria-current="page"' : '' %>>
+                      <%- include('../admin/partials/icon', { name: it.icon }) %>
+                      <span class="flex-1"><%= it.label %></span>
+                      <% if (it.badge) { %><span class="a-nav-badge" title="<%= it.badge %> awaiting confirmation"><%= it.badge %></span><% } %>
+                    </a>
+                  </li>
+                <% }) %>
+              </ul>
+            <% }) %>
+          </nav>
+          <div class="border-t border-paper/10 px-4 py-5">
+            <div class="flex items-center gap-3 px-2">
+              <span class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-amber font-serif text-lg text-night"><%= admin.name[0] %></span>
+              <div class="min-w-0 flex-1">
+                <p class="truncate text-sm font-medium text-paper"><%= admin.name %></p>
+                <p class="text-xs text-paper/55"><%= isOwner ? 'Owner' : 'Staff' %></p>
+              </div>
+              <%- include('../partials/theme-toggle', { tone: 'light', id: 'admin' }) %>
+            </div>
+            <div class="mt-4 grid grid-cols-2 gap-2">
+              <a href="/" class="a-nav-mini"><%- include('../admin/partials/icon', { name: 'site' }) %>View site</a>
+              <form method="post" action="/admin/logout">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                <button type="submit" class="a-nav-mini w-full"><%- include('../admin/partials/icon', { name: 'logout' }) %>Sign out</button>
+              </form>
+            </div>
+          </div>
+        </aside>
+        <div class="a-backdrop" data-a-backdrop hidden></div>
+
+        <div class="a-main">
+          <header class="a-topbar lg:hidden">
+            <button type="button" class="icon-btn-dark" data-a-nav-open aria-controls="admin-nav" aria-expanded="false">
+              <span class="sr-only">Open menu</span>
+              <span class="burger" aria-hidden="true"><i></i><i></i></span>
+            </button>
+            <a href="/admin" class="font-serif text-xl"><%= shop.name.split(' ')[0] %> <span class="font-sans text-[0.6rem] uppercase tracking-[0.28em] text-ink/55">Admin</span></a>
+            <a href="/admin/bookings/new" class="icon-btn-dark !h-11 !w-11" aria-label="New booking"><%- include('../admin/partials/icon', { name: 'plus' }) %></a>
+          </header>
+          <main id="main" class="a-content">
+            <%- include('../admin/partials/flash') %>
+            <%- body %>
+          </main>
+        </div>
+      </div>
+    <% } else { %>
+      <main id="main"><%- body %></main>
+    <% } %>
+
+    <script src="/vendor/gsap/gsap.min.js" defer></script>
+    <script src="/js/site.js" defer></script>
+    <script src="/js/booking.js" defer></script>
+    <script src="/js/admin.js" defer></script>
+  </body>
+</html>

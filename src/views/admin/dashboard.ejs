@@ -1,0 +1,80 @@
+<% const hour = Number(formatTime(now).slice(0, 2)); const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'; %>
+<header class="a-page-head">
+  <div>
+    <p class="eyebrow"><%= formatDay(now) %></p>
+    <h1 class="a-title"><%= greeting %>, <em class="accent"><%= admin.name.split(' ')[0] %></em>.</h1>
+  </div>
+  <div class="flex flex-wrap gap-2">
+    <a href="/admin/calendar" class="btn-ghost">Calendar</a>
+    <a href="/admin/bookings/new" class="btn-primary">New booking <span class="arrow" aria-hidden="true">→</span></a>
+  </div>
+</header>
+
+<section class="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4" aria-label="Today at a glance">
+  <div class="a-stat">
+    <p class="a-stat-label">Today’s bookings</p>
+    <p class="a-stat-value"><%= stats.todayCount %></p>
+    <p class="a-stat-foot"><%= stats.todayDone %> completed</p>
+  </div>
+  <a href="/admin/bookings?scope=pending" class="a-stat <%= stats.pendingTotal ? 'is-alert' : '' %>">
+    <p class="a-stat-label">Awaiting confirmation</p>
+    <p class="a-stat-value"><%= stats.pendingTotal %></p>
+    <p class="a-stat-foot">Home visit requests →</p>
+  </a>
+  <div class="a-stat">
+    <p class="a-stat-label">Expected today</p>
+    <p class="a-stat-value text-[clamp(1.6rem,3vw,2.4rem)]"><%= naira(stats.expectedKobo) %></p>
+    <p class="a-stat-foot"><%= naira(stats.takenKobo) %> taken so far</p>
+  </div>
+  <div class="a-stat">
+    <p class="a-stat-label">This week</p>
+    <p class="a-stat-value"><%= stats.weekCount %></p>
+    <p class="a-stat-foot">bookings, Mon–Sun</p>
+  </div>
+</section>
+
+<div class="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_24rem]">
+  <section aria-labelledby="schedule-h">
+    <div class="flex items-end justify-between gap-4">
+      <h2 id="schedule-h" class="a-h2">Today’s schedule</h2>
+      <% if (next) { %><p class="text-sm text-ink/65">Up next: <strong class="font-medium text-ink"><%= formatTime(next.startsAt) %> · <%= next.customer.name %></strong></p><% } %>
+    </div>
+    <div class="mt-4 grid gap-4 <%= lanes.length > 1 ? 'lg:grid-cols-2' : '' %>">
+      <% lanes.forEach((lane) => { %>
+        <div class="a-card">
+          <div class="flex items-center gap-3">
+            <% if (lane.barber.photoUrl) { %><img src="<%= lane.barber.photoUrl %>-500.webp" alt="" class="h-10 w-10 rounded-full object-cover object-top" /><% } %>
+            <div class="flex-1">
+              <p class="font-medium"><%= lane.barber.name %></p>
+              <p class="text-xs text-ink/65"><%= lane.working ? `${lane.bookings.length} booking${lane.bookings.length === 1 ? '' : 's'}` : 'Not working today' %></p>
+            </div>
+          </div>
+          <div class="mt-4 space-y-2">
+            <% if (!lane.bookings.length) { %>
+              <p class="a-empty-row"><%= lane.working ? 'No bookings yet today.' : 'Day off.' %></p>
+            <% } %>
+            <% lane.bookings.forEach((b) => { %>
+              <%- include('partials/booking-row', { b, showDate: false, actions: actionsFor(b).filter((a) => a !== 'reschedule') }) %>
+            <% }) %>
+          </div>
+        </div>
+      <% }) %>
+      <% if (!lanes.length) { %><div class="a-card"><p class="a-empty-row">No active barbers yet.</p></div><% } %>
+    </div>
+  </section>
+
+  <section aria-labelledby="pending-h">
+    <div class="flex items-end justify-between gap-4">
+      <h2 id="pending-h" class="a-h2">Home visit requests</h2>
+      <% if (stats.pendingTotal > pending.length) { %><a href="/admin/bookings?scope=pending" class="link-u text-sm">View all <%= stats.pendingTotal %></a><% } %>
+    </div>
+    <div class="a-card mt-4 space-y-2">
+      <% if (!pending.length) { %>
+        <p class="a-empty-row">All caught up. No requests waiting.</p>
+      <% } %>
+      <% pending.forEach((b) => { %>
+        <%- include('partials/booking-row', { b, showDate: true, actions: actionsFor(b).filter((a) => a === 'confirm' || a === 'cancel') }) %>
+      <% }) %>
+    </div>
+  </section>
+</div>

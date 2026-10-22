@@ -1,0 +1,92 @@
+<% const scopes = [['upcoming', 'Upcoming'], ['today', 'Today'], ['pending', 'Pending'], ['past', 'Past'], ['all', 'All']]; %>
+<% const qs = (over) => { const p = { scope, q: filters.q, from: filters.from, to: filters.to, barber: filters.barber, type: filters.type, status: filters.status, ...over }; return Object.entries(p).filter(([, v]) => v !== undefined && v !== '' && v !== null).map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join('&'); }; %>
+<header class="a-page-head">
+  <div>
+    <p class="eyebrow">Bookings</p>
+    <h1 class="a-title"><%= total %> <em class="accent"><%= total === 1 ? 'booking' : 'bookings' %></em></h1>
+  </div>
+  <a href="/admin/bookings/new" class="btn-primary">New booking <span class="arrow" aria-hidden="true">→</span></a>
+</header>
+
+<nav class="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:px-0" aria-label="Booking views">
+  <% scopes.forEach(([key, label]) => { %>
+    <a href="/admin/bookings?<%= qs({ scope: key, page: undefined }) %>" class="a-chip <%= scope === key ? 'is-active' : '' %>" <%- scope === key ? 'aria-current="page"' : '' %>><%= label %><% if (key === 'pending' && locals.pendingCount) { %> <span class="a-chip-count"><%= pendingCount %></span><% } %></a>
+  <% }) %>
+</nav>
+
+<form method="get" action="/admin/bookings" class="a-filters mt-4">
+  <input type="hidden" name="scope" value="<%= scope %>" />
+  <label class="a-search col-span-2">
+    <%- include('../partials/icon', { name: 'search' }) %>
+    <span class="sr-only">Search</span>
+    <input type="search" name="q" value="<%= filters.q || '' %>" placeholder="Name, phone or reference" />
+  </label>
+  <label class="a-field"><span>Barber</span>
+    <select name="barber">
+      <option value="">All barbers</option>
+      <% barbers.forEach((b) => { %><option value="<%= b.id %>" <%= filters.barber === b.id ? 'selected' : '' %>><%= b.name %></option><% }) %>
+    </select>
+  </label>
+  <label class="a-field"><span>Type</span>
+    <select name="type">
+      <option value="">Shop &amp; home</option>
+      <option value="SHOP" <%= filters.type === 'SHOP' ? 'selected' : '' %>>Shop</option>
+      <option value="HOME" <%= filters.type === 'HOME' ? 'selected' : '' %>>Home</option>
+    </select>
+  </label>
+  <label class="a-field"><span>Status</span>
+    <select name="status">
+      <option value="">Any status</option>
+      <% ['PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED', 'NO_SHOW'].forEach((s) => { %><option value="<%= s %>" <%= filters.status === s ? 'selected' : '' %>><%= s === 'NO_SHOW' ? 'No-show' : s[0] + s.slice(1).toLowerCase() %></option><% }) %>
+    </select>
+  </label>
+  <label class="a-field col-span-2 min-[400px]:col-span-1"><span>From</span><input type="date" name="from" value="<%= filters.from || '' %>" /></label>
+  <label class="a-field col-span-2 min-[400px]:col-span-1"><span>To</span><input type="date" name="to" value="<%= filters.to || '' %>" /></label>
+  <div class="col-span-2 flex items-end gap-2 xl:col-span-1">
+    <button type="submit" class="btn-primary flex-1 justify-center">Filter</button>
+    <a href="/admin/bookings?scope=<%= scope %>" class="btn-ghost">Reset</a>
+  </div>
+</form>
+
+<section class="mt-6" aria-label="Results">
+  <% if (!rows.length) { %>
+    <div class="a-empty">
+      <p class="font-serif text-3xl">Nothing here.</p>
+      <p class="mt-2 text-ink/65">No bookings match these filters.</p>
+    </div>
+  <% } else { %>
+    <div class="a-table-wrap">
+      <table class="a-table">
+        <thead>
+          <tr><th>When</th><th>Customer</th><th>Services</th><th>Barber</th><th>Total</th><th>Status</th><th><span class="sr-only">Open</span></th></tr>
+        </thead>
+        <tbody>
+          <% rows.forEach((b) => { %>
+            <tr class="<%= b.status === 'CANCELLED' || b.status === 'NO_SHOW' ? 'is-muted' : '' %>" data-href="/admin/bookings/<%= b.id %>">
+              <td data-label="When"><span class="font-medium"><%= formatShort(b.startsAt) %></span> <span class="tabular-nums text-ink/65"><%= formatTime(b.startsAt) %></span></td>
+              <td data-label="Customer">
+                <a href="/admin/bookings/<%= b.id %>" class="font-medium hover:underline"><%= b.customer.name %></a>
+                <span class="block text-xs text-ink/65"><%= b.reference %> · <%= fmtPhone(b.customer.phone) %></span>
+              </td>
+              <td data-label="Services">
+                <span class="a-type a-type-<%= b.type.toLowerCase() %>"><%= b.type === 'HOME' ? 'Home' : 'Shop' %></span>
+                <span class="text-sm"><%= b.services.map((s) => s.name).join(', ') %></span>
+              </td>
+              <td data-label="Barber"><%= b.barber.name %></td>
+              <td data-label="Total" class="tabular-nums"><%= naira(b.totalKobo) %></td>
+              <td data-label="Status"><%- include('../partials/status', { status: b.status }) %></td>
+              <td class="a-table-go"><a href="/admin/bookings/<%= b.id %>" aria-label="Open <%= b.reference %>"><%- include('../partials/icon', { name: 'chevron' }) %></a></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <% if (pages > 1) { %>
+      <nav class="mt-6 flex items-center justify-between gap-4" aria-label="Pages">
+        <% if (page > 1) { %><a class="btn-ghost" href="/admin/bookings?<%= qs({ page: page - 1 }) %>">← Previous</a><% } else { %><span></span><% } %>
+        <span class="text-sm text-ink/65">Page <%= page %> of <%= pages %></span>
+        <% if (page < pages) { %><a class="btn-ghost" href="/admin/bookings?<%= qs({ page: page + 1 }) %>">Next →</a><% } else { %><span></span><% } %>
+      </nav>
+    <% } %>
+  <% } %>
+</section>

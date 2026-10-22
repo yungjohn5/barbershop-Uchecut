@@ -10,7 +10,7 @@ const { HttpError, SlotTakenError, ValidationError } = require('../lib/errors');
 const { toShopDate, wallClockToUtc, addDays } = require('../lib/time');
 const { ACTIVE_STATUSES } = require('../config/constants');
 const settingsService = require('./settings');
-const { computeDay, pickLeastBusy } = require('./availability');
+const { computeDay, pickLeastBusy, staffSettings } = require('./availability');
 
 const MAX_SERIALIZATION_RETRIES = 3;
 const BOOKING_LOCK_NAMESPACE = 7341; // first key of pg_advisory_xact_lock(ns, barberId)
@@ -79,7 +79,7 @@ const backoffMs = (attempt) => 10 + Math.floor(Math.random() * 50 * 2 ** attempt
 
 // ---------------------------------------------------------------------------
 
-async function attemptCreate(db, input, { now, settings, phone, hooks }) {
+async function attemptCreate(db, input, { now, settings, phone, hooks, staff = false }) {
   return db.$transaction(
     async (tx) => {
       const date = toShopDate(input.startsAt);
@@ -160,8 +160,10 @@ async function attemptCreate(db, input, { now, settings, phone, hooks }) {
           reference: generateReference(),
           manageToken: generateManageToken(),
           type: input.type,
-          status: isHome ? 'PENDING' : 'CONFIRMED',
-          confirmedAt: isHome ? null : now,
+          // Online home visits wait for staff; anything staff books is confirmed already.
+          status: isHome && !staff ? 'PENDING' : 'CONFIRMED',
+          confirmedAt: isHome && !staff ? null : now,
+          source: staff ? 'STAFF' : 'WEB',
           startsAt,
           endsAt,
           blockStartsAt,
@@ -199,7 +201,14 @@ async function attemptCreate(db, input, { now, settings, phone, hooks }) {
  * Create a booking. SHOP → CONFIRMED, HOME → PENDING.
  * Throws ValidationError (400), SlotTakenError (409) or HttpError 503 under heavy contention.
  */
-async function createBooking(rawInput, { now = new Date(), db = prisma, hooks = {} } = {}) {
+/**
+ * actor: 'customer' (default) or 'staff'. Staff bookings skip the lead time, are confirmed
+ * immediately (home visits included) and are marked source STAFF.
+ */
+async function createBooking(
+  rawInput,
+  { now = new Date(), db = prisma, hooks = {}, actor = 'customer' } = {},
+) {
   const parsed = bookingInputSchema.safeParse(rawInput);
   if (!parsed.success) {
     throw new ValidationError(
@@ -214,9 +223,11 @@ async function createBooking(rawInput, { now = new Date(), db = prisma, hooks = 
       { path: 'customer.phone', message: 'Invalid phone number' },
     ]);
   }
-  const settings = await settingsService.getAll();
+  const staff = actor === 'staff';
+  const base = await settingsService.getAll();
+  const settings = staff ? staffSettings(base) : base;
   return withTxRetry('createBooking', () =>
-    attemptCreate(db, input, { now, settings, phone, hooks }),
+    attemptCreate(db, input, { now, settings, phone, hooks, staff }),
   );
 }
 
@@ -300,11 +311,13 @@ async function getBookingByToken(token, { db = prisma } = {}) {
   return db.booking.findUnique({ where: { manageToken: token }, include: bookingInclude });
 }
 
-async function requireModifiable(db, token, now) {
+async function requireModifiable(db, token, now, { staff = false } = {}) {
   const booking = await getBookingByToken(token, { db });
   if (!booking) throw new HttpError(404, 'We couldn’t find that booking.', { code: 'NOT_FOUND' });
-  const settings = await settingsService.getAll();
-  const check = canModify(booking, { now, cutoffMin: settings.cancelCutoffMin });
+  const base = await settingsService.getAll();
+  const settings = staff ? staffSettings(base) : base;
+  // Staff can act until the appointment starts; customers until the cutoff.
+  const check = canModify(booking, { now, cutoffMin: staff ? 0 : settings.cancelCutoffMin });
   if (!check.allowed) throw new HttpError(409, check.reason, { code: 'LOCKED' });
   return { booking, settings };
 }
@@ -332,11 +345,11 @@ async function cancelBooking(token, { now = new Date(), reason, db = prisma } = 
 async function rescheduleBooking(
   token,
   { startsAt, barberId = 'any' },
-  { now = new Date(), db = prisma } = {},
+  { now = new Date(), db = prisma, staff = false } = {},
 ) {
   const start = new Date(startsAt);
   if (Number.isNaN(start.getTime())) throw new ValidationError('Choose a new time.');
-  const { booking, settings } = await requireModifiable(db, token, now);
+  const { booking, settings } = await requireModifiable(db, token, now, { staff });
   const wanted = barberId === 'any' ? 'any' : Number(barberId);
 
   return withTxRetry('rescheduleBooking', () =>
@@ -377,8 +390,9 @@ async function rescheduleBooking(
             blockStartsAt: new Date(start.getTime() - selection.bufferMin * MIN),
             blockEndsAt: new Date(endsAt.getTime() + selection.bufferMin * MIN),
             barberId: nextBarber,
-            status: isHome ? 'PENDING' : 'CONFIRMED',
-            confirmedAt: isHome ? null : (booking.confirmedAt ?? now),
+            // A customer moving a home visit needs re-confirming; staff moves stay confirmed.
+            status: isHome && !staff ? 'PENDING' : 'CONFIRMED',
+            confirmedAt: isHome && !staff ? null : (booking.confirmedAt ?? now),
           },
           include: bookingInclude,
         });

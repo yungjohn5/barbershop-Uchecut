@@ -1,0 +1,74 @@
+<%
+  const range = axis.to - axis.from;
+  const pct = (m) => ((m - axis.from) / range) * 100;
+  const hours = [];
+  for (let m = axis.from; m <= axis.to; m += 60) hours.push(m);
+  const hh = (m) => `${String(Math.floor(m / 60)).padStart(2, '0')}:00`;
+  const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+%>
+<header class="a-page-head">
+  <div>
+    <p class="eyebrow">Calendar</p>
+    <h1 class="a-title"><%= formatShortDate(start) %> – <%= formatShortDate(end) %></h1>
+  </div>
+  <div class="flex flex-wrap items-center gap-2">
+    <a href="/admin/calendar?date=<%= prevWeek %>&barber=<%= barber ? barber.id : '' %>" class="icon-btn-dark" aria-label="Previous week">←</a>
+    <a href="/admin/calendar?date=<%= thisWeek %>&barber=<%= barber ? barber.id : '' %>" class="btn-ghost !min-h-[2.75rem]">This week</a>
+    <a href="/admin/calendar?date=<%= nextWeek %>&barber=<%= barber ? barber.id : '' %>" class="icon-btn-dark" aria-label="Next week">→</a>
+  </div>
+</header>
+
+<nav class="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:px-0" aria-label="Barber">
+  <% barbers.forEach((b) => { %>
+    <a href="/admin/calendar?date=<%= start %>&barber=<%= b.id %>" class="a-chip <%= barber && barber.id === b.id ? 'is-active' : '' %>"><%= b.name %></a>
+  <% }) %>
+</nav>
+
+<div class="mt-3 flex flex-wrap gap-4 text-xs text-ink/65" aria-hidden="true">
+  <span class="flex items-center gap-1.5"><i class="cal-key cal-key-shop"></i>In shop</span>
+  <span class="flex items-center gap-1.5"><i class="cal-key cal-key-home"></i>Home visit</span>
+  <span class="flex items-center gap-1.5"><i class="cal-key cal-key-buffer"></i>Travel time</span>
+  <span class="flex items-center gap-1.5"><i class="cal-key cal-key-off"></i>Closed / time off</span>
+</div>
+
+<% if (!barber) { %>
+  <div class="a-empty mt-6"><p class="font-serif text-3xl">No barbers yet.</p></div>
+<% } else { %>
+<div class="cal-wrap mt-4" data-cal>
+  <div class="cal">
+    <div class="cal-head">
+      <div class="cal-corner"></div>
+      <% days.forEach((d) => { %>
+        <div class="cal-day-head <%= d.isToday ? 'is-today' : '' %>">
+          <span class="text-xs uppercase tracking-[0.16em] text-ink/65"><%= DOW[d.weekday] %></span>
+          <span class="font-serif text-2xl leading-none"><%= Number(d.date.slice(8)) %></span>
+          <span class="text-xs text-ink/65"><%= d.events.length %> booked</span>
+        </div>
+      <% }) %>
+    </div>
+    <div class="cal-body">
+      <div class="cal-axis">
+        <% hours.forEach((m) => { %><span class="cal-hour" data-top="<%= pct(m) %>"><%= hh(m) %></span><% }) %>
+      </div>
+      <% days.forEach((d) => { %>
+        <div class="cal-col <%= d.isToday ? 'is-today' : '' %>" aria-label="<%= DOW[d.weekday] %> <%= d.date %>">
+          <% hours.forEach((m) => { %><span class="cal-line" data-top="<%= pct(m) %>"></span><% }) %>
+          <%# closed time = everything outside shifts %>
+          <% let cursor = axis.from; d.shifts.slice().sort((a, b) => a.from - b.from).forEach((s) => { if (s.from > cursor) { %><span class="cal-closed" data-top="<%= pct(cursor) %>" data-h="<%= pct(s.from) - pct(cursor) %>"></span><% } cursor = Math.max(cursor, s.to); }); if (cursor < axis.to) { %><span class="cal-closed" data-top="<%= pct(cursor) %>" data-h="<%= 100 - pct(cursor) %>"></span><% } %>
+          <% d.off.filter((o) => o.to > axis.from && o.from < axis.to).forEach((o) => { %><span class="cal-off" data-top="<%= pct(Math.max(o.from, axis.from)) %>" data-h="<%= pct(Math.min(o.to, axis.to)) - pct(Math.max(o.from, axis.from)) %>" title="<%= o.reason || 'Time off' %>"></span><% }) %>
+          <% d.events.forEach((e) => { const b = e.booking; %>
+            <% if (e.from > e.blockFrom) { %><span class="cal-buffer" data-top="<%= pct(e.blockFrom) %>" data-h="<%= pct(e.from) - pct(e.blockFrom) %>"></span><% } %>
+            <% if (e.blockTo > e.to) { %><span class="cal-buffer" data-top="<%= pct(e.to) %>" data-h="<%= pct(e.blockTo) - pct(e.to) %>"></span><% } %>
+            <a href="/admin/bookings/<%= b.id %>" class="cal-event cal-<%= b.type.toLowerCase() %> cal-s-<%= b.status.toLowerCase() %>" data-top="<%= pct(e.from) %>" data-h="<%= pct(e.to) - pct(e.from) %>">
+              <span class="cal-event-time"><%= formatTime(b.startsAt) %>–<%= formatTime(b.endsAt) %></span>
+              <span class="cal-event-name"><%= b.customer.name %></span>
+              <span class="cal-event-meta"><%= b.services.map((s) => s.name).join(', ') %><%= b.zone ? ` · ${b.zone.name}` : '' %></span>
+            </a>
+          <% }) %>
+          <% if (d.isToday && nowMin !== null && nowMin >= axis.from && nowMin <= axis.to) { %><span class="cal-now" data-top="<%= pct(nowMin) %>"></span><% } %>
+        </div>
+      <% }) %>
+    </div>
+  </div>
+</div>
+<% } %>

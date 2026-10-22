@@ -237,8 +237,14 @@ async function computeDay(
 }
 
 /** Public entry point used by GET /api/slots. */
-async function getSlots(query, { now = new Date(), db = prisma } = {}) {
-  const settings = await settingsService.getAll();
+/** Lead-time-free settings for staff (walk-ins and phone bookings). */
+function staffSettings(settings) {
+  return { ...settings, leadTimeShopMin: 0, leadTimeHomeMin: 0 };
+}
+
+async function getSlots(query, { now = new Date(), db = prisma, staff = false } = {}) {
+  const base = await settingsService.getAll();
+  const settings = staff ? staffSettings(base) : base;
   const { slots, selection } = await computeDay(db, query, { now, settings });
   return {
     date: query.date,
@@ -253,6 +259,7 @@ async function getSlots(query, { now = new Date(), db = prisma } = {}) {
 }
 
 module.exports = {
+  staffSettings,
   eligibleBarbers,
   summariseSelection,
   computeSlots,

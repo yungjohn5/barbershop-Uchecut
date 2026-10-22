@@ -1,0 +1,3 @@
+<%# Param: status, type (optional) %>
+<% const labels = { PENDING: 'Pending', CONFIRMED: 'Confirmed', COMPLETED: 'Completed', CANCELLED: 'Cancelled', NO_SHOW: 'No-show' }; %>
+<span class="a-badge a-badge-<%= status.toLowerCase() %>"><span class="a-badge-dot" aria-hidden="true"></span><%= labels[status] || status %></span>

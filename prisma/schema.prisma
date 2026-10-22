@@ -24,6 +24,11 @@ enum BookingStatus {
   NO_SHOW
 }
 
+enum BookingSource {
+  WEB
+  STAFF
+}
+
 enum AdminRole {
   OWNER
   STAFF
@@ -156,7 +161,9 @@ model Booking {
   subtotalKobo  Int
   homeFeeKobo   Int              @default(0)
   totalKobo     Int
-  notes         String?
+  notes         String? // from the customer
+  staffNotes    String? // internal, admin only
+  source        BookingSource    @default(WEB)
   manageToken   String           @unique // 32 random bytes, base64url
   barberId      Int
   customerId    Int

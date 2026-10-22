@@ -1,0 +1,130 @@
+<% const err = (k) => errors && errors[k]; const v = values || {}; const type = v.type || 'SHOP'; const chosen = (v.serviceIds || []).map(Number); %>
+<header class="a-page-head">
+  <div>
+    <p class="eyebrow">Walk-in or phone booking</p>
+    <h1 class="a-title">New <em class="accent">booking</em></h1>
+    <p class="mt-2 max-w-xl text-ink/65">No lead time for staff bookings, and home visits are confirmed straight away.</p>
+  </div>
+</header>
+
+<% if (err('_form')) { %><div class="flash flash-error" role="alert"><span class="flash-icon" aria-hidden="true">!</span><p><%= errors._form %></p></div><% } %>
+
+<form method="post" action="/admin/bookings" id="staff-form" class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]" data-staff-form novalidate>
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+  <div class="space-y-6">
+    <section class="a-card booking-type">
+      <h2 class="a-h3">1. Visit</h2>
+      <div class="mt-4 grid gap-3 sm:grid-cols-2">
+        <% [['SHOP', 'In the shop'], ['HOME', 'Home visit']].forEach(([val, label]) => { %>
+          <label class="choice choice-row">
+            <input type="radio" name="type" value="<%= val %>" class="sr-only" <%= type === val ? 'checked' : '' %> data-staff-type />
+            <span class="flex-1 font-medium"><%= label %></span>
+            <span class="choice-check shrink-0" aria-hidden="true"></span>
+          </label>
+        <% }) %>
+      </div>
+      <div class="zones mt-5">
+        <p class="text-sm font-medium uppercase tracking-[0.14em] text-ink/65">Area</p>
+        <div class="mt-3 grid gap-2 sm:grid-cols-2">
+          <% zones.forEach((z) => { %>
+            <label class="choice choice-row !py-3" data-fee="<%= z.feeKobo %>">
+              <input type="radio" name="zoneId" value="<%= z.id %>" class="sr-only" <%= Number(v.zoneId) === z.id ? 'checked' : '' %> aria-labelledby="sz-<%= z.id %>" data-staff-zone />
+              <span class="flex flex-1 justify-between gap-3"><span id="sz-<%= z.id %>"><%= z.name %></span><span class="whitespace-nowrap tabular-nums text-ink/65">+<%= naira(z.feeKobo) %></span></span>
+              <span class="choice-check shrink-0" aria-hidden="true"></span>
+            </label>
+          <% }) %>
+        </div>
+      </div>
+    </section>
+
+    <section class="a-card">
+      <h2 class="a-h3">2. Services</h2>
+      <% if (err('serviceIds')) { %><p class="field-error">Choose at least one service.</p><% } %>
+      <% categories.forEach((c) => { %>
+        <p class="mt-5 text-sm font-medium uppercase tracking-[0.14em] text-ink/65"><%= c.name %></p>
+        <div class="mt-2 grid gap-2 md:grid-cols-2">
+          <% c.services.forEach((s) => { %>
+            <label class="choice choice-row !py-3" data-home-ok="<%= s.homeAvailable %>">
+              <input type="checkbox" name="serviceIds" value="<%= s.id %>" class="sr-only" data-name="<%= s.name %>" data-price="<%= s.priceKobo %>" data-duration="<%= s.durationMin %>" <%= chosen.includes(s.id) ? 'checked' : '' %> data-staff-service />
+              <span class="flex min-w-0 flex-1 flex-col">
+                <span class="font-medium"><%= s.name %></span>
+                <span class="text-sm text-ink/65"><%= naira(s.priceKobo) %> · <%= duration(s.durationMin) %><%= s.homeAvailable ? '' : ' · shop only' %></span>
+              </span>
+              <span class="choice-check shrink-0" aria-hidden="true"></span>
+            </label>
+          <% }) %>
+        </div>
+      <% }) %>
+    </section>
+
+    <section class="a-card">
+      <h2 class="a-h3">3. Barber &amp; time</h2>
+      <% if (err('startsAt')) { %><p class="field-error mt-2"><%= errors.startsAt %></p><% } %>
+      <div class="mt-4 grid gap-4 sm:grid-cols-2">
+        <label class="a-field"><span>Barber</span>
+          <select name="barberId" data-staff-barber>
+            <option value="any">Any barber</option>
+            <% barbers.forEach((b) => { %><option value="<%= b.id %>" <%= Number(v.barberId) === b.id ? 'selected' : '' %>><%= b.name %></option><% }) %>
+          </select>
+        </label>
+        <label class="a-field"><span>Date</span>
+          <input type="date" name="date" value="<%= v.date || today %>" min="<%= today %>" data-staff-date />
+        </label>
+      </div>
+      <div class="mt-5" data-staff-slots data-selected="<%= v.startsAt || '' %>" aria-live="polite">
+        <p class="slots-empty">Choose services, then pick a date to see free times.</p>
+      </div>
+      <noscript><p class="mt-3 text-sm text-ink/65">JavaScript is needed to load free times here.</p></noscript>
+    </section>
+
+    <section class="a-card">
+      <h2 class="a-h3">4. Customer</h2>
+      <div class="mt-4 grid gap-4 sm:grid-cols-2">
+        <div class="field-float <%= err('phone') ? 'has-error' : '' %>">
+          <input id="s-phone" name="phone" type="tel" inputmode="tel" placeholder=" " value="<%= v.phone || '' %>" data-staff-phone />
+          <label for="s-phone">Phone number</label>
+          <p class="field-hint" data-customer-hint>We’ll fill in returning customers.</p>
+          <% if (err('phone')) { %><p class="field-error"><%= v.phone ? 'Enter a valid Nigerian mobile, e.g. 0803 123 4567.' : 'Phone number is required.' %></p><% } %>
+        </div>
+        <div class="field-float <%= err('name') ? 'has-error' : '' %>">
+          <input id="s-name" name="name" type="text" placeholder=" " value="<%= v.name || '' %>" data-staff-name />
+          <label for="s-name">Full name</label>
+          <% if (err('name')) { %><p class="field-error">Please enter a name.</p><% } %>
+        </div>
+        <div class="field-float sm:col-span-2">
+          <input id="s-email" name="email" type="email" placeholder=" " value="<%= v.email || '' %>" data-staff-email />
+          <label for="s-email">Email <span class="font-normal opacity-70">(optional)</span></label>
+        </div>
+        <div class="zones-address field-float sm:col-span-2 <%= err('address') ? 'has-error' : '' %>">
+          <input id="s-address" name="address" type="text" placeholder=" " value="<%= v.address || '' %>" />
+          <label for="s-address">Address (home visits)</label>
+          <% if (err('address')) { %><p class="field-error">Address is required for home visits.</p><% } %>
+        </div>
+        <div class="zones-address field-float sm:col-span-2">
+          <input id="s-landmark" name="landmark" type="text" placeholder=" " value="<%= v.landmark || '' %>" />
+          <label for="s-landmark">Landmark <span class="font-normal opacity-70">(optional)</span></label>
+        </div>
+        <div class="field-float sm:col-span-2">
+          <textarea id="s-notes" name="notes" rows="2" placeholder=" "><%= v.notes || '' %></textarea>
+          <label for="s-notes">Notes <span class="font-normal opacity-70">(optional)</span></label>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <aside>
+    <div class="a-card xl:sticky xl:top-6">
+      <p class="eyebrow">Summary</p>
+      <dl class="mt-4 space-y-3 text-[0.95rem]">
+        <div class="sum-row"><dt>Services</dt><dd data-ss-services>—</dd></div>
+        <div class="sum-row"><dt>Duration</dt><dd data-ss-duration>—</dd></div>
+        <div class="sum-row"><dt>When</dt><dd data-ss-when>—</dd></div>
+      </dl>
+      <div class="mt-5 flex items-baseline justify-between border-t border-ink/10 pt-4">
+        <span class="font-medium">Total</span><span class="font-serif text-3xl tabular-nums" data-ss-total>—</span>
+      </div>
+      <button type="submit" class="btn-primary mt-6 w-full justify-center" data-staff-submit>Create booking <span class="arrow" aria-hidden="true">→</span></button>
+      <p class="mt-3 text-xs text-ink/65">Paid on the day. The customer isn’t messaged automatically yet.</p>
+    </div>
+  </aside>
+</form>

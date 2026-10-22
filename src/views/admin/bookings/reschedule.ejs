@@ -1,0 +1,22 @@
+<nav class="text-sm text-ink/65" aria-label="Breadcrumb"><a href="/admin/bookings" class="link-u">Bookings</a> <span aria-hidden="true">/</span> <a href="/admin/bookings/<%= booking.id %>" class="link-u"><%= booking.reference %></a> <span aria-hidden="true">/</span> Move</nav>
+<header class="a-page-head">
+  <div>
+    <p class="eyebrow">Reschedule</p>
+    <h1 class="a-title">Move <em class="accent"><%= booking.customer.name.split(' ')[0] %></em>’s booking</h1>
+    <p class="mt-2 text-ink/65">Currently <strong class="font-medium text-ink"><%= when %></strong>. No lead time or cutoff for staff.</p>
+  </div>
+</header>
+<form method="post" action="/admin/bookings/<%= booking.id %>/reschedule" class="a-card" id="step-form">
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+  <%- include('../../partials/booking/time-picker', {
+    barbers: ctx.barbers,
+    selectedStart: null,
+    baseUrl: `/admin/bookings/${booking.id}/reschedule`,
+    slotsUrl: '/admin/api/slots',
+    slotsQuery: { services: booking.services.map((s) => s.serviceId).join(','), type: booking.type, zone: booking.zoneId || '' },
+  }) %>
+  <div class="mt-10 flex flex-wrap items-center justify-between gap-4">
+    <a href="/admin/bookings/<%= booking.id %>" class="link-line text-sm"><span class="link-arrow rotate-180" aria-hidden="true">→</span> Keep current time</a>
+    <button type="submit" class="btn-primary" data-continue disabled>Move booking <span class="arrow" aria-hidden="true">→</span></button>
+  </div>
+</form>

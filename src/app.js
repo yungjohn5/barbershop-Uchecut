@@ -91,6 +91,7 @@ function createApp({ sessionPool } = {}) {
     }
   });
 
+  app.use('/admin', require('./routes/admin'));
   app.use('/', require('./routes/public'));
   app.use('/', require('./routes/booking'));
 

@@ -43,4 +43,17 @@ const plain = (text) => String(text).replace(/\*/g, '');
 
 const { formatNgPhone: fmtPhone } = require('./phone');
 
-module.exports = { naira, duration, srcset, src, pad2, rich, plain, fmtPhone };
+// Dates for the admin views, always in shop time.
+const { formatInTimeZone } = require('date-fns-tz');
+const { TIMEZONE } = require('../config/constants');
+
+/** "14:30" */
+const formatTime = (instant) => formatInTimeZone(new Date(instant), TIMEZONE, 'HH:mm');
+/** "Wed 22 Oct" */
+const formatShort = (instant) => formatInTimeZone(new Date(instant), TIMEZONE, 'EEE d MMM');
+/** "Wednesday 22 October" */
+const formatDay = (instant) => formatInTimeZone(new Date(instant), TIMEZONE, 'EEEE d MMMM');
+/** Shop date string "2026-10-22" → "22 Oct" (no timezone shift: it is already a shop date). */
+const formatShortDate = (dateStr) => formatInTimeZone(new Date(`${dateStr}T12:00:00Z`), 'UTC', 'd MMM');
+
+module.exports = { naira, duration, srcset, src, pad2, rich, plain, fmtPhone, formatTime, formatShort, formatDay, formatShortDate };
