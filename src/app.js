@@ -92,6 +92,7 @@ function createApp({ sessionPool } = {}) {
   });
 
   app.use('/', require('./routes/public'));
+  app.use('/', require('./routes/booking'));
 
   app.use(notFound);
   app.use(errorHandler);

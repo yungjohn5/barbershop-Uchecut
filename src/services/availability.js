@@ -157,7 +157,14 @@ async function loadSelection(db, { type, serviceIds, zoneId }) {
  * Load everything computeSlots needs for one day and run it.
  * Returns { slots, selection, barbers } so booking.js can reuse the context.
  */
-async function computeDay(db, { date, barberId, serviceIds, type, zoneId }, { now, settings }) {
+/**
+ * excludeBookingId: ignore this booking's own block (rescheduling must not collide with itself).
+ */
+async function computeDay(
+  db,
+  { date, barberId, serviceIds, type, zoneId, excludeBookingId = null },
+  { now, settings },
+) {
   if (!isValidDateStr(date)) throw new ValidationError('Invalid date.');
   const selection = await loadSelection(db, { type, serviceIds, zoneId });
   const weekday = weekdayOf(date);
@@ -191,6 +198,7 @@ async function computeDay(db, { date, barberId, serviceIds, type, zoneId }, { no
           where: {
             barberId: { in: ids },
             status: { in: ACTIVE_STATUSES },
+            ...(excludeBookingId ? { id: { not: excludeBookingId } } : {}),
             blockStartsAt: { lt: to },
             blockEndsAt: { gt: from },
           },

@@ -30,7 +30,8 @@
   // width hands control back to native scrolling (and the mobile menu).
   var smoother = null;
   var finePointer = window.matchMedia('(pointer: fine)').matches;
-  if (motion && window.ScrollSmoother) {
+  // Pages with sticky UI (the booking summary) opt out: smoothing transforms break sticky.
+  if (motion && window.ScrollSmoother && !document.body.hasAttribute('data-no-smoother')) {
     gsap.matchMedia().add('(min-width: 1024px) and (pointer: fine)', function () {
       smoother = window.ScrollSmoother.create({
         wrapper: '#smooth-wrapper',

@@ -1,0 +1,29 @@
+<%# Booking facts grid. Params: booking, day, time, endTime %>
+<dl class="booking-facts">
+  <div><dt>When</dt><dd><span class="block font-serif text-2xl leading-tight"><%= day %></span><span class="text-ink/70"><%= time %> – <%= endTime %></span></dd></div>
+  <div>
+    <dt>Where</dt>
+    <dd>
+      <% if (booking.type === 'HOME') { %>
+        <span class="block font-medium">Home visit<%= booking.zone ? ` · ${booking.zone.name}` : '' %></span>
+        <span class="text-ink/70"><%= booking.address %><%= booking.landmark ? ` (near ${booking.landmark})` : '' %></span>
+      <% } else { %>
+        <span class="block font-medium">At the shop</span>
+        <span class="text-ink/70"><%= shop.address.join(', ') %></span>
+      <% } %>
+    </dd>
+  </div>
+  <div><dt>Barber</dt><dd class="font-medium"><%= booking.barber.name %></dd></div>
+  <div>
+    <dt>Services</dt>
+    <dd>
+      <% booking.services.forEach((s) => { %>
+        <span class="flex justify-between gap-4"><span><%= s.name %></span><span class="tabular-nums text-ink/70"><%= naira(s.priceKobo) %></span></span>
+      <% }) %>
+      <% if (booking.homeFeeKobo) { %>
+        <span class="flex justify-between gap-4"><span>Travel fee</span><span class="tabular-nums text-ink/70"><%= naira(booking.homeFeeKobo) %></span></span>
+      <% } %>
+    </dd>
+  </div>
+  <div class="booking-facts-total"><dt>Total, paid on the day</dt><dd class="font-serif text-4xl tabular-nums"><%= naira(booking.totalKobo) %></dd></div>
+</dl>

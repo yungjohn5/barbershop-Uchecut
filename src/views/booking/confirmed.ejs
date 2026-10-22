@@ -1,0 +1,49 @@
+<% const pending = booking.status === 'PENDING'; %>
+<% const wa = encodeURIComponent(`Hi ${shop.name}, about my booking ${booking.reference}.`); %>
+<section class="mx-auto max-w-5xl px-5 pb-28 pt-8 sm:px-8 lg:pt-14">
+  <div class="confirm-card" data-b-reveal>
+    <div class="confirm-head keep-dark">
+      <svg class="confirm-mark" viewBox="0 0 80 80" aria-hidden="true">
+        <circle class="confirm-ring" cx="40" cy="40" r="36" />
+        <path class="confirm-tick" d="M25 41.5l10 10 20-23" />
+      </svg>
+      <p class="eyebrow mt-8 justify-center !text-paper/60"><%= pending ? 'Request received' : 'Booking confirmed' %></p>
+      <h1 class="mt-4 text-center text-[clamp(2.4rem,5.5vw,4.5rem)] leading-[1]">
+        <%= pending ? 'We’ve got your request.' : 'You’re booked.' %>
+      </h1>
+      <p class="mx-auto mt-4 max-w-md text-center text-[1.02rem] text-paper/75">
+        <%= pending
+          ? `Your barber will call ${booking.customer.phone} to confirm the visit before setting off.`
+          : `See you ${day}, ${booking.customer.name.split(' ')[0]}. Your chair will be ready.` %>
+      </p>
+      <div class="mt-8 flex flex-col items-center gap-2">
+        <span class="text-[0.7rem] uppercase tracking-[0.28em] text-paper/55">Reference</span>
+        <button type="button" class="ref-pill" data-copy="<%= booking.reference %>" aria-label="Copy reference <%= booking.reference %>">
+          <span class="font-serif text-3xl tracking-[0.06em]"><%= booking.reference %></span>
+          <span class="ref-copy" data-copy-label>Copy</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="confirm-body">
+      <%- include('../partials/booking/details-card') %>
+
+      <div class="mt-10 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+        <a href="/manage/<%= booking.manageToken %>/calendar.ics" class="btn-primary">Add to calendar <span class="arrow" aria-hidden="true">→</span></a>
+        <a href="/manage/<%= booking.manageToken %>" class="btn-ghost">Manage booking</a>
+        <a href="https://wa.me/<%= shop.whatsapp %>?text=<%= wa %>" rel="noopener" class="btn-ghost">WhatsApp us</a>
+      </div>
+
+      <div class="manage-link mt-10">
+        <div class="min-w-0 flex-1">
+          <p class="text-sm font-medium">Your manage link</p>
+          <p class="mt-1 text-sm text-ink/65">Keep it safe. Use it to reschedule or cancel up to <%= cutoffMin / 60 %> hours before.</p>
+          <p class="mt-3 truncate font-mono text-[0.8rem] text-ink/75" title="<%= manageUrl %>"><%= manageUrl %></p>
+        </div>
+        <button type="button" class="btn-ghost shrink-0 !px-5" data-copy="<%= manageUrl %>"><span data-copy-label>Copy link</span></button>
+      </div>
+
+      <p class="mt-8 text-center text-sm text-ink/65"><a href="/" class="link-u">Back to the site</a></p>
+    </div>
+  </div>
+</section>

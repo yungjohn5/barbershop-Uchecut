@@ -105,10 +105,10 @@ describe('JSON API', () => {
     expect(res.text).toContain('2 services · from ₦6,000');
   });
 
-  test('GET /book keeps CTAs working until the wizard ships', async () => {
+  test('GET /book?type=HOME opens the wizard with Home visit preselected', async () => {
     const res = await request(app).get('/book?type=HOME').expect(200);
-    expect(res.text).toContain('Online booking opens shortly');
-    expect(res.text).toContain('a home visit');
+    expect(res.text).toContain('Where shall we');
+    expect(res.text).toMatch(/value="HOME"[^>]*checked/);
   });
 
   test('GSAP is served locally', async () => {

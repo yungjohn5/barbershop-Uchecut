@@ -1,0 +1,65 @@
+<section class="mx-auto max-w-[88rem] px-5 pb-40 pt-6 sm:px-8 lg:px-10 lg:pb-28 lg:pt-10">
+  <%- include('../partials/booking/steps') %>
+
+  <div class="mt-10 grid gap-12 lg:mt-14 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-14 xl:grid-cols-[minmax(0,1fr)_24rem]">
+    <div>
+      <%- include('../partials/booking/flash') %>
+      <p class="eyebrow" data-b-reveal><span class="eyebrow-num">01</span>Your visit</p>
+      <h1 class="mt-4 text-[clamp(2.2rem,4.4vw,3.75rem)] leading-[1.02]" data-b-reveal>Where shall we <em class="accent">meet</em>?</h1>
+      <p class="mt-4 max-w-xl text-[1.02rem] text-ink/70" data-b-reveal>Come into the shop, or have your barber come to you anywhere we cover in Lagos.</p>
+
+      <form id="step-form" method="post" action="/book/type" class="booking-type mt-10" novalidate>
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+        <fieldset>
+          <legend class="sr-only">Visit type</legend>
+          <div class="grid gap-4 sm:grid-cols-2">
+            <% const types = [
+              { value: 'SHOP', title: 'In the shop', text: 'Your chair is ready when you walk in. Confirmed instantly.', meta: 'No travel fee', img: '/images/site/craft-a', widths: [500, 900] },
+              { value: 'HOME', title: 'Home visit', text: 'Your barber brings the full kit to your home or office.', meta: ctx.zones.length ? `From +${naira(Math.min(...ctx.zones.map((z) => z.feeKobo)))} travel` : 'Coming soon', img: '/images/site/home-visit', widths: [700, 1300] },
+            ]; %>
+            <% types.forEach((t) => { %>
+              <label class="choice group" data-b-reveal>
+                <input type="radio" name="type" value="<%= t.value %>" class="sr-only" required <%= ctx.type === t.value ? 'checked' : '' %> <%= t.value === 'HOME' && !ctx.zones.length ? 'disabled' : '' %> />
+                <span class="block overflow-hidden rounded-[0.9rem]">
+                  <img src="<%= src(t.img, t.widths) %>" srcset="<%= srcset(t.img, t.widths) %>" sizes="(min-width: 640px) 30vw, 90vw" alt="" class="aspect-[16/10] w-full object-cover transition-transform duration-[1.2s] ease-expo group-hover:scale-[1.04]" />
+                </span>
+                <span class="mt-5 flex items-start justify-between gap-4">
+                  <span>
+                    <span class="block font-serif text-[1.75rem] leading-tight"><%= t.title %></span>
+                    <span class="mt-1.5 block text-[0.95rem] text-ink/70"><%= t.text %></span>
+                    <span class="mt-3 inline-block text-sm font-medium text-amber-dark"><%= t.meta %></span>
+                  </span>
+                  <span class="choice-check" aria-hidden="true"></span>
+                </span>
+              </label>
+            <% }) %>
+          </div>
+        </fieldset>
+
+        <fieldset class="zones mt-10" data-zones>
+          <legend class="text-sm font-medium uppercase tracking-[0.16em] text-ink/65">Your area <span class="normal-case tracking-normal text-ink/65">(home visits)</span></legend>
+          <div class="mt-4 grid gap-3 sm:grid-cols-2">
+            <% ctx.zones.forEach((z) => { %>
+              <label class="choice choice-row">
+                <input type="radio" name="zoneId" value="<%= z.id %>" class="sr-only" <%= ctx.zone && ctx.zone.id === z.id ? 'checked' : '' %> />
+                <span class="flex flex-1 items-center justify-between gap-4">
+                  <span class="font-medium"><%= z.name %></span>
+                  <span class="tabular-nums text-ink/65">+ <%= naira(z.feeKobo) %></span>
+                </span>
+                <span class="choice-check" aria-hidden="true"></span>
+              </label>
+            <% }) %>
+          </div>
+          <p class="mt-4 text-sm text-ink/65">Not listed? <a class="link-u" href="https://wa.me/<%= shop.whatsapp %>" rel="noopener">Message us on WhatsApp</a>; we may still come to you.</p>
+        </fieldset>
+
+        <div class="mt-12 hidden items-center justify-between gap-4 lg:flex">
+          <a href="/" class="link-line text-sm"><span class="link-arrow rotate-180" aria-hidden="true">→</span> Back to site</a>
+          <button type="submit" class="btn-primary">Continue <span class="arrow" aria-hidden="true">→</span></button>
+        </div>
+      </form>
+    </div>
+
+    <%- include('../partials/booking/summary', { cta: 'Continue' }) %>
+  </div>
+</section>

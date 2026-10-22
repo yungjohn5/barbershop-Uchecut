@@ -250,12 +250,16 @@ Pages render with EJS; the booking widget calls three small JSON endpoints, so t
 | GET | `/book/time` | Step 3: pick barber (or any) + date + slot |
 | GET | `/book/details` | Step 4: name, phone, email, address/landmark for HOME |
 | POST | `/book` | Validate (zod), transaction create, redirect |
-| GET | `/book/confirmed/:reference` | Confirmation, add-to-calendar (.ics) link |
+| POST | `/book/type`, `/book/services`, `/book/time` | Save each step to the session draft, then redirect to the next step |
+| GET | `/book/confirmed/:reference` | Confirmation; viewable only from the session that booked it (references are short), with links to the calendar file and manage link |
 | GET | `/manage/:token` | View booking, cancel or reschedule |
 | POST | `/manage/:token/cancel` | Cancel before cutoff |
-| POST | `/manage/:token/reschedule` | Move to a new valid slot |
+| POST | `/manage/:token/reschedule` | Move to a new valid slot (same services and price; home visits return to PENDING) |
+| GET | `/manage/:token/reschedule` | Time picker for a new slot, ignoring the booking's own block |
+| GET | `/manage/:token/slots` | JSON slots for the reschedule picker (token-scoped, rate limited) |
+| GET | `/manage/:token/calendar.ics` | Calendar file (RFC 5545) with a 2-hour reminder |
 
-Wizard state is kept in the session between steps, so a refresh never loses the selection.
+Wizard state is kept in the session between steps, so a refresh never loses the selection. Each step is a plain form, so the flow works without JavaScript; `public/js/booking.js` adds live totals, in-place slot loading and the mobile summary sheet. Deep links prefill the draft (`/book?type=HOME`, `?service=3`, `?barber=2`). Steps are guarded: a later step redirects to the first incomplete one. Rescheduling uses the same transaction, advisory lock and retry policy as creation.
 
 **JSON API** (rate limited, used by the widget)
 

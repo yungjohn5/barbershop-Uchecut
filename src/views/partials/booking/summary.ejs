@@ -1,0 +1,63 @@
+<%#
+  Booking summary. Desktop: sticky card. Phones: fixed bottom bar with the total and the
+  step's submit button (form="step-form"), expandable to the full summary.
+  Params: summary, cta (button label), formId, canContinue
+%>
+<% const formId = locals.formId || 'step-form'; %>
+<% const body = () => { %>
+  <div class="flex items-center justify-between gap-3">
+    <p class="eyebrow">Your booking</p>
+    <% if (summary.type) { %>
+      <span class="rounded-full border border-ink/15 px-3 py-1 text-xs font-medium"><%= summary.type === 'HOME' ? 'Home visit' : 'In shop' %></span>
+    <% } %>
+  </div>
+  <dl class="mt-5 space-y-4 text-[0.95rem]">
+    <% if (summary.zone) { %>
+      <div class="sum-row"><dt>Area</dt><dd><%= summary.zone.name %></dd></div>
+    <% } %>
+    <div class="sum-row">
+      <dt>Services</dt>
+      <dd data-sum-services>
+        <% if (summary.services.length) { %>
+          <% summary.services.forEach((s) => { %><span class="block"><%= s.name %></span><% }) %>
+        <% } else { %><span class="text-ink/50">Not chosen yet</span><% } %>
+      </dd>
+    </div>
+    <div class="sum-row"><dt>Duration</dt><dd data-sum-duration><%= summary.serviceMin ? duration(summary.serviceMin) : '—' %></dd></div>
+    <div class="sum-row"><dt>Barber</dt><dd data-sum-barber><%= summary.barber ? summary.barber.name : 'Any barber' %></dd></div>
+    <div class="sum-row"><dt>When</dt><dd data-sum-when><%= summary.when || '—' %></dd></div>
+  </dl>
+  <div class="mt-6 space-y-2 border-t border-ink/10 pt-5 text-[0.95rem]">
+    <div class="flex justify-between gap-3"><span class="text-ink/65">Services</span><span class="tabular-nums" data-sum-subtotal><%= summary.services.length ? naira(summary.subtotalKobo) : '—' %></span></div>
+    <% if (summary.type === 'HOME') { %>
+      <div class="flex justify-between gap-3"><span class="text-ink/65">Travel fee</span><span class="tabular-nums" data-sum-fee data-fee="<%= summary.homeFeeKobo %>"><%= naira(summary.homeFeeKobo) %></span></div>
+    <% } %>
+    <div class="flex items-baseline justify-between gap-3 pt-2">
+      <span class="font-medium">Total</span>
+      <span class="font-serif text-3xl tabular-nums" data-sum-total><%= summary.services.length ? naira(summary.totalKobo) : '—' %></span>
+    </div>
+    <p class="pt-1 text-xs text-ink/65">Pay on the day: cash or transfer. Nothing to pay now.</p>
+  </div>
+<% } %>
+
+<aside class="hidden lg:block" aria-label="Booking summary">
+  <div class="sticky top-8 rounded-[1.25rem] border border-ink/10 bg-surface p-7 shadow-[0_30px_70px_-50px_rgba(0,0,0,0.5)]" data-b-reveal>
+    <% body() %>
+  </div>
+</aside>
+
+<div class="booking-bar lg:hidden" data-booking-bar>
+  <details class="booking-sheet">
+    <summary class="sr-only">Show booking summary</summary>
+    <div class="max-h-[60svh] overflow-y-auto px-5 pb-4 pt-5"><% body() %></div>
+  </details>
+  <div class="flex items-center gap-3 px-4 py-3">
+    <button type="button" class="flex min-h-[2.75rem] flex-1 flex-col items-start text-left" data-sheet-toggle aria-expanded="false">
+      <span class="text-[0.7rem] uppercase tracking-[0.18em] text-ink/65">Total <span class="sheet-caret" aria-hidden="true">⌃</span></span>
+      <span class="font-serif text-2xl leading-tight tabular-nums" data-sum-total><%= summary.services.length ? naira(summary.totalKobo) : '—' %></span>
+    </button>
+    <% if (locals.cta) { %>
+      <button type="submit" form="<%= formId %>" class="btn-primary shrink-0 !px-6" data-continue <%= locals.canContinue === false ? 'disabled' : '' %>><%= cta %> <span class="arrow" aria-hidden="true">→</span></button>
+    <% } %>
+  </div>
+</div>

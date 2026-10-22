@@ -13,10 +13,4 @@ router.get(
   }),
 );
 
-// Temporary until the booking wizard lands (Phase 3): keeps every "Book" CTA working.
-router.get('/book', (req, res) => {
-  const type = req.query.type === 'HOME' ? 'HOME' : 'SHOP';
-  res.render('pages/book-soon', { title: 'Book', page: 'book', type });
-});
-
 module.exports = router;

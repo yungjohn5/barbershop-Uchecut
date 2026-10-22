@@ -215,15 +215,25 @@ async function createBooking(rawInput, { now = new Date(), db = prisma, hooks = 
     ]);
   }
   const settings = await settingsService.getAll();
+  return withTxRetry('createBooking', () =>
+    attemptCreate(db, input, { now, settings, phone, hooks }),
+  );
+}
 
+/**
+ * Runs a booking write with the shared failure policy:
+ * 23P01 → SlotTakenError; reference collision → retry; P2034/40001/40P01 → up to
+ * MAX_SERIALIZATION_RETRIES retries with jittered backoff, then 503.
+ */
+async function withTxRetry(label, attempt) {
   let retries = 0;
   let refCollisions = 0;
   for (;;) {
     try {
-      return await attemptCreate(db, input, { now, settings, phone, hooks });
+      return await attempt();
     } catch (err) {
       if (isExclusionViolation(err)) {
-        logger.debug('createBooking: exclusion constraint rejected overlapping insert');
+        logger.debug(`${label}: exclusion constraint rejected overlapping insert`);
         throw new SlotTakenError();
       }
       // Regenerate the reference (31^5 space, so collisions are rare); no backoff needed.
@@ -231,7 +241,7 @@ async function createBooking(rawInput, { now = new Date(), db = prisma, hooks = 
       if (isRetryableTxError(err) && retries < MAX_SERIALIZATION_RETRIES) {
         retries += 1;
         logger.debug(
-          `createBooking: serialization conflict (${err.code ?? pgErrorCode(err)}), retry ${retries}`,
+          `${label}: serialization conflict (${err.code ?? pgErrorCode(err)}), retry ${retries}`,
         );
         await sleep(backoffMs(retries));
         continue;
@@ -246,8 +256,148 @@ async function createBooking(rawInput, { now = new Date(), db = prisma, hooks = 
   }
 }
 
+// ---------------------------------------------------------------------------
+// Manage link: look up, cancel, reschedule
+// ---------------------------------------------------------------------------
+
+const TOKEN_RE = /^[A-Za-z0-9_-]{43}$/;
+const bookingInclude = {
+  services: { orderBy: { serviceId: 'asc' } },
+  barber: true,
+  customer: true,
+  zone: true,
+};
+
+/**
+ * Pure: may the customer still cancel or reschedule this booking themselves?
+ * Returns { allowed, reason } where reason explains a refusal for the UI.
+ */
+function canModify(booking, { now, cutoffMin }) {
+  if (!['PENDING', 'CONFIRMED'].includes(booking.status)) {
+    const why = {
+      CANCELLED: 'This booking has been cancelled.',
+      COMPLETED: 'This booking has already taken place.',
+      NO_SHOW: 'This booking has already passed.',
+    };
+    return {
+      allowed: false,
+      reason: why[booking.status] || 'This booking can no longer be changed.',
+    };
+  }
+  const deadline = booking.startsAt.getTime() - cutoffMin * MIN;
+  if (now.getTime() >= deadline) {
+    const hours = cutoffMin % 60 === 0 ? `${cutoffMin / 60} hours` : `${cutoffMin} minutes`;
+    return {
+      allowed: false,
+      reason: `Changes close ${hours} before your appointment. Please call or WhatsApp us instead.`,
+    };
+  }
+  return { allowed: true, reason: null };
+}
+
+async function getBookingByToken(token, { db = prisma } = {}) {
+  if (typeof token !== 'string' || !TOKEN_RE.test(token)) return null;
+  return db.booking.findUnique({ where: { manageToken: token }, include: bookingInclude });
+}
+
+async function requireModifiable(db, token, now) {
+  const booking = await getBookingByToken(token, { db });
+  if (!booking) throw new HttpError(404, 'We couldn’t find that booking.', { code: 'NOT_FOUND' });
+  const settings = await settingsService.getAll();
+  const check = canModify(booking, { now, cutoffMin: settings.cancelCutoffMin });
+  if (!check.allowed) throw new HttpError(409, check.reason, { code: 'LOCKED' });
+  return { booking, settings };
+}
+
+/** Cancel via the manage link (before the cutoff). Frees the slot immediately. */
+async function cancelBooking(token, { now = new Date(), reason, db = prisma } = {}) {
+  await requireModifiable(db, token, now);
+  return db.booking.update({
+    where: { manageToken: token },
+    data: {
+      status: 'CANCELLED',
+      cancelledAt: now,
+      cancelReason: reason ? String(reason).trim().slice(0, 300) || null : 'Cancelled by customer',
+    },
+    include: bookingInclude,
+  });
+}
+
+/**
+ * Move a booking to a new slot via the manage link. Same services, type and zone; prices
+ * stay as booked. Runs the full availability check (ignoring the booking's own block) in a
+ * Serializable transaction with the per-barber lock. Home visits go back to PENDING so
+ * staff re-confirm the new time.
+ */
+async function rescheduleBooking(
+  token,
+  { startsAt, barberId = 'any' },
+  { now = new Date(), db = prisma } = {},
+) {
+  const start = new Date(startsAt);
+  if (Number.isNaN(start.getTime())) throw new ValidationError('Choose a new time.');
+  const { booking, settings } = await requireModifiable(db, token, now);
+  const wanted = barberId === 'any' ? 'any' : Number(barberId);
+
+  return withTxRetry('rescheduleBooking', () =>
+    db.$transaction(
+      async (tx) => {
+        const date = toShopDate(start);
+        const { slots, selection } = await computeDay(
+          tx,
+          {
+            date,
+            barberId: wanted,
+            serviceIds: booking.services.map((s) => s.serviceId),
+            type: booking.type,
+            zoneId: booking.zoneId,
+            excludeBookingId: booking.id,
+          },
+          { now, settings },
+        );
+        const slot = slots.find((s) => s.startsAt === start.toISOString());
+        if (!slot) throw new SlotTakenError();
+        // Prefer keeping the same barber when "any" and they are free.
+        const nextBarber =
+          wanted === 'any'
+            ? slot.barberIds.includes(booking.barberId)
+              ? booking.barberId
+              : slot.barberIds[0]
+            : wanted;
+        if (!slot.barberIds.includes(nextBarber)) throw new SlotTakenError();
+
+        await tx.$executeRaw`SELECT pg_advisory_xact_lock(${BOOKING_LOCK_NAMESPACE}::int, ${nextBarber}::int)`;
+        const endsAt = new Date(start.getTime() + selection.serviceMin * MIN);
+        const isHome = booking.type === 'HOME';
+        return tx.booking.update({
+          where: { id: booking.id },
+          data: {
+            startsAt: start,
+            endsAt,
+            blockStartsAt: new Date(start.getTime() - selection.bufferMin * MIN),
+            blockEndsAt: new Date(endsAt.getTime() + selection.bufferMin * MIN),
+            barberId: nextBarber,
+            status: isHome ? 'PENDING' : 'CONFIRMED',
+            confirmedAt: isHome ? null : (booking.confirmedAt ?? now),
+          },
+          include: bookingInclude,
+        });
+      },
+      {
+        isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+        maxWait: 5_000,
+        timeout: 10_000,
+      },
+    ),
+  );
+}
+
 module.exports = {
   createBooking,
+  cancelBooking,
+  rescheduleBooking,
+  getBookingByToken,
+  canModify,
   bookingInputSchema,
   pgErrorCode,
   isExclusionViolation,

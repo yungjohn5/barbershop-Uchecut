@@ -1,0 +1,30 @@
+<section class="mx-auto max-w-[88rem] px-5 pb-40 pt-6 sm:px-8 lg:px-10 lg:pb-28 lg:pt-10">
+  <%- include('../partials/booking/steps') %>
+
+  <div class="mt-10 grid gap-12 lg:mt-14 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-14 xl:grid-cols-[minmax(0,1fr)_24rem]">
+    <div class="min-w-0">
+      <%- include('../partials/booking/flash') %>
+      <p class="eyebrow" data-b-reveal><span class="eyebrow-num">03</span>Barber &amp; time</p>
+      <h1 class="mt-4 text-[clamp(2.2rem,4.4vw,3.75rem)] leading-[1.02]" data-b-reveal>Pick your <em class="accent">moment</em>.</h1>
+      <p class="mt-4 max-w-xl text-[1.02rem] text-ink/70" data-b-reveal>
+        <%= ctx.type === 'HOME' ? 'Times include travel either side, so your barber is never rushed.' : 'Times shown are when your barber is free for the whole appointment.' %>
+      </p>
+
+      <form id="step-form" method="post" action="/book/time">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+        <%- include('../partials/booking/time-picker', {
+          barbers: ctx.barbers,
+          baseUrl: '/book/time',
+          slotsUrl: '/api/slots',
+        }) %>
+
+        <div class="mt-12 hidden items-center justify-between gap-4 lg:flex">
+          <a href="/book/services" class="link-line text-sm"><span class="link-arrow rotate-180" aria-hidden="true">→</span> Back</a>
+          <button type="submit" class="btn-primary" data-continue <%= selectedStart ? '' : 'disabled' %>>Your details <span class="arrow" aria-hidden="true">→</span></button>
+        </div>
+      </form>
+    </div>
+
+    <%- include('../partials/booking/summary', { cta: 'Your details', canContinue: !!selectedStart }) %>
+  </div>
+</section>

@@ -1,0 +1,41 @@
+<section class="mx-auto max-w-[88rem] px-5 pb-40 pt-8 sm:px-8 lg:px-10 lg:pb-28 lg:pt-14">
+  <div class="grid gap-12 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-14 xl:grid-cols-[minmax(0,1fr)_24rem]">
+    <div class="min-w-0">
+      <%- include('../partials/booking/flash') %>
+      <p class="eyebrow" data-b-reveal>Reschedule · <%= booking.reference %></p>
+      <h1 class="mt-4 text-[clamp(2.2rem,4.4vw,3.75rem)] leading-[1.02]" data-b-reveal>Choose a <em class="accent">new</em> time.</h1>
+      <p class="mt-4 max-w-xl text-[1.02rem] text-ink/70" data-b-reveal>Same services and price. Currently <strong class="font-medium text-ink"><%= when %></strong>.</p>
+
+      <form id="step-form" method="post" action="/manage/<%= booking.manageToken %>/reschedule">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+        <%- include('../partials/booking/time-picker', {
+          barbers: ctx.barbers,
+          selectedStart: null,
+          baseUrl: `/manage/${booking.manageToken}/reschedule`,
+          slotsUrl: `/manage/${booking.manageToken}/slots`,
+          slotsQuery: {},
+        }) %>
+        <div class="mt-12 hidden items-center justify-between gap-4 lg:flex">
+          <a href="/manage/<%= booking.manageToken %>" class="link-line text-sm"><span class="link-arrow rotate-180" aria-hidden="true">→</span> Keep current time</a>
+          <button type="submit" class="btn-primary" data-continue disabled>Move my booking <span class="arrow" aria-hidden="true">→</span></button>
+        </div>
+      </form>
+    </div>
+
+    <%- include('../partials/booking/summary', {
+      cta: 'Move booking',
+      canContinue: false,
+      summary: {
+        type: booking.type,
+        zone: booking.zone,
+        services: booking.services,
+        serviceMin: booking.services.reduce((m, s) => m + s.durationMin, 0),
+        subtotalKobo: booking.subtotalKobo,
+        homeFeeKobo: booking.homeFeeKobo,
+        totalKobo: booking.totalKobo,
+        barber: barberId === 'any' ? null : ctx.barbers.find((b) => b.id === barberId) || null,
+        when: null,
+      },
+    }) %>
+  </div>
+</section>

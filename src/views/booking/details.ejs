@@ -1,0 +1,74 @@
+<% const home = ctx.type === 'HOME'; %>
+<% const err = (k) => errors && errors[k]; %>
+<section class="mx-auto max-w-[88rem] px-5 pb-40 pt-6 sm:px-8 lg:px-10 lg:pb-28 lg:pt-10">
+  <%- include('../partials/booking/steps') %>
+
+  <div class="mt-10 grid gap-12 lg:mt-14 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-14 xl:grid-cols-[minmax(0,1fr)_24rem]">
+    <div>
+      <%- include('../partials/booking/flash') %>
+      <p class="eyebrow" data-b-reveal><span class="eyebrow-num">04</span>Your details</p>
+      <h1 class="mt-4 text-[clamp(2.2rem,4.4vw,3.75rem)] leading-[1.02]" data-b-reveal>Almost <em class="accent">there</em>.</h1>
+      <p class="mt-4 max-w-xl text-[1.02rem] text-ink/70" data-b-reveal>
+        No account needed. We’ll send your confirmation and a link to manage your booking.
+      </p>
+
+      <% if (err('_form')) { %>
+        <div class="flash flash-error mt-8" role="alert"><span class="flash-icon" aria-hidden="true">!</span><p><%= errors._form %></p></div>
+      <% } %>
+
+      <form id="step-form" method="post" action="/book" class="mt-10 grid gap-5 sm:grid-cols-2" data-details-form novalidate>
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+
+        <div class="field-float sm:col-span-2 <%= err('name') ? 'has-error' : '' %>" data-b-reveal>
+          <input id="f-name" name="name" type="text" autocomplete="name" placeholder=" " required minlength="2" maxlength="80" value="<%= values.name || '' %>" <%- err('name') ? 'aria-invalid="true" aria-describedby="e-name"' : '' %> />
+          <label for="f-name">Full name</label>
+          <% if (err('name')) { %><p id="e-name" class="field-error">Please enter your name.</p><% } %>
+        </div>
+
+        <div class="field-float <%= err('phone') ? 'has-error' : '' %>" data-b-reveal>
+          <input id="f-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder=" " required value="<%= values.phone || '' %>" aria-describedby="h-phone<%= err('phone') ? ' e-phone' : '' %>" <%- err('phone') ? 'aria-invalid="true"' : '' %> />
+          <label for="f-phone">Phone number</label>
+          <p id="h-phone" class="field-hint">Nigerian mobile, e.g. 0803 123 4567</p>
+          <% if (err('phone')) { %><p id="e-phone" class="field-error"><%= errors.phone === 'Invalid phone number' ? 'Enter a valid Nigerian mobile number.' : 'Please enter your phone number.' %></p><% } %>
+        </div>
+
+        <div class="field-float <%= err('email') ? 'has-error' : '' %>" data-b-reveal>
+          <input id="f-email" name="email" type="email" autocomplete="email" placeholder=" " value="<%= values.email || '' %>" aria-describedby="h-email<%= err('email') ? ' e-email' : '' %>" <%- err('email') ? 'aria-invalid="true"' : '' %> />
+          <label for="f-email">Email <span class="font-normal opacity-70">(optional)</span></label>
+          <p id="h-email" class="field-hint">For your confirmation and calendar invite</p>
+          <% if (err('email')) { %><p id="e-email" class="field-error">That email doesn’t look right.</p><% } %>
+        </div>
+
+        <% if (home) { %>
+          <div class="field-float sm:col-span-2 <%= err('address') ? 'has-error' : '' %>" data-b-reveal>
+            <textarea id="f-address" name="address" rows="3" autocomplete="street-address" placeholder=" " required maxlength="300" <%- err('address') ? 'aria-invalid="true" aria-describedby="e-address"' : '' %>><%= values.address || '' %></textarea>
+            <label for="f-address">Address in <%= ctx.zone ? ctx.zone.name : 'your area' %></label>
+            <% if (err('address')) { %><p id="e-address" class="field-error">Please enter the address for the visit.</p><% } %>
+          </div>
+          <div class="field-float sm:col-span-2" data-b-reveal>
+            <input id="f-landmark" name="landmark" type="text" placeholder=" " maxlength="200" value="<%= values.landmark || '' %>" />
+            <label for="f-landmark">Nearest landmark <span class="font-normal opacity-70">(optional)</span></label>
+          </div>
+        <% } %>
+
+        <div class="field-float sm:col-span-2" data-b-reveal>
+          <textarea id="f-notes" name="notes" rows="3" placeholder=" " maxlength="500"><%= values.notes || '' %></textarea>
+          <label for="f-notes">Anything we should know? <span class="font-normal opacity-70">(optional)</span></label>
+        </div>
+
+        <ul class="grid gap-3 text-sm text-ink/70 sm:col-span-2 sm:grid-cols-3" data-b-reveal>
+          <li class="policy"><span aria-hidden="true">₦</span>Pay on the day: cash or transfer</li>
+          <li class="policy"><span aria-hidden="true">↺</span>Change or cancel up to <%= ctx.settings.cancelCutoffMin / 60 %> hours before</li>
+          <li class="policy"><span aria-hidden="true">✓</span><%= home ? 'We call to confirm before setting off' : 'Confirmed instantly' %></li>
+        </ul>
+
+        <div class="mt-4 hidden items-center justify-between gap-4 sm:col-span-2 lg:flex">
+          <a href="/book/time" class="link-line text-sm"><span class="link-arrow rotate-180" aria-hidden="true">→</span> Back</a>
+          <button type="submit" class="btn-primary" data-submit><%= home ? 'Request home visit' : 'Confirm booking' %> <span class="arrow" aria-hidden="true">→</span></button>
+        </div>
+      </form>
+    </div>
+
+    <%- include('../partials/booking/summary', { cta: home ? 'Request visit' : 'Confirm' }) %>
+  </div>
+</section>

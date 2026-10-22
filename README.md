@@ -5,8 +5,8 @@ Customers book an in-shop appointment or a home visit without creating an accoun
 and pay on the day. One Node.js app serves the site, the booking engine and (soon)
 the owner's dashboard.
 
-> **Status:** Phases 1–2 complete (foundation, booking engine) plus the public home page.
-> The booking wizard, admin dashboard and notifications are next. See [Roadmap](#roadmap).
+> **Status:** Phases 1–3 complete: foundation, booking engine, public site, booking wizard,
+> confirmation and manage link. The admin dashboard and notifications are next. See [Roadmap](#roadmap).
 > "Victory" and all copy, prices, zones and photos are **placeholders** until the client signs off.
 
 **Contents:**
@@ -232,6 +232,19 @@ bookings impossible even if the application has a bug.
 
 ---
 
+## Booking flow
+
+| Page | Path |
+| --- | --- |
+| 1. Visit (shop or home + area) | `/book` (accepts `?type=`, `?service=`, `?barber=`) |
+| 2. Services | `/book/services` |
+| 3. Barber, date and time | `/book/time` |
+| 4. Details and confirm | `/book/details` → `POST /book` |
+| Confirmation | `/book/confirmed/:reference` (only in the booking session) |
+| Manage (view, reschedule, cancel, calendar) | `/manage/:token` |
+
+The draft lives in the session, every step works without JavaScript, and later steps redirect to the first incomplete one. Customers can reschedule or cancel up to the cutoff (`cancelCutoffMin`, default 3 h).
+
 ## API
 
 Read-only JSON endpoints used by the booking widget (rate-limited):
@@ -304,7 +317,7 @@ Stop the other process, or set `PORT` in `.env`.
 | --- | --- | --- |
 | 1 | Foundation: app shell, schema, migrations, seed | ✅ Done |
 | 2 | Booking engine, transactional create, JSON API, tests | ✅ Done |
-| 3 | Public site and booking wizard, confirmation, manage link | 🟡 Home page done, wizard next (`/book` is a holding page) |
+| 3 | Public site and booking wizard, confirmation, manage link | ✅ Done |
 | 4 | Admin dashboard: bookings, calendar, CRUD, settings, home-visit confirmation | ⬜ |
 | 5 | Email/SMS notifications, reminders, auto-cancel job, deployment | ⬜ |
 

@@ -1,0 +1,18 @@
+<%# Booking progress. steps: [{ index, label, path, state: done|current|upcoming, reachable }] %>
+<nav aria-label="Booking progress" class="booking-steps" data-b-reveal>
+  <ol class="flex items-center">
+    <% steps.forEach((s, i) => { %>
+      <li class="flex items-center <%= i < steps.length - 1 ? 'flex-1' : '' %>">
+        <% const inner = `<span class="step-dot" aria-hidden="true">${s.state === 'done' ? '<svg viewBox="0 0 16 16" width="14" height="14"><path d="M3.5 8.5l3 3 6-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>' : s.index}</span><span class="step-label">${s.label}</span>`; %>
+        <% if (s.state === 'done' && s.reachable) { %>
+          <a href="<%= s.path %>" class="step is-<%= s.state %>" aria-label="Step <%= s.index %>, <%= s.label %>, completed. Edit"><%- inner %></a>
+        <% } else { %>
+          <span class="step is-<%= s.state %>" <%- s.state === 'current' ? 'aria-current="step"' : '' %>><span class="sr-only">Step <%= s.index %> of <%= steps.length %>: </span><%- inner %></span>
+        <% } %>
+        <% if (i < steps.length - 1) { %>
+          <span class="step-line" aria-hidden="true"><span class="<%= s.state === 'done' ? 'is-filled' : '' %>"></span></span>
+        <% } %>
+      </li>
+    <% }) %>
+  </ol>
+</nav>

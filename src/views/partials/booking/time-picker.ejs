@@ -1,0 +1,86 @@
+<%#
+  Barber + date + slots. Works without JS (barber/date are links, slots are radios);
+  booking.js swaps slots in place when JS is available.
+  Params: barbers, barberId, days, date, groups, slotsError, selectedStart, baseUrl,
+          slotsUrl (JSON endpoint), slotsQuery (extra query for the JSON endpoint)
+%>
+<% const qs = (o) => Object.entries(o).filter(([, v]) => v !== '' && v != null).map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join('&'); %>
+<% const selectedIso = selectedStart ? new Date(selectedStart).toISOString() : null; %>
+<div
+  data-time-picker
+  data-slots-url="<%= slotsUrl %>"
+  data-slots-query="<%= qs(locals.slotsQuery || {}) %>"
+  data-date="<%= date %>"
+  data-barber="<%= barberId %>"
+  data-selected="<%= selectedIso || '' %>"
+>
+  <fieldset class="mt-10" data-b-reveal>
+    <legend class="text-sm font-medium uppercase tracking-[0.16em] text-ink/65">Barber</legend>
+    <div class="no-scrollbar -mx-5 mt-4 flex snap-x gap-3 overflow-x-auto px-5 pb-2 sm:mx-0 sm:flex-wrap sm:px-0">
+      <a href="<%= baseUrl %>?<%= qs({ barber: 'any', date }) %>" class="barber-chip snap-start <%= barberId === 'any' ? 'is-active' : '' %>" data-barber-link="any" <%- barberId === 'any' ? 'aria-current="true"' : '' %>>
+        <span class="barber-avatar barber-any" aria-hidden="true">✦</span>
+        <span><span class="block font-medium">Any barber</span><span class="block text-xs text-ink/65">Soonest free</span></span>
+      </a>
+      <% barbers.forEach((b) => { %>
+        <a href="<%= baseUrl %>?<%= qs({ barber: b.id, date }) %>" class="barber-chip snap-start <%= barberId === b.id ? 'is-active' : '' %>" data-barber-link="<%= b.id %>" <%- barberId === b.id ? 'aria-current="true"' : '' %>>
+          <% if (b.photoUrl) { %>
+            <img src="<%= b.photoUrl %>-500.webp" alt="" class="barber-avatar object-cover object-top" loading="lazy" />
+          <% } else { %><span class="barber-avatar" aria-hidden="true"><%= b.name[0] %></span><% } %>
+          <span><span class="block font-medium"><%= b.name %></span><span class="block text-xs text-ink/65"><%= (b.specialties || []).slice(0, 1).join('') || 'Barber' %></span></span>
+        </a>
+      <% }) %>
+    </div>
+  </fieldset>
+
+  <fieldset class="mt-10" data-b-reveal>
+    <div class="flex items-end justify-between gap-4">
+      <legend class="text-sm font-medium uppercase tracking-[0.16em] text-ink/65">Date</legend>
+      <div class="hidden gap-2 sm:flex">
+        <button type="button" class="icon-btn-dark !h-10 !w-10" data-strip-prev aria-label="Earlier dates">←</button>
+        <button type="button" class="icon-btn-dark !h-10 !w-10" data-strip-next aria-label="Later dates">→</button>
+      </div>
+    </div>
+    <div class="no-scrollbar -mx-5 mt-4 flex snap-x gap-2.5 overflow-x-auto scroll-smooth px-5 pb-2 sm:mx-0 sm:px-0" data-date-strip>
+      <% days.forEach((d) => { %>
+        <% if (d.closed) { %>
+          <span class="date-chip is-closed snap-start" aria-disabled="true" title="Closed">
+            <span class="date-chip-dow"><%= d.weekday %></span><span class="date-chip-day"><%= d.day %></span><span class="date-chip-mon">Closed</span>
+          </span>
+        <% } else { %>
+          <a href="<%= baseUrl %>?<%= qs({ barber: barberId, date: d.date }) %>" class="date-chip snap-start <%= d.date === date ? 'is-active' : '' %>" data-date-link="<%= d.date %>" <%- d.date === date ? 'aria-current="date"' : '' %>>
+            <span class="date-chip-dow"><%= d.weekday %></span><span class="date-chip-day"><%= d.day %></span><span class="date-chip-mon"><%= d.month %></span>
+          </a>
+        <% } %>
+      <% }) %>
+    </div>
+  </fieldset>
+
+  <fieldset class="mt-10" data-b-reveal>
+    <legend class="text-sm font-medium uppercase tracking-[0.16em] text-ink/65">Time</legend>
+    <input type="hidden" name="barberId" value="<%= barberId %>" data-barber-input />
+    <div class="mt-4 min-h-[10rem]" data-slots aria-live="polite">
+      <% if (slotsError) { %>
+        <p class="slots-empty"><%= slotsError %></p>
+      <% } else if (!groups.length) { %>
+        <div class="slots-empty">
+          <p class="font-serif text-2xl">No free times on this day.</p>
+          <p class="mt-2 text-sm text-ink/65">Try another date or choose “Any barber” for more options.</p>
+        </div>
+      <% } else { %>
+        <% groups.forEach((g) => { %>
+          <div class="slot-group">
+            <p class="slot-group-label"><%= g.label %> <span><%= g.slots.length %></span></p>
+            <div class="slot-grid">
+              <% g.slots.forEach((s) => { %>
+                <label class="slot">
+                  <input type="radio" name="startsAt" value="<%= s.startsAt %>" class="sr-only" required <%= selectedIso === s.startsAt ? 'checked' : '' %> />
+                  <span><%= s.time %></span>
+                </label>
+              <% }) %>
+            </div>
+          </div>
+        <% }) %>
+      <% } %>
+    </div>
+  </fieldset>
+</div>

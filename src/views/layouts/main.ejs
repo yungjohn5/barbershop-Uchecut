@@ -1,3 +1,4 @@
+<% const inFlow = page === 'book' || page === 'manage'; -%>
 <!doctype html>
 <html lang="en-NG" class="no-js">
   <head>
@@ -17,10 +18,10 @@
     />
     <link rel="stylesheet" href="/css/app.css" />
   </head>
-  <body class="min-h-screen overflow-x-clip">
+  <body class="min-h-screen overflow-x-clip" <%- inFlow ? 'data-no-smoother' : '' %>>
     <a href="#main" class="sr-only z-[60] rounded-full bg-ink px-4 py-2 text-paper focus:not-sr-only focus:fixed focus:left-3 focus:top-3">Skip to content</a>
 
-    <%- include('../partials/sticky-nav') %>
+    <% if (!inFlow) { %><%- include('../partials/sticky-nav') %><% } %>
     <%- include('../partials/mobile-menu') %>
     <% if (page !== 'home') { %><%- include('../partials/nav', { variant: 'dark' }) %><% } %>
 
@@ -37,10 +38,11 @@
     <div id="smooth-wrapper">
       <div id="smooth-content">
         <main id="main"><%- body %></main>
-        <%- include('../partials/footer') %>
+        <% if (inFlow) { %><%- include('../partials/footer-slim') %><% } else { %><%- include('../partials/footer') %><% } %>
       </div>
     </div>
 
+    <% if (!inFlow) { %>
     <button type="button" class="to-top" aria-label="Back to top" data-to-top data-magnetic>
       <svg class="to-top-ring" viewBox="0 0 52 52" aria-hidden="true">
         <circle class="to-top-track" cx="26" cy="26" r="24.5" />
@@ -54,6 +56,7 @@
         Book now <span class="arrow" aria-hidden="true">→</span>
       </a>
     </div>
+    <% } %>
 
     <script src="/vendor/gsap/gsap.min.js" defer></script>
     <script src="/vendor/gsap/ScrollTrigger.min.js" defer></script>
@@ -62,5 +65,6 @@
     <script src="/vendor/gsap/ScrollSmoother.min.js" defer></script>
     <script src="/js/site.js" defer></script>
     <% if (page === 'home') { %><script src="/js/home.js" defer></script><% } %>
+    <% if (inFlow) { %><script src="/js/booking.js" defer></script><% } %>
   </body>
 </html>

@@ -1,0 +1,6 @@
+<% if (locals.flash) { %>
+  <div class="flash flash-<%= flash.type %>" role="<%= flash.type === 'error' ? 'alert' : 'status' %>" data-b-reveal>
+    <span class="flash-icon" aria-hidden="true"><%= flash.type === 'error' ? '!' : '✓' %></span>
+    <p><%= flash.message %></p>
+  </div>
+<% } %>
