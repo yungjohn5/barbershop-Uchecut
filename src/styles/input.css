@@ -1036,8 +1036,8 @@ a.step:hover .step-dot {
 
 /* ---------- Selectable cards ---------- */
 .choice {
+  /* display comes from utilities on each card (flex / block), not set here */
   position: relative;
-  display: block;
   cursor: pointer;
   border-radius: 1.25rem;
   border: 1px solid rgb(var(--ink) / 0.12);
@@ -1618,4 +1618,50 @@ a.step:hover .step-dot {
   font-family: 'Gloock', Georgia, serif;
   font-size: 2.25rem;
   line-height: 1.1;
+}
+
+/* Phone progress: back link + segment bars */
+.steps-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.75rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: rgb(var(--ink) / 0.75);
+  transition: color 0.3s;
+}
+.steps-back:hover {
+  color: rgb(var(--ink));
+}
+.step-seg {
+  height: 4px;
+  border-radius: 9999px;
+  background: rgb(var(--ink) / 0.12);
+  overflow: hidden;
+  position: relative;
+}
+.step-seg.is-done,
+.step-seg.is-current {
+  background: #b8833e;
+}
+.step-seg.is-current::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.45), transparent);
+  animation: seg-shine 2.4s ease-in-out infinite;
+}
+@keyframes seg-shine {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .step-seg.is-current::after {
+    animation: none;
+  }
 }

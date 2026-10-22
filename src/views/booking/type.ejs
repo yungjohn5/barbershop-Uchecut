@@ -18,18 +18,18 @@
               { value: 'HOME', title: 'Home visit', text: 'Your barber brings the full kit to your home or office.', meta: ctx.zones.length ? `From +${naira(Math.min(...ctx.zones.map((z) => z.feeKobo)))} travel` : 'Coming soon', img: '/images/site/home-visit', widths: [700, 1300] },
             ]; %>
             <% types.forEach((t) => { %>
-              <label class="choice group" data-b-reveal>
+              <label class="choice group flex items-center gap-4 sm:block" data-b-reveal>
                 <input type="radio" name="type" value="<%= t.value %>" class="sr-only" required <%= ctx.type === t.value ? 'checked' : '' %> <%= t.value === 'HOME' && !ctx.zones.length ? 'disabled' : '' %> />
-                <span class="block overflow-hidden rounded-[0.9rem]">
-                  <img src="<%= src(t.img, t.widths) %>" srcset="<%= srcset(t.img, t.widths) %>" sizes="(min-width: 640px) 30vw, 90vw" alt="" class="aspect-[16/10] w-full object-cover transition-transform duration-[1.2s] ease-expo group-hover:scale-[1.04]" />
+                <span class="block w-[4.5rem] shrink-0 overflow-hidden rounded-[0.9rem] min-[400px]:w-28 sm:w-auto">
+                  <img src="<%= src(t.img, t.widths) %>" srcset="<%= srcset(t.img, t.widths) %>" sizes="(min-width: 640px) 30vw, 90vw" alt="" class="aspect-square w-full object-cover sm:aspect-[16/10] transition-transform duration-[1.2s] ease-expo group-hover:scale-[1.04]" />
                 </span>
-                <span class="mt-5 flex items-start justify-between gap-4">
+                <span class="flex min-w-0 flex-1 items-start justify-between gap-3 sm:mt-5 sm:gap-4">
                   <span>
-                    <span class="block font-serif text-[1.75rem] leading-tight"><%= t.title %></span>
-                    <span class="mt-1.5 block text-[0.95rem] text-ink/70"><%= t.text %></span>
-                    <span class="mt-3 inline-block text-sm font-medium text-amber-dark"><%= t.meta %></span>
+                    <span class="block font-serif text-[1.4rem] leading-tight sm:text-[1.75rem]"><%= t.title %></span>
+                    <span class="mt-1 block text-sm text-ink/70 sm:mt-1.5 sm:text-[0.95rem]"><%= t.text %></span>
+                    <span class="mt-2 inline-block text-sm font-medium text-amber-dark sm:mt-3"><%= t.meta %></span>
                   </span>
-                  <span class="choice-check" aria-hidden="true"></span>
+                  <span class="choice-check shrink-0" aria-hidden="true"></span>
                 </span>
               </label>
             <% }) %>
@@ -46,7 +46,7 @@
                   <span class="font-medium"><%= z.name %></span>
                   <span class="tabular-nums text-ink/65">+ <%= naira(z.feeKobo) %></span>
                 </span>
-                <span class="choice-check" aria-hidden="true"></span>
+                <span class="choice-check shrink-0" aria-hidden="true"></span>
               </label>
             <% }) %>
           </div>
@@ -54,7 +54,7 @@
         </fieldset>
 
         <div class="mt-12 hidden items-center justify-between gap-4 lg:flex">
-          <a href="/" class="link-line text-sm"><span class="link-arrow rotate-180" aria-hidden="true">→</span> Back to site</a>
+          <a href="/" class="link-line text-sm"><span class="link-arrow rotate-180" aria-hidden="true">→</span> Back to home</a>
           <button type="submit" class="btn-primary">Continue <span class="arrow" aria-hidden="true">→</span></button>
         </div>
       </form>

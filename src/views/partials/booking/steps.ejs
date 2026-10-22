@@ -1,6 +1,31 @@
-<%# Booking progress. steps: [{ index, label, path, state: done|current|upcoming, reachable }] %>
+<%#
+  Booking progress. steps: [{ index, label, path, state: done|current|upcoming, reachable }]
+  Phones: "Step 2 of 4 · Services" with a back link and four segment bars.
+  Tablets and up: numbered dots with labels joined by lines.
+%>
+<% const ci = steps.findIndex((s) => s.state === 'current'); %>
+<% const current = steps[ci]; const prev = steps[ci - 1]; const next = steps[ci + 1]; %>
 <nav aria-label="Booking progress" class="booking-steps" data-b-reveal>
-  <ol class="flex items-center">
+  <div class="sm:hidden">
+    <div class="flex min-h-[2.75rem] items-center justify-between gap-3">
+      <% if (prev && prev.reachable) { %>
+        <a href="<%= prev.path %>" class="steps-back" aria-label="Back to <%= prev.label %>"><span aria-hidden="true">←</span> Back</a>
+      <% } else { %>
+        <a href="/" class="steps-back"><span aria-hidden="true">←</span> Back to home</a>
+      <% } %>
+      <p class="text-right text-sm" aria-current="step">
+        <span class="text-ink/65">Step <%= current.index %> of <%= steps.length %></span>
+        <span class="mx-1 text-ink/40" aria-hidden="true">·</span>
+        <span class="font-medium"><%= current.label %></span>
+      </p>
+    </div>
+    <ol class="mt-2 grid grid-cols-4 gap-1.5" aria-hidden="true">
+      <% steps.forEach((s) => { %><li class="step-seg is-<%= s.state %>"></li><% }) %>
+    </ol>
+    <% if (next) { %><p class="mt-2 text-right text-xs text-ink/60">Next: <%= next.label %></p><% } %>
+  </div>
+
+  <ol class="hidden items-center sm:flex">
     <% steps.forEach((s, i) => { %>
       <li class="flex items-center <%= i < steps.length - 1 ? 'flex-1' : '' %>">
         <% const inner = `<span class="step-dot" aria-hidden="true">${s.state === 'done' ? '<svg viewBox="0 0 16 16" width="14" height="14"><path d="M3.5 8.5l3 3 6-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>' : s.index}</span><span class="step-label">${s.label}</span>`; %>
