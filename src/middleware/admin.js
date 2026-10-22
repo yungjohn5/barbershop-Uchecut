@@ -33,7 +33,9 @@ const requireRole =
   (...roles) =>
   (req, res, next) => {
     if (req.admin && roles.includes(req.admin.role)) return next();
-    res.status(403).render('admin/forbidden', { layout: 'layouts/admin', title: 'Owner only', nav: null });
+    res
+      .status(403)
+      .render('admin/forbidden', { layout: 'layouts/admin', title: 'Owner only', nav: null });
   };
 
 /** Only same-site paths are allowed as a post-login redirect. */

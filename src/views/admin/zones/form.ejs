@@ -1,0 +1,43 @@
+<% const v = values; const e = errors || {}; const err = (k) => (e[k] ? 'has-error' : ''); %>
+<nav class="text-sm text-ink/65" aria-label="Breadcrumb"><a href="/admin/zones" class="link-u">Zones</a> <span aria-hidden="true">/</span> <%= zone ? zone.name : 'New' %></nav>
+<header class="a-page-head">
+  <div>
+    <p class="eyebrow"><%= zone ? 'Edit zone' : 'New zone' %></p>
+    <h1 class="a-title"><% if (zone) { %><%= zone.name %><% } else { %>Add a <em class="accent">zone</em><% } %></h1>
+  </div>
+  <% if (zone) { %>
+    <%- include('../partials/delete', {
+      id: `zone-${zone.id}`,
+      action: `/admin/zones/${zone.id}/delete`,
+      title: `Delete ${zone.name}?`,
+      body: zone._count.bookings ? `It has ${zone._count.bookings} booking(s), so it can’t be deleted. Switch it off instead.` : 'Customers won’t be able to pick it any more.',
+      label: 'Delete zone',
+    }) %>
+  <% } %>
+</header>
+
+<form method="post" action="/admin/zones<%= zone ? `/${zone.id}` : '' %>" class="a-card max-w-2xl" data-a-form>
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+  <div class="grid gap-4 sm:grid-cols-2">
+    <label class="a-field sm:col-span-2 <%= err('name') %>"><span>Area name</span>
+      <input name="name" value="<%= v.name || '' %>" maxlength="60" required placeholder="e.g. Lekki Phase 1" />
+      <% if (e.name) { %><p class="field-error"><%= e.name %></p><% } %>
+    </label>
+    <label class="a-field <%= err('fee') %>"><span>Travel fee</span>
+      <span class="a-money"><span aria-hidden="true">₦</span><input name="fee" inputmode="decimal" value="<%= v.fee || '' %>" placeholder="5000" required /></span>
+      <% if (e.fee) { %><p class="field-error"><%= e.fee %></p><% } %>
+    </label>
+    <label class="a-field <%= err('travelBufferMin') %>"><span>Travel time each way</span>
+      <span class="a-money a-suffix"><input name="travelBufferMin" type="number" min="0" max="180" step="5" value="<%= v.travelBufferMin ?? '' %>" required /><span aria-hidden="true">min</span></span>
+      <% if (e.travelBufferMin) { %><p class="field-error"><%= e.travelBufferMin %></p><% } %>
+    </label>
+  </div>
+  <p class="mt-4 rounded-xl bg-paper-deep/70 p-4 text-sm text-ink/70">The barber is blocked for this long before and after each visit, so a 45-minute cut with 30 minutes’ travel holds 1 h 45 min of their day.</p>
+  <div class="mt-6">
+    <%- include('../partials/switch', { name: 'active', checked: v.active, label: 'Customers can choose this zone' }) %>
+  </div>
+  <div class="mt-8 flex flex-wrap items-center justify-end gap-3">
+    <a href="/admin/zones" class="text-sm text-ink/65 hover:text-ink">Cancel</a>
+    <button type="submit" class="btn-primary" data-a-submit><%= zone ? 'Save changes' : 'Add zone' %> <span class="arrow" aria-hidden="true">→</span></button>
+  </div>
+</form>

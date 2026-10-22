@@ -1,0 +1,40 @@
+<% const short = { 0: 'Sun', 1: 'Mon', 2: 'Tue', 3: 'Wed', 4: 'Thu', 5: 'Fri', 6: 'Sat' }; %>
+<header class="a-page-head">
+  <div>
+    <p class="eyebrow">Team</p>
+    <h1 class="a-title"><%= barbers.length %> <em class="accent">barber<%= barbers.length === 1 ? '' : 's' %></em></h1>
+    <p class="mt-2 text-ink/65">Order here is the order on the site and in the booking wizard.</p>
+  </div>
+  <a href="/admin/barbers/new" class="btn-primary">New barber <span class="arrow" aria-hidden="true">→</span></a>
+</header>
+
+<% if (!barbers.length) { %>
+  <div class="a-empty"><p class="font-serif text-3xl">No barbers yet.</p><p class="mt-2 text-ink/65">Add the first one to start taking bookings.</p></div>
+<% } %>
+
+<div class="grid grid-cols-1 gap-5 md:grid-cols-2 2xl:grid-cols-3">
+  <% barbers.forEach((b, i) => { %>
+    <article class="a-barber <%= b.active ? '' : 'is-muted' %>">
+      <a href="/admin/barbers/<%= b.id %>" class="a-barber-photo" tabindex="-1" aria-hidden="true">
+        <% if (b.photoUrl) { %><img src="<%= b.photoUrl %>-500.webp" alt="" loading="lazy" /><% } else { %><span class="font-serif text-6xl"><%= b.name[0] %></span><% } %>
+        <span class="a-barber-tags">
+          <% if (!b.active) { %><span class="a-type bg-surface">Inactive</span><% } %>
+          <% if (b.doesHomeService) { %><span class="a-type a-type-home bg-surface">Home visits</span><% } %>
+        </span>
+      </a>
+      <div class="flex items-start gap-3 p-5">
+        <div class="min-w-0 flex-1">
+          <h2 class="a-h3"><a href="/admin/barbers/<%= b.id %>" class="hover:underline"><%= b.name %></a></h2>
+          <p class="mt-1 truncate text-sm text-ink/65"><%= b.specialties.join(' · ') || 'No specialties yet' %></p>
+          <div class="a-week mt-4" aria-label="Working days">
+            <% [1, 2, 3, 4, 5, 6, 0].forEach((d) => { const h = b.hours.find((x) => x.weekday === d); %>
+              <span class="a-week-day <%= h ? 'is-on' : '' %>" title="<%= h ? `${short[d]} ${String(Math.floor(h.startMin / 60)).padStart(2, '0')}:${String(h.startMin % 60).padStart(2, '0')}–${String(Math.floor(h.endMin / 60)).padStart(2, '0')}:${String(h.endMin % 60).padStart(2, '0')}` : `${short[d]} off` %>"><%= short[d][0] %></span>
+            <% }) %>
+          </div>
+          <p class="mt-3 text-xs text-ink/65"><%= b._count.services %> service<%= b._count.services === 1 ? '' : 's' %> · <%= b._count.bookings %> booking<%= b._count.bookings === 1 ? '' : 's' %> all-time</p>
+        </div>
+        <%- include('../partials/move', { action: `/admin/barbers/${b.id}/move`, first: i === 0, last: i === barbers.length - 1, label: b.name }) %>
+      </div>
+    </article>
+  <% }) %>
+</div>

@@ -1,0 +1,22 @@
+<%#
+  Photo picker with live preview. Params: current (base URL or null), width (smallest
+  rendered width, for the preview), label, hint, error, shape ('square' | 'portrait' | 'wide')
+%>
+<% const shape = locals.shape || 'square'; %>
+<div class="a-image-input a-image-<%= shape %> <%= locals.error ? 'has-error' : '' %>" data-image-input>
+  <div class="a-image-preview" data-image-preview>
+    <% if (locals.current) { %>
+      <img src="<%= current %>-<%= width %>.webp" alt="" />
+    <% } else { %>
+      <span class="a-image-empty" aria-hidden="true"><%- include('icon', { name: 'gallery' }) %></span>
+    <% } %>
+  </div>
+  <div class="min-w-0 flex-1">
+    <p class="font-medium"><%= locals.label || 'Photo' %></p>
+    <p class="mt-1 text-sm text-ink/65"><%= locals.hint || 'JPG, PNG or WebP up to 8 MB. 1000 px or wider looks sharpest.' %></p>
+    <% const fileId = 'img-' + Math.random().toString(36).slice(2, 8); %>
+    <input id="<%= fileId %>" type="file" name="image" accept="image/jpeg,image/png,image/webp" class="a-file-input sr-only" data-image-file />
+    <label for="<%= fileId %>" class="btn-ghost mt-3 !min-h-[2.5rem] cursor-pointer !px-4 !py-2 text-sm" data-image-label><%= locals.current ? 'Replace photo' : 'Choose photo' %></label>
+    <% if (locals.error) { %><p class="field-error"><%= error %></p><% } %>
+  </div>
+</div>

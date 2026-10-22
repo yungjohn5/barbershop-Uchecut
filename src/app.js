@@ -31,7 +31,7 @@ function createApp({ sessionPool } = {}) {
           'script-src': ["'self'"],
           'style-src': ["'self'", 'https://fonts.googleapis.com'],
           'font-src': ["'self'", 'https://fonts.gstatic.com'],
-          'img-src': ["'self'", 'data:', 'https:'],
+          'img-src': ["'self'", 'data:', 'blob:', 'https:'], // blob: previews admin uploads
           'connect-src': ["'self'"],
           'form-action': ["'self'"],
           'frame-ancestors': ["'none'"],
@@ -78,6 +78,8 @@ function createApp({ sessionPool } = {}) {
     }),
   );
 
+  // Admin image forms are multipart: parse them first so CSRF can read the _csrf field.
+  app.use('/admin', require('./middleware/upload').parseMultipart);
   app.use(csrfProtection); // enforced on POST/PUT/PATCH/DELETE only
   app.use(exposeCsrfToken);
   app.use(async (req, res, next) => {

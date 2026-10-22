@@ -8,9 +8,13 @@ const BCRYPT_COST = 12;
 // Compared against when the email is unknown, so timing doesn't reveal which emails exist.
 // Generated once, on first use, at the same cost as real hashes.
 let dummyHash = null;
-const getDummyHash = async () => (dummyHash = dummyHash || (await bcrypt.hash('not-a-real-password', BCRYPT_COST)));
+const getDummyHash = async () =>
+  (dummyHash = dummyHash || (await bcrypt.hash('not-a-real-password', BCRYPT_COST)));
 
-const normaliseEmail = (email) => String(email || '').trim().toLowerCase();
+const normaliseEmail = (email) =>
+  String(email || '')
+    .trim()
+    .toLowerCase();
 
 /** Pure: is the account currently locked? */
 function isLocked(admin, now) {
@@ -34,7 +38,10 @@ async function authenticate(email, password, { now = new Date(), db = prisma } =
     return { ok: false, reason: generic };
   }
   if (isLocked(admin, now)) {
-    return { ok: false, reason: `Too many attempts. Try again in ${minutesLeft(admin, now)} minutes.` };
+    return {
+      ok: false,
+      reason: `Too many attempts. Try again in ${minutesLeft(admin, now)} minutes.`,
+    };
   }
 
   const match = await bcrypt.compare(String(password || ''), admin.passwordHash);
@@ -66,8 +73,17 @@ const hashPassword = (password) => bcrypt.hash(password, BCRYPT_COST);
 /** Pure: minimum password policy for admin accounts. */
 function passwordProblem(password) {
   if (typeof password !== 'string' || password.length < 12) return 'Use at least 12 characters.';
-  if (!/[A-Za-z]/.test(password) || !/\d/.test(password)) return 'Use letters and at least one number.';
+  if (!/[A-Za-z]/.test(password) || !/\d/.test(password))
+    return 'Use letters and at least one number.';
   return null;
 }
 
-module.exports = { authenticate, hashPassword, passwordProblem, isLocked, normaliseEmail, MAX_FAILED, LOCK_MIN };
+module.exports = {
+  authenticate,
+  hashPassword,
+  passwordProblem,
+  isLocked,
+  normaliseEmail,
+  MAX_FAILED,
+  LOCK_MIN,
+};

@@ -1,22 +1,38 @@
 const { allowedActions, transitionFor, weekStartOf } = require('../../src/services/adminBookings');
 const { passwordProblem, isLocked, normaliseEmail } = require('../../src/services/adminAuth');
 const { safeNext } = require('../../src/middleware/admin');
-const { formatTime, formatShort, formatDay, formatShortDate } = require('../../src/lib/viewHelpers');
+const {
+  formatTime,
+  formatShort,
+  formatDay,
+  formatShortDate,
+} = require('../../src/lib/viewHelpers');
 
 const NOW = new Date('2026-10-22T12:00:00Z'); // 13:00 in Lagos
 const at = (iso, status) => ({ startsAt: new Date(iso), status });
 
 describe('allowedActions', () => {
   test('pending, in the future: confirm, reschedule, cancel', () => {
-    expect(allowedActions(at('2026-10-23T09:00:00Z', 'PENDING'), NOW)).toEqual(['confirm', 'reschedule', 'cancel']);
+    expect(allowedActions(at('2026-10-23T09:00:00Z', 'PENDING'), NOW)).toEqual([
+      'confirm',
+      'reschedule',
+      'cancel',
+    ]);
   });
 
   test('confirmed, in the future: reschedule and cancel only', () => {
-    expect(allowedActions(at('2026-10-23T09:00:00Z', 'CONFIRMED'), NOW)).toEqual(['reschedule', 'cancel']);
+    expect(allowedActions(at('2026-10-23T09:00:00Z', 'CONFIRMED'), NOW)).toEqual([
+      'reschedule',
+      'cancel',
+    ]);
   });
 
   test('confirmed, started: complete, no-show, cancel (no reschedule)', () => {
-    expect(allowedActions(at('2026-10-22T11:30:00Z', 'CONFIRMED'), NOW)).toEqual(['complete', 'noShow', 'cancel']);
+    expect(allowedActions(at('2026-10-22T11:30:00Z', 'CONFIRMED'), NOW)).toEqual([
+      'complete',
+      'noShow',
+      'cancel',
+    ]);
   });
 
   test('completed or no-show can be undone within 7 days, not after', () => {
@@ -50,7 +66,10 @@ describe('transitionFor', () => {
   });
 
   test('confirm stamps confirmedAt', () => {
-    expect(transitionFor({}, 'confirm', { now: NOW }).data).toEqual({ status: 'CONFIRMED', confirmedAt: NOW });
+    expect(transitionFor({}, 'confirm', { now: NOW }).data).toEqual({
+      status: 'CONFIRMED',
+      confirmedAt: NOW,
+    });
   });
 
   test('unknown actions are rejected', () => {

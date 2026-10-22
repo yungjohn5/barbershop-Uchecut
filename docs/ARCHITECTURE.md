@@ -41,7 +41,7 @@ Node 22 LTS (`.nvmrc`, `engines >=22`; Node 20 is end-of-life) + Express 4, EJS 
 | Dates | `date-fns`, `date-fns-tz` | All times in Africa/Lagos |
 | Email/SMS | `nodemailer` (SMTP), Termii API behind `sms.send()` | Confirmations and reminders |
 | Jobs | `node-cron` | Reminder sends, expire unconfirmed home requests |
-| Uploads | `multer` + `sharp` | Resize gallery/barber photos to WebP |
+| Uploads | `multer` + `sharp` | Admin photos resized to WebP at each rendered width, stored under `public/uploads/` |
 | Process | `pm2` | Production process manager |
 | Dev tooling | `nodemon`, `concurrently`, `eslint`, `prettier`, `jest` | `npm run dev` runs the server and the Tailwind watcher together |
 
@@ -274,7 +274,8 @@ Wizard state is kept in the session between steps, so a refresh never loses the 
 - `/admin/login`, `/admin/logout`
 - `/admin` Today; `/admin/bookings` (list with scope chips, search and filters), `/admin/bookings/new` (staff booking), `/admin/bookings/:id` (detail), `POST /admin/bookings/:id/status` (`confirm | complete | noShow | cancel | undo`), `POST /admin/bookings/:id/notes`, `/admin/bookings/:id/reschedule`, `/admin/calendar?date=&barber=`
 - Admin JSON: `GET /admin/api/slots` (staff rules: no lead time), `GET /admin/api/customer?phone=` (returning-customer lookup). Signed-out requests get 401 JSON; pages redirect to `/admin/login?next=`.
-- CRUD: `/admin/services`, `/admin/categories`, `/admin/barbers` (+ hours and time off), `/admin/zones`, `/admin/gallery`, `/admin/products`, `/admin/settings`, `/admin/users` (OWNER only)
+- OWNER only (STAFF get a 403 page): `/admin/services` (+ `/new`, `/:id`, `/:id/active`, `/:id/move`, `/:id/delete`), `/admin/categories` (`POST` add, `/:id` rename, `/:id/move`, `/:id/delete`), `/admin/barbers` (+ `/new`, `/:id` profile, `/:id/hours`, `/:id/time-off`, `/:id/time-off/:offId/delete`, `/:id/move`), `/admin/zones`, `/admin/products`, `/admin/gallery` (each with `/new`, `/:id`, `/:id/move`, `/:id/delete`)
+- Still to come (wave C): `/admin/customers`, `/admin/reports`, `/admin/settings`, `/admin/users`
 
 ## Page map from the design
 
@@ -293,7 +294,7 @@ The home page follows the reference's six sections in order, adapted with a home
 **Implementation notes (home page)**
 
 - Section partials live in `views/partials/home/`; data comes from `services/content.js` (`getHomeContent`), copy from the `home` setting (code defaults in `config/constants.js` until the owner edits it).
-- Responsive images follow `${base}-${width}.webp` (e.g. `/images/site/svc-skin-fade-900.webp`); `Service.imageUrl`, `Barber.photoUrl` and `Product.imageUrl` store the base path. Admin uploads (Phase 4) must write the same widths with `sharp`.
+- Responsive images follow `${base}-${width}.webp` (e.g. `/images/site/svc-skin-fade-900.webp`); `Service.imageUrl`, `Barber.photoUrl` and `Product.imageUrl` store the base path. Admin uploads write the same widths with `sharp` (`services/images.js`: services and barbers 500/900, products 400/800, gallery 600/1200) to `public/uploads/<kind>/<slug>-<random>-<width>.webp`, and the database stores the base path.
 - Current photos are Pexels placeholders, listed in `public/images/site/CREDITS.md`.
 - Motion: `public/js/boot.js` (pre-paint flags + 2.5 s failsafe), `site.js` (menu, sticky nav, reveals, parallax, rings, fit-text), `home.js` (hero timeline, marquee, Flip service filter, step progress, pinned product rail on desktop).
 - Premium layer: first-visit intro loader (once per session, `sessionStorage`), desktop-only ScrollSmoother (created/destroyed with the `(min-width:1024px) and (pointer:fine)` breakpoint; fixed UI lives outside `#smooth-wrapper`), cursor companion that labels `[data-cursor]` targets and hides over round buttons, `*accent*` words in copy rendered by `rich()`, live open/closed status from barbers' `WorkingHours` (`shopStatus`), and a home-visit price estimator.
@@ -346,6 +347,16 @@ A no-show adds 1 to `Customer.noShowCount`; undoing it takes 1 off. Every change
 
 **Build waves.** A: sign-in, Today, bookings, booking detail, staff booking, reschedule, calendar. B (OWNER): services and categories, barbers (hours, time off, photos), zones, products, gallery. C: customers, reports, settings, users.
 
+**Catalogue rules** (`services/catalog.js`, `services/barbers.js`):
+
+- Prices are typed in naira (`7,500`, `7500.50`) and stored in kobo. Durations come in 5-minute steps (5–480). Zone travel time is 0–180 minutes.
+- Slugs come from the name and stay unique (`cut`, `cut-2`, …). Reordering rewrites `sortOrder` as 10, 20, 30… within the group.
+- Anything with booking history is never deleted: a service with bookings must be hidden (`active = false`), a zone with bookings switched off, and barbers are deactivated rather than deleted. A category can only be deleted once it is empty. Products and gallery photos can be deleted, and their image files go with them.
+- Weekly hours: one shift per day in Lagos wall-clock minutes. Saving replaces the barber's whole week in one transaction and lists any upcoming bookings that now fall outside it. Those bookings are not changed.
+- Time off: all-day ranges run from 00:00 on the first date to 24:00 on the last, and ranges are capped at a year. Adding time off lists the overlapping bookings but does not cancel them; the owner decides.
+
+**Uploads.** Image forms are `multipart/form-data`. `middleware/upload.js` parses them (memory storage, one file, 8 MB cap) before CSRF protection runs, so the hidden `_csrf` field is checked as usual. The file only reaches a handler after CSRF and the OWNER check pass. `sharp` decodes the buffer, rejects anything that isn't a JPG/PNG/WebP/AVIF/HEIF image or is under 400 px wide, applies EXIF rotation and writes WebP. Replaced or deleted images are removed from disk, and `removeUpload` only touches files inside `/uploads/<kind>/`. The sharp file cache is off because it holds Windows file handles open. The CSP allows `blob:` images so the picker can preview a photo before upload.
+
 ## Notifications, security and deployment
 
 Without a deposit, reminders are the main defence against no-shows, so every booking triggers a confirmation and a reminder on two channels.
@@ -377,7 +388,7 @@ SMS goes through Termii (good Nigerian delivery rates) behind a small `sms.send(
 1. Ubuntu 24.04 droplet (2 GB RAM is enough for v1) or App Platform if you prefer managed.
 2. Managed PostgreSQL, or Postgres on the droplet with daily `pg_dump` to Spaces.
 3. Nginx reverse proxy + Let's Encrypt (certbot); PM2 runs `src/server.js` in cluster mode.
-4. Images on DigitalOcean Spaces + CDN, uploaded through `multer` and resized with `sharp`.
+4. Uploaded images live in `public/uploads/` on the droplet, so include that folder in backups and keep it across deploys (symlink it to a persistent path). Moving them to DigitalOcean Spaces + CDN later only needs `services/images.js` to change.
 5. GitHub Actions: lint + Jest on push; on `main`, SSH deploy → `npm ci` → `prisma migrate deploy` → `pm2 reload`.
 6. Env vars: `DATABASE_URL`, `SESSION_SECRET`, `SMTP_*`, `TERMII_API_KEY`, `APP_URL`, `TZ=Africa/Lagos`.
 

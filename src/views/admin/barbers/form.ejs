@@ -1,0 +1,160 @@
+<% const v = values; const e = errors || {}; const err = (k) => (e[k] ? 'has-error' : ''); %>
+<nav class="text-sm text-ink/65" aria-label="Breadcrumb"><a href="/admin/barbers" class="link-u">Barbers</a> <span aria-hidden="true">/</span> <%= barber ? barber.name : 'New' %></nav>
+<header class="a-page-head">
+  <div>
+    <p class="eyebrow"><%= barber ? 'Barber' : 'New barber' %></p>
+    <h1 class="a-title"><% if (barber) { %><%= barber.name %><% } else { %>Add a <em class="accent">barber</em><% } %></h1>
+  </div>
+  <% if (barber) { %>
+    <a href="/admin/calendar?barber=<%= barber.id %>" class="btn-ghost">Calendar</a>
+  <% } %>
+</header>
+
+<% if (barber) { %>
+  <nav class="a-tabs no-scrollbar" aria-label="Sections">
+    <a href="#profile">Profile</a><a href="#services">Services</a><a href="#hours">Weekly hours</a><a href="#time-off">Time off<% if (barber.timeOff.length) { %> <span class="a-chip-count"><%= barber.timeOff.length %></span><% } %></a>
+  </nav>
+<% } %>
+
+<form id="profile" method="post" action="/admin/barbers<%= barber ? `/${barber.id}` : '' %>" enctype="multipart/form-data" class="scroll-mt-24 space-y-6" data-a-form>
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+  <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
+    <section class="a-card">
+      <h2 class="a-h3">Profile</h2>
+      <div class="mt-5 grid gap-4 sm:grid-cols-2">
+        <label class="a-field <%= err('name') %>"><span>Name</span>
+          <input name="name" value="<%= v.name || '' %>" maxlength="60" required placeholder="e.g. Tunde A." />
+          <% if (e.name) { %><p class="field-error"><%= e.name %></p><% } %>
+        </label>
+        <label class="a-field <%= err('specialties') %>"><span>Specialties</span>
+          <input name="specialties" value="<%= v.specialties || '' %>" placeholder="Skin fades, Beard sculpting" />
+          <small class="field-hint !mt-0 !pl-0">Separate with commas. The first shows in the booking wizard.</small>
+          <% if (e.specialties) { %><p class="field-error"><%= e.specialties %></p><% } %>
+        </label>
+        <label class="a-field sm:col-span-2 <%= err('bio') %>"><span>Bio <em class="not-italic normal-case tracking-normal text-ink/50">(optional)</em></span>
+          <textarea name="bio" rows="4" maxlength="600" placeholder="A few lines about their style and experience."><%= v.bio || '' %></textarea>
+          <% if (e.bio) { %><p class="field-error"><%= e.bio %></p><% } %>
+        </label>
+      </div>
+      <div class="mt-6 grid gap-5 sm:grid-cols-2">
+        <%- include('../partials/switch', { name: 'active', checked: v.active, label: 'Taking bookings', hint: 'Off hides them from the site and the wizard.' }) %>
+        <%- include('../partials/switch', { name: 'doesHomeService', checked: v.doesHomeService, label: 'Does home visits', hint: 'Can be booked for home visits.' }) %>
+      </div>
+    </section>
+    <aside class="a-card">
+      <%- include('../partials/image-input', { current: barber && barber.photoUrl, width: 500, label: 'Portrait', hint: 'A vertical photo works best. JPG, PNG or WebP up to 8 MB.', error: e.image, shape: 'portrait' }) %>
+    </aside>
+  </div>
+
+  <section id="services" class="a-card scroll-mt-24">
+    <div class="flex flex-wrap items-end justify-between gap-3">
+      <div>
+        <h2 class="a-h3">Services offered</h2>
+        <p class="mt-1 text-sm text-ink/65">Customers can only book this barber for the services ticked here.</p>
+      </div>
+      <button type="button" class="link-u text-sm" data-check-all="serviceIds">Select all</button>
+    </div>
+    <% categories.forEach((c) => { if (!c.services.length) return; %>
+      <p class="mt-5 text-xs font-medium uppercase tracking-[0.16em] text-ink/65"><%= c.name %></p>
+      <div class="a-checks mt-2">
+        <% c.services.forEach((s) => { %>
+          <label class="a-check <%= s.active ? '' : 'is-muted' %>">
+            <input type="checkbox" name="serviceIds" value="<%= s.id %>" class="sr-only" <%= (v.serviceIds || []).includes(s.id) ? 'checked' : '' %> />
+            <span class="min-w-0"><span class="block truncate"><%= s.name %></span><span class="block text-xs text-ink/60"><%= duration(s.durationMin) %><%= s.active ? '' : ' · hidden' %></span></span>
+            <span class="choice-check ml-auto shrink-0" aria-hidden="true"></span>
+          </label>
+        <% }) %>
+      </div>
+    <% }) %>
+  </section>
+
+  <div class="flex flex-wrap items-center justify-end gap-3">
+    <a href="/admin/barbers" class="text-sm text-ink/65 hover:text-ink">Cancel</a>
+    <button type="submit" class="btn-primary" data-a-submit><%= barber ? 'Save profile' : 'Add barber' %> <span class="arrow" aria-hidden="true">→</span></button>
+  </div>
+</form>
+
+<% if (barber) { %>
+  <form id="hours" method="post" action="/admin/barbers/<%= barber.id %>/hours" class="a-card mt-10 scroll-mt-24" data-a-form>
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+    <div class="flex flex-wrap items-end justify-between gap-3">
+      <div>
+        <h2 class="a-h3">Weekly hours</h2>
+        <p class="mt-1 text-sm text-ink/65">One shift per day, in Lagos time. Free times in the wizard come from these hours.</p>
+      </div>
+      <button type="button" class="link-u text-sm" data-copy-monday>Copy Monday to weekdays</button>
+    </div>
+    <div class="mt-5 divide-y divide-ink/10">
+      <% weekdays.forEach(([d, label]) => { const h = hours[d]; const de = hoursErrors[`day_${d}`]; %>
+        <div class="a-hours-row <%= h.open ? 'is-open' : '' %> <%= de ? 'has-error' : '' %>" data-hours-row="<%= d %>">
+          <label class="a-switch a-hours-day">
+            <input type="checkbox" name="open_<%= d %>" class="sr-only" <%= h.open ? 'checked' : '' %> data-hours-open />
+            <span class="a-switch-track" aria-hidden="true"><span class="a-switch-thumb"></span></span>
+            <span class="font-medium"><%= label %></span>
+          </label>
+          <div class="a-hours-times">
+            <label class="a-field"><span class="sr-only"><%= label %> start</span><input type="time" name="start_<%= d %>" value="<%= h.start %>" step="900" /></label>
+            <span class="text-ink/50" aria-hidden="true">–</span>
+            <label class="a-field"><span class="sr-only"><%= label %> end</span><input type="time" name="end_<%= d %>" value="<%= h.end %>" step="900" /></label>
+          </div>
+          <span class="a-hours-closed text-sm text-ink/55">Day off</span>
+          <% if (de) { %><p class="field-error a-hours-error"><%= de %></p><% } %>
+        </div>
+      <% }) %>
+    </div>
+    <div class="mt-6 flex justify-end">
+      <button type="submit" class="btn-primary" data-a-submit>Save hours <span class="arrow" aria-hidden="true">→</span></button>
+    </div>
+  </form>
+
+  <section id="time-off" class="a-card mt-6 scroll-mt-24">
+    <h2 class="a-h3">Time off</h2>
+    <p class="mt-1 text-sm text-ink/65">Holidays, training, a long lunch. Existing bookings stay; you’ll be told about any overlap.</p>
+
+    <% if (barber.timeOff.length) { %>
+      <ul class="mt-5 divide-y divide-ink/10">
+        <% barber.timeOff.forEach((t) => {
+          const sameDay = formatShort(t.startsAt) === formatShort(new Date(t.endsAt.getTime() - 1));
+          const allDay = formatTime(t.startsAt) === '00:00' && formatTime(t.endsAt) === '00:00';
+        %>
+          <li class="flex flex-wrap items-center gap-x-4 gap-y-2 py-3">
+            <span class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-paper-deep text-ink/70" aria-hidden="true"><%- include('../partials/icon', { name: 'calendar' }) %></span>
+            <div class="min-w-0 flex-1">
+              <p class="font-medium">
+                <% if (allDay) { %><%= formatShort(t.startsAt) %><%= sameDay ? '' : ` – ${formatShort(new Date(t.endsAt.getTime() - 1))}` %> <span class="font-normal text-ink/60">· all day</span>
+                <% } else { %><%= formatShort(t.startsAt) %> <%= formatTime(t.startsAt) %> – <%= sameDay ? '' : formatShort(t.endsAt) + ' ' %><%= formatTime(t.endsAt) %><% } %>
+              </p>
+              <% if (t.reason) { %><p class="text-sm text-ink/65"><%= t.reason %></p><% } %>
+            </div>
+            <form method="post" action="/admin/barbers/<%= barber.id %>/time-off/<%= t.id %>/delete">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+              <button type="submit" class="a-danger-link">Remove</button>
+            </form>
+          </li>
+        <% }) %>
+      </ul>
+    <% } else { %>
+      <p class="a-empty-row mt-5">No time off coming up.</p>
+    <% } %>
+
+    <form method="post" action="/admin/barbers/<%= barber.id %>/time-off" class="a-subcard mt-6" data-timeoff-form>
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <p class="font-medium">Add time off</p>
+      <div class="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <label class="a-field col-span-2 min-[400px]:col-span-1 <%= offErrors.fromDate ? 'has-error' : '' %>"><span>From</span><input type="date" name="fromDate" value="<%= off.fromDate || '' %>" required />
+          <% if (offErrors.fromDate) { %><p class="field-error"><%= offErrors.fromDate %></p><% } %></label>
+        <label class="a-field col-span-2 min-[400px]:col-span-1 <%= offErrors.toDate ? 'has-error' : '' %>"><span>To</span><input type="date" name="toDate" value="<%= off.toDate || '' %>" />
+          <% if (offErrors.toDate) { %><p class="field-error"><%= offErrors.toDate %></p><% } %></label>
+        <label class="a-field a-off-time <%= offErrors.fromTime ? 'has-error' : '' %>"><span>Start time</span><input type="time" name="fromTime" value="<%= off.fromTime || '13:00' %>" step="900" />
+          <% if (offErrors.fromTime) { %><p class="field-error"><%= offErrors.fromTime %></p><% } %></label>
+        <label class="a-field a-off-time <%= offErrors.toTime ? 'has-error' : '' %>"><span>End time</span><input type="time" name="toTime" value="<%= off.toTime || '14:00' %>" step="900" />
+          <% if (offErrors.toTime) { %><p class="field-error"><%= offErrors.toTime %></p><% } %></label>
+        <label class="a-field col-span-2 lg:col-span-3"><span>Reason <em class="not-italic normal-case tracking-normal text-ink/50">(optional, staff only)</em></span><input name="reason" value="<%= off.reason || '' %>" maxlength="120" placeholder="e.g. Annual leave" /></label>
+        <div class="col-span-2 flex items-end lg:col-span-1">
+          <%- include('../partials/switch', { name: 'allDay', checked: !!off.allDay, label: 'All day' }) %>
+        </div>
+      </div>
+      <button type="submit" class="btn-primary mt-5" data-a-submit>Add time off</button>
+    </form>
+  </section>
+<% } %>

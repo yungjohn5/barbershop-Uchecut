@@ -1,0 +1,17 @@
+<%# Reorder buttons. Params: action (POST url), first, last, label (for screen readers) %>
+<div class="a-move">
+  <form method="post" action="<%= action %>">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+    <input type="hidden" name="dir" value="up" />
+    <button type="submit" class="a-move-btn" <%= first ? 'disabled' : '' %> aria-label="Move <%= label %> up">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg>
+    </button>
+  </form>
+  <form method="post" action="<%= action %>">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+    <input type="hidden" name="dir" value="down" />
+    <button type="submit" class="a-move-btn" <%= last ? 'disabled' : '' %> aria-label="Move <%= label %> down">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+    </button>
+  </form>
+</div>

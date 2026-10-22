@@ -1,0 +1,81 @@
+<% const total = categories.reduce((n, c) => n + c.services.length, 0); const live = categories.reduce((n, c) => n + c.services.filter((s) => s.active).length, 0); %>
+<header class="a-page-head">
+  <div>
+    <p class="eyebrow">Catalogue</p>
+    <h1 class="a-title"><%= total %> <em class="accent">services</em></h1>
+    <p class="mt-2 text-ink/65"><%= live %> live on the site, in <%= categories.length %> categor<%= categories.length === 1 ? 'y' : 'ies' %>.</p>
+  </div>
+  <div class="flex flex-wrap gap-2">
+    <a href="#categories" class="btn-ghost">Add category</a>
+    <a href="/admin/services/new" class="btn-primary">New service <span class="arrow" aria-hidden="true">→</span></a>
+  </div>
+</header>
+
+<div class="space-y-6">
+  <% categories.forEach((c, ci) => { %>
+    <section class="a-card" aria-labelledby="cat-<%= c.id %>">
+      <div class="a-section-head">
+        <%- include('../partials/move', { action: `/admin/categories/${c.id}/move`, first: ci === 0, last: ci === categories.length - 1, label: c.name }) %>
+        <div class="min-w-0 flex-1">
+          <h2 id="cat-<%= c.id %>" class="a-h2"><%= c.name %></h2>
+          <p class="text-sm text-ink/65"><%= c.services.length %> service<%= c.services.length === 1 ? '' : 's' %></p>
+        </div>
+        <details class="a-pop">
+          <summary class="btn-ghost !min-h-[2.4rem] !px-4 !py-2 text-sm">Rename</summary>
+          <form method="post" action="/admin/categories/<%= c.id %>" class="a-pop-panel">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+            <label class="a-field"><span>Category name</span><input name="name" value="<%= c.name %>" maxlength="60" required /></label>
+            <button type="submit" class="btn-primary mt-3 w-full justify-center">Save</button>
+          </form>
+        </details>
+        <a href="/admin/services/new?category=<%= c.id %>" class="icon-btn-dark !h-10 !w-10" aria-label="Add a service to <%= c.name %>"><%- include('../partials/icon', { name: 'plus' }) %></a>
+      </div>
+
+      <% if (!c.services.length) { %>
+        <div class="a-empty-row mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+          <span>No services yet.</span>
+          <%- include('../partials/delete', { id: `cat-${c.id}`, action: `/admin/categories/${c.id}/delete`, title: `Delete “${c.name}”?`, body: 'The category will disappear from the services filter on the site.', label: 'Delete category' }) %>
+        </div>
+      <% } %>
+
+      <ul class="mt-4 divide-y divide-ink/10">
+        <% c.services.forEach((s, si) => { %>
+          <li class="a-row <%= s.active ? '' : 'is-muted' %>">
+            <%- include('../partials/move', { action: `/admin/services/${s.id}/move`, first: si === 0, last: si === c.services.length - 1, label: s.name }) %>
+            <a href="/admin/services/<%= s.id %>" class="a-row-main">
+              <% if (s.imageUrl) { %><img src="<%= s.imageUrl %>-500.webp" alt="" class="a-thumb" loading="lazy" /><% } else { %><span class="a-thumb a-thumb-empty" aria-hidden="true"><%= s.name[0] %></span><% } %>
+              <span class="min-w-0">
+                <span class="block truncate font-medium"><%= s.name %></span>
+                <span class="block text-sm text-ink/65"><span class="tabular-nums"><%= naira(s.priceKobo) %></span> · <%= duration(s.durationMin) %> · <%= s._count.barbers %> barber<%= s._count.barbers === 1 ? '' : 's' %></span>
+              </span>
+            </a>
+            <div class="a-row-tags">
+              <span class="a-type <%= s.homeAvailable ? 'a-type-home' : '' %>"><%= s.homeAvailable ? 'Home & shop' : 'Shop only' %></span>
+            </div>
+            <form method="post" action="/admin/services/<%= s.id %>/active" class="a-row-toggle">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+              <input type="hidden" name="active" value="<%= s.active ? 'false' : 'true' %>" />
+              <button type="submit" class="a-live <%= s.active ? 'is-on' : '' %>" aria-label="<%= s.active ? `Hide ${s.name} from the site` : `Show ${s.name} on the site` %>">
+                <span class="a-live-dot" aria-hidden="true"></span><%= s.active ? 'Live' : 'Hidden' %>
+              </button>
+            </form>
+            <a href="/admin/services/<%= s.id %>" class="a-row-go" aria-label="Edit <%= s.name %>"><%- include('../partials/icon', { name: 'chevron' }) %></a>
+          </li>
+        <% }) %>
+      </ul>
+    </section>
+  <% }) %>
+
+  <section id="categories" class="a-card scroll-mt-24">
+    <h2 class="a-h3">Add a category</h2>
+    <p class="mt-1 text-sm text-ink/65">Categories are the filter tabs in the services section of the home page.</p>
+    <form method="post" action="/admin/categories" class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <label class="a-field flex-1 <%= categoryForm.errors.name ? 'has-error' : '' %>"><span>Name</span>
+        <input name="name" value="<%= (categoryForm.values && categoryForm.values.name) || '' %>" placeholder="e.g. Colour & Texture" maxlength="60" />
+        <% if (categoryForm.errors.name) { %><p class="field-error"><%= categoryForm.errors.name %></p><% } %>
+      </label>
+      <button type="submit" class="btn-primary justify-center">Add category</button>
+    </form>
+  </section>
+</div>

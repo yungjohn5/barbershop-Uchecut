@@ -1,0 +1,9 @@
+<%# On/off switch (a styled checkbox). Params: name, checked, label, hint %>
+<label class="a-switch">
+  <input type="checkbox" name="<%= name %>" class="sr-only" <%= checked ? 'checked' : '' %> />
+  <span class="a-switch-track" aria-hidden="true"><span class="a-switch-thumb"></span></span>
+  <span class="min-w-0">
+    <span class="block font-medium"><%= label %></span>
+    <% if (locals.hint) { %><span class="block text-sm text-ink/65"><%= hint %></span><% } %>
+  </span>
+</label>

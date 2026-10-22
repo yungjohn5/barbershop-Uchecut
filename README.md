@@ -6,8 +6,9 @@ and pay on the day. One Node.js app serves the site, the booking engine and (soo
 the owner's dashboard.
 
 > **Status:** Phases 1–3 complete (foundation, booking engine, public site, booking wizard,
-> confirmation and manage link). Phase 4 in progress: the admin dashboard's daily screens are
-> done; catalogue, staff and settings screens are next. See [Roadmap](#roadmap).
+> confirmation and manage link). Phase 4 in progress: the admin dashboard's daily screens and
+> the owner's catalogue and team screens are done; customers, reports, settings and users are next.
+> See [Roadmap](#roadmap).
 > "Victory" and all copy, prices, zones and photos are **placeholders** until the client signs off.
 
 **Contents:**
@@ -59,6 +60,12 @@ the owner's dashboard.
 - **Reschedule:** the same barber, date and time picker as the public wizard, with staff rules applied.
 - **Calendar:** a week per barber with travel buffers, closed hours and time off shaded, a red "now" line, and sideways scrolling on phones.
 - **Sign-in:** bcrypt with a 15-minute lockout after 5 wrong passwords. Dark sidebar on desktop, slide-in drawer on phones, light and dark mode.
+- **Owner screens:**
+  - **Services and categories:** price in naira, duration, description, card photo, home-visit toggle, live/hidden, who offers each service, reorder, rename and delete.
+  - **Barbers:** portrait, bio, specialties, services offered, home-visit and taking-bookings toggles, a weekly-hours editor with "copy Monday", and time off that warns about clashing bookings.
+  - **Zones:** fee and travel time.
+  - **Products and gallery:** photo upload with live preview, captions, barber tags, show/hide and reorder.
+  - Anything with booking history is hidden, never deleted.
 
 ---
 
@@ -181,7 +188,7 @@ uchecut/
 │   ├── config/               # env validation, constants and default settings
 │   ├── lib/                  # prisma, logger, errors, phone, time, ids, sms, mailer, view helpers
 │   ├── middleware/           # csrf, rate limits, zod validate(), error handler
-│   ├── services/             # business logic: availability, booking, bookingFlow, adminAuth, adminBookings, content, settings
+│   ├── services/             # business logic: availability, booking, bookingFlow, adminAuth, adminBookings, catalog, barbers, images, content, settings
 │   ├── routes/               # public pages, booking wizard, JSON API, admin/
 │   ├── styles/input.css      # Tailwind source + component styles
 │   └── views/                # layouts, partials (home sections), pages
@@ -242,7 +249,8 @@ bookings impossible even if the application has a bug.
   - `boot.js` sets `data-theme` before first paint, from the saved `vb-theme` value or the OS setting.
 - **Buttons:** `.btn-primary`, `.btn-light`, `.btn-ghost` and `.btn-ghost-light` get the rolling-label hover markup at runtime. Use them for any new button. Text links use `.link-u` or `.link-line`.
 - **Client sign-off:** the hero's rotating **"Book Appointment"** ring button (`partials/ring-btn.ejs`, `.ring-btn`) is approved as is. Do not change its look, size, position or hover.
-- **CSP:** scripts load only from `'self'`, so GSAP is served from `node_modules` at `/vendor/gsap`. Inline `<script>` tags and `style` attributes are blocked; use classes.
+- **CSP:** scripts load only from `'self'`, so GSAP is served from `node_modules` at `/vendor/gsap`. Inline `<script>` tags and `style` attributes are blocked; use classes. `blob:` images are allowed for the admin upload preview.
+- **Uploads:** admin photos are written to `public/uploads/` (git-ignored). Back this folder up and keep it across deploys.
 
 ---
 
@@ -286,6 +294,7 @@ npm test
   - a direct insert that the exclusion constraint must reject
   - the JSON API and the home page
   - admin sign-in and lockout, route guards, status actions, staff bookings, reschedule, the week calendar
+  - owner-only access, catalogue CRUD rules, weekly hours and time off, and multipart uploads behind CSRF
 
 ---
 
@@ -333,7 +342,7 @@ Stop the other process, or set `PORT` in `.env`.
 | 1 | Foundation: app shell, schema, migrations, seed | ✅ Done |
 | 2 | Booking engine, transactional create, JSON API, tests | ✅ Done |
 | 3 | Public site and booking wizard, confirmation, manage link | ✅ Done |
-| 4 | Admin dashboard: Today, bookings, staff booking, calendar ✅ · catalogue and staff CRUD, customers, reports, settings, users | 🟡 In progress |
+| 4 | Admin dashboard: Today, bookings, staff booking, calendar ✅ · services, barbers, zones, products, gallery ✅ · customers, reports, settings, users | 🟡 In progress |
 | 5 | Email/SMS notifications, reminders, auto-cancel job, deployment | ⬜ |
 
 **Needed from the client:**

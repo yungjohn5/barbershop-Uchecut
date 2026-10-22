@@ -105,7 +105,9 @@
 
   // ------------------------------------------------------------ entrance
   if (Site.motion && gsap) {
-    var items = $$('.a-page-head, .a-stat, .a-card, .a-filters, .a-table-wrap, .cal-wrap, .a-empty');
+    var items = $$(
+      '.a-page-head, .a-stat, .a-card, .a-filters, .a-table-wrap, .cal-wrap, .a-empty, .a-barber, .a-tile',
+    );
     if (items.length)
       gsap.from(items, {
         y: 22,
@@ -135,6 +137,124 @@
       cal.scrollLeft = today.offsetLeft - 64;
     }
   }
+
+  // ------------------------------------------------------------ owner forms
+  // Photo picker: preview the chosen file before upload.
+  $$('[data-image-input]').forEach(function (box) {
+    var input = $('[data-image-file]', box);
+    var preview = $('[data-image-preview]', box);
+    var label = $('[data-image-label]', box);
+    if (!input || !preview) return;
+    var url = null;
+    input.addEventListener('change', function () {
+      var file = input.files && input.files[0];
+      if (!file) return;
+      if (url) URL.revokeObjectURL(url);
+      url = URL.createObjectURL(file);
+      preview.innerHTML = '';
+      var img = document.createElement('img');
+      img.src = url;
+      img.alt = '';
+      preview.appendChild(img);
+      box.classList.remove('has-error');
+      if (label) {
+        var parts = $$('.btn-roll-a, .btn-roll-b', label);
+        var text = file.name.length > 28 ? file.name.slice(0, 25) + '…' : file.name;
+        if (parts.length)
+          parts.forEach(function (p) {
+            p.textContent = text;
+          });
+        else label.textContent = text;
+      }
+      if (Site.motion && gsap)
+        gsap.from(img, { scale: 1.08, opacity: 0, duration: 0.7, ease: 'expo.out' });
+    });
+  });
+
+  // "Select all" for a group of checkboxes; toggles to "Clear all".
+  $$('[data-check-all]').forEach(function (btn) {
+    var name = btn.getAttribute('data-check-all');
+    var form = btn.closest('form');
+    var boxes = $$('input[name="' + name + '"]', form);
+    var sync = function () {
+      var all = boxes.every(function (b) {
+        return b.checked;
+      });
+      btn.textContent = all ? 'Clear all' : 'Select all';
+    };
+    btn.addEventListener('click', function () {
+      var all = boxes.every(function (b) {
+        return b.checked;
+      });
+      boxes.forEach(function (b) {
+        b.checked = !all;
+      });
+      sync();
+    });
+    boxes.forEach(function (b) {
+      b.addEventListener('change', sync);
+    });
+    sync();
+  });
+
+  // Weekly hours: copy Monday's shift to Tuesday–Friday.
+  var copyMon = $('[data-copy-monday]');
+  if (copyMon) {
+    copyMon.addEventListener('click', function () {
+      var form = copyMon.closest('form');
+      var get = function (n) {
+        return $('[name="' + n + '"]', form);
+      };
+      [2, 3, 4, 5].forEach(function (d) {
+        get('open_' + d).checked = get('open_1').checked;
+        get('start_' + d).value = get('start_1').value;
+        get('end_' + d).value = get('end_1').value;
+      });
+      copyMon.textContent = 'Copied ✓';
+      setTimeout(function () {
+        copyMon.textContent = 'Copy Monday to weekdays';
+      }, 1600);
+    });
+  }
+
+  // Section tabs: highlight the section in view.
+  var tabs = $$('.a-tabs a[href^="#"]');
+  if (tabs.length && 'IntersectionObserver' in window) {
+    var byId = {};
+    tabs.forEach(function (a) {
+      byId[a.getAttribute('href').slice(1)] = a;
+    });
+    var io = new IntersectionObserver(
+      function (entries) {
+        entries.forEach(function (en) {
+          if (!en.isIntersecting) return;
+          tabs.forEach(function (a) {
+            a.classList.remove('is-active');
+          });
+          var a = byId[en.target.id];
+          if (a) a.classList.add('is-active');
+        });
+      },
+      { rootMargin: '-30% 0px -60% 0px' },
+    );
+    Object.keys(byId).forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) io.observe(el);
+    });
+  }
+
+  // Submit once: no double uploads on slow connections.
+  $$('[data-a-form]').forEach(function (f) {
+    f.addEventListener('submit', function () {
+      var btn = $('[data-a-submit]', f);
+      if (!btn) return;
+      setTimeout(function () {
+        btn.disabled = true;
+        var label = btn.querySelector('.btn-roll-a') || btn;
+        label.textContent = 'Saving…';
+      }, 0);
+    });
+  });
 
   // ------------------------------------------------------------ staff booking form
   var form = $('[data-staff-form]');
@@ -180,7 +300,9 @@
       var fee = zoneFee();
       $('[data-ss-total]').textContent = picked.length ? naira(price + fee) : '—';
       var chosen = $('input[name="startsAt"]:checked', form);
-      $('[data-ss-when]').textContent = chosen ? whenFmt.format(new Date(chosen.value)).replace(',', '') : '—';
+      $('[data-ss-when]').textContent = chosen
+        ? whenFmt.format(new Date(chosen.value)).replace(',', '')
+        : '—';
     };
 
     // Home visits: shop-only services can't be picked.
@@ -254,7 +376,13 @@
         slotsBox.appendChild(group);
       });
       if (Site.motion && gsap) {
-        gsap.from($$('.slot', slotsBox), { y: 10, opacity: 0, duration: 0.5, ease: 'expo.out', stagger: 0.01 });
+        gsap.from($$('.slot', slotsBox), {
+          y: 10,
+          opacity: 0,
+          duration: 0.5,
+          ease: 'expo.out',
+          stagger: 0.01,
+        });
       }
     };
 
@@ -293,11 +421,14 @@
         })
         .then(function (body) {
           if (mine !== seq) return;
-          if (body.error) return empty(typeof body.error === 'string' ? body.error : 'Couldn’t load times.');
+          if (body.error)
+            return empty(typeof body.error === 'string' ? body.error : 'Couldn’t load times.');
           if (!body.slots || !body.slots.length)
             return empty(
               'No free times on this day.',
-              barberSelect.value === 'any' ? 'Try another date.' : 'Try another date or “Any barber”.',
+              barberSelect.value === 'any'
+                ? 'Try another date.'
+                : 'Try another date or “Any barber”.',
             );
           render(body.slots);
         })
@@ -339,7 +470,11 @@
         return;
       }
       if (t.matches('[data-staff-type]')) syncType();
-      if (t.matches('[data-staff-type], [data-staff-zone], [data-staff-service], [data-staff-barber], [data-staff-date]')) {
+      if (
+        t.matches(
+          '[data-staff-type], [data-staff-zone], [data-staff-service], [data-staff-barber], [data-staff-date]',
+        )
+      ) {
         load();
       }
     });
@@ -350,7 +485,9 @@
     var lookup = function () {
       var v = phone.value.trim();
       if (v.replace(/\D/g, '').length < 10) return;
-      fetch('/admin/api/customer?phone=' + encodeURIComponent(v), { headers: { Accept: 'application/json' } })
+      fetch('/admin/api/customer?phone=' + encodeURIComponent(v), {
+        headers: { Accept: 'application/json' },
+      })
         .then(function (r) {
           return r.json();
         })
@@ -372,7 +509,9 @@
             visits +
             ' booking' +
             (visits === 1 ? '' : 's') +
-            (c.noShowCount ? ' · ' + c.noShowCount + ' no-show' + (c.noShowCount === 1 ? '' : 's') : '');
+            (c.noShowCount
+              ? ' · ' + c.noShowCount + ' no-show' + (c.noShowCount === 1 ? '' : 's')
+              : '');
           hint.classList.toggle('is-warn', !!c.noShowCount);
         })
         .catch(function () {});

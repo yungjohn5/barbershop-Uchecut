@@ -89,7 +89,9 @@ async function applyAction(id, action, { now = new Date(), reason, db = prisma }
 }
 
 async function updateStaffNotes(id, notes, { db = prisma } = {}) {
-  const text = String(notes || '').trim().slice(0, 2000);
+  const text = String(notes || '')
+    .trim()
+    .slice(0, 2000);
   return db.booking.update({ where: { id }, data: { staffNotes: text || null } });
 }
 
@@ -135,20 +137,26 @@ function listWhere(f, now) {
   }
   if (f.barberId) where.barberId = f.barberId;
   if (f.type === 'SHOP' || f.type === 'HOME') where.type = f.type;
-  if (['PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED', 'NO_SHOW'].includes(f.status)) where.status = f.status;
+  if (['PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED', 'NO_SHOW'].includes(f.status))
+    where.status = f.status;
   const q = String(f.q || '').trim();
   if (q) {
     const digits = q.replace(/\D/g, '');
     where.OR = [
       { reference: { contains: q.toUpperCase() } },
       { customer: { name: { contains: q, mode: 'insensitive' } } },
-      ...(digits.length >= 4 ? [{ customer: { phone: { contains: digits.replace(/^0/, '') } } }] : []),
+      ...(digits.length >= 4
+        ? [{ customer: { phone: { contains: digits.replace(/^0/, '') } } }]
+        : []),
     ];
   }
   return where;
 }
 
-async function listBookings(filters, { now = new Date(), page = 1, pageSize = 25, db = prisma } = {}) {
+async function listBookings(
+  filters,
+  { now = new Date(), page = 1, pageSize = 25, db = prisma } = {},
+) {
   const scope = SCOPES.includes(filters.scope) ? filters.scope : 'upcoming';
   const where = listWhere({ ...filters, scope }, now);
   const orderBy = scope === 'past' || scope === 'all' ? { startsAt: 'desc' } : { startsAt: 'asc' };
@@ -184,18 +192,23 @@ async function todayOverview({ now = new Date(), db = prisma } = {}) {
       include,
       take: 6,
     }),
-    db.booking.count({ where: { startsAt: { gte: weekStart, lt: weekEnd }, status: { not: 'CANCELLED' } } }),
+    db.booking.count({
+      where: { startsAt: { gte: weekStart, lt: weekEnd }, status: { not: 'CANCELLED' } },
+    }),
     db.barber.findMany({
       where: { active: true },
       orderBy: [{ sortOrder: 'asc' }, { id: 'asc' }],
       include: { hours: { where: { weekday: wd } } },
     }),
   ]);
-  const pendingTotal = await db.booking.count({ where: { status: 'PENDING', startsAt: { gte: now } } });
+  const pendingTotal = await db.booking.count({
+    where: { status: 'PENDING', startsAt: { gte: now } },
+  });
 
   const sum = (list) => list.reduce((s, b) => s + b.totalKobo, 0);
   const done = todays.filter((b) => b.status === 'COMPLETED');
-  const next = todays.find((b) => b.startsAt > now && ['PENDING', 'CONFIRMED'].includes(b.status)) || null;
+  const next =
+    todays.find((b) => b.startsAt > now && ['PENDING', 'CONFIRMED'].includes(b.status)) || null;
   return {
     today,
     now,
@@ -234,27 +247,49 @@ async function weekCalendar({ date, barberId, now = new Date(), db = prisma }) {
   const start = weekStartOf(isValidDateStr(date) ? date : toShopDate(now));
   const from = wallClockToUtc(start, 0);
   const to = wallClockToUtc(addDays(start, 7), 0);
-  const barbers = await db.barber.findMany({ where: { active: true }, orderBy: [{ sortOrder: 'asc' }, { id: 'asc' }] });
+  const barbers = await db.barber.findMany({
+    where: { active: true },
+    orderBy: [{ sortOrder: 'asc' }, { id: 'asc' }],
+  });
   const barber = barbers.find((b) => b.id === barberId) || barbers[0] || null;
-  if (!barber) return { start, end: addDays(start, 6), days: [], barbers, barber: null, axis: { from: 540, to: 1260 }, nowMin: null };
+  if (!barber)
+    return {
+      start,
+      end: addDays(start, 6),
+      days: [],
+      barbers,
+      barber: null,
+      axis: { from: 540, to: 1260 },
+      nowMin: null,
+    };
 
   const [bookings, hours, timeOff] = await Promise.all([
     db.booking.findMany({
-      where: { barberId: barber.id, blockStartsAt: { lt: to }, blockEndsAt: { gt: from }, status: { not: 'CANCELLED' } },
+      where: {
+        barberId: barber.id,
+        blockStartsAt: { lt: to },
+        blockEndsAt: { gt: from },
+        status: { not: 'CANCELLED' },
+      },
       include: { customer: true, services: true, zone: true },
       orderBy: { startsAt: 'asc' },
     }),
     db.workingHours.findMany({ where: { barberId: barber.id } }),
-    db.timeOff.findMany({ where: { barberId: barber.id, startsAt: { lt: to }, endsAt: { gt: from } } }),
+    db.timeOff.findMany({
+      where: { barberId: barber.id, startsAt: { lt: to }, endsAt: { gt: from } },
+    }),
   ]);
 
-  const minuteOf = (instant, day) => Math.round((instant.getTime() - wallClockToUtc(day, 0).getTime()) / 60_000);
+  const minuteOf = (instant, day) =>
+    Math.round((instant.getTime() - wallClockToUtc(day, 0).getTime()) / 60_000);
   let axisFrom = 600;
   let axisTo = 1200;
   const days = Array.from({ length: 7 }, (_, i) => {
     const day = addDays(start, i);
     const wd = weekdayOf(day);
-    const shifts = hours.filter((h) => h.weekday === wd).map((h) => ({ from: h.startMin, to: h.endMin }));
+    const shifts = hours
+      .filter((h) => h.weekday === wd)
+      .map((h) => ({ from: h.startMin, to: h.endMin }));
     shifts.forEach((s) => {
       axisFrom = Math.min(axisFrom, s.from);
       axisTo = Math.max(axisTo, s.to);
@@ -274,13 +309,23 @@ async function weekCalendar({ date, barberId, now = new Date(), db = prisma }) {
         return e;
       });
     const off = timeOff
-      .map((t) => ({ from: Math.max(0, minuteOf(t.startsAt, day)), to: Math.min(1440, minuteOf(t.endsAt, day)), reason: t.reason }))
+      .map((t) => ({
+        from: Math.max(0, minuteOf(t.startsAt, day)),
+        to: Math.min(1440, minuteOf(t.endsAt, day)),
+        reason: t.reason,
+      }))
       .filter((t) => t.to > 0 && t.from < 1440);
     return { date: day, weekday: wd, isToday: day === toShopDate(now), shifts, events, off };
   });
   // Round the axis to whole hours with a little air.
-  const axis = { from: Math.max(0, Math.floor(axisFrom / 60) * 60 - 60), to: Math.min(1440, Math.ceil(axisTo / 60) * 60 + 60) };
-  const nowMin = toShopDate(now) >= start && toShopDate(now) < addDays(start, 7) ? minuteOf(now, toShopDate(now)) : null;
+  const axis = {
+    from: Math.max(0, Math.floor(axisFrom / 60) * 60 - 60),
+    to: Math.min(1440, Math.ceil(axisTo / 60) * 60 + 60),
+  };
+  const nowMin =
+    toShopDate(now) >= start && toShopDate(now) < addDays(start, 7)
+      ? minuteOf(now, toShopDate(now))
+      : null;
   return { start, end: addDays(start, 6), days, barbers, barber, axis, nowMin };
 }
 

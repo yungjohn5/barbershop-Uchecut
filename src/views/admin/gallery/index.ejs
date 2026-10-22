@@ -1,0 +1,55 @@
+<% const fv = form.values || { visible: 'on' }; const fe = form.errors || {}; %>
+<header class="a-page-head">
+  <div>
+    <p class="eyebrow">Portfolio</p>
+    <h1 class="a-title"><%= items.length %> <em class="accent">photo<%= items.length === 1 ? '' : 's' %></em></h1>
+    <p class="mt-2 max-w-xl text-ink/65">Finished cuts, tagged by barber. Kept ready for the gallery page; hidden photos stay here only.</p>
+  </div>
+</header>
+
+<form method="post" action="/admin/gallery" enctype="multipart/form-data" class="a-card" data-a-form>
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+  <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
+    <%- include('../partials/image-input', { current: null, width: 600, label: 'Add a photo', hint: 'JPG, PNG or WebP up to 8 MB.', error: fe.image, shape: 'wide' }) %>
+    <div class="grid content-end gap-4 sm:grid-cols-2">
+      <label class="a-field sm:col-span-2"><span>Caption <em class="not-italic normal-case tracking-normal text-ink/50">(optional)</em></span><input name="caption" value="<%= fv.caption || '' %>" maxlength="120" placeholder="e.g. Low taper with textured top" /></label>
+      <label class="a-field"><span>Barber</span>
+        <select name="barberId"><option value="">Not tagged</option><% barbers.forEach((b) => { %><option value="<%= b.id %>" <%= Number(fv.barberId) === b.id ? 'selected' : '' %>><%= b.name %></option><% }) %></select>
+      </label>
+      <div class="flex items-end justify-between gap-3">
+        <%- include('../partials/switch', { name: 'visible', checked: !!fv.visible, label: 'Visible' }) %>
+        <button type="submit" class="btn-primary" data-a-submit>Upload</button>
+      </div>
+    </div>
+  </div>
+</form>
+
+<% if (!items.length) { %>
+  <div class="a-empty mt-6"><p class="font-serif text-3xl">No photos yet.</p></div>
+<% } %>
+
+<div class="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+  <% items.forEach((g, i) => { %>
+    <article id="g-<%= g.id %>" class="a-tile scroll-mt-24 <%= g.visible ? '' : 'is-muted' %>">
+      <div class="a-tile-photo a-tile-wide">
+        <img src="<%= g.imageUrl %>-600.webp" alt="<%= g.caption || '' %>" loading="lazy" />
+        <% if (!g.visible) { %><span class="a-type bg-surface absolute left-3 top-3">Hidden</span><% } %>
+        <div class="absolute right-3 top-3"><%- include('../partials/move', { action: `/admin/gallery/${g.id}/move`, first: i === 0, last: i === items.length - 1, label: 'photo' }) %></div>
+      </div>
+      <form id="gf-<%= g.id %>" method="post" action="/admin/gallery/<%= g.id %>" class="grid gap-3 px-4 pt-4">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+        <label class="a-field"><span class="sr-only">Caption</span><input name="caption" value="<%= g.caption || '' %>" maxlength="120" placeholder="Caption" /></label>
+        <div class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+          <label class="a-field"><span class="sr-only">Barber</span>
+            <select name="barberId"><option value="">Not tagged</option><% barbers.forEach((b) => { %><option value="<%= b.id %>" <%= g.barberId === b.id ? 'selected' : '' %>><%= b.name %></option><% }) %></select>
+          </label>
+          <%- include('../partials/switch', { name: 'visible', checked: g.visible, label: 'Visible' }) %>
+        </div>
+      </form>
+      <div class="flex items-center justify-between gap-3 p-4">
+        <%- include('../partials/delete', { id: `g-${g.id}`, action: `/admin/gallery/${g.id}/delete`, title: 'Delete this photo?', body: 'The image files are removed too. This can’t be undone.' }) %>
+        <button type="submit" form="gf-<%= g.id %>" class="btn-ghost !min-h-[2.4rem] !px-4 !py-2 text-sm">Save</button>
+      </div>
+    </article>
+  <% }) %>
+</div>

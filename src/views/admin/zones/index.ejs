@@ -1,0 +1,35 @@
+<header class="a-page-head">
+  <div>
+    <p class="eyebrow">Home visits</p>
+    <h1 class="a-title"><%= zones.length %> <em class="accent">zone<%= zones.length === 1 ? '' : 's' %></em></h1>
+    <p class="mt-2 max-w-xl text-ink/65">Each zone adds its fee to the bill and blocks travel time before and after the visit.</p>
+  </div>
+  <a href="/admin/zones/new" class="btn-primary">New zone <span class="arrow" aria-hidden="true">→</span></a>
+</header>
+
+<% if (!zones.length) { %>
+  <div class="a-empty"><p class="font-serif text-3xl">No zones yet.</p><p class="mt-2 text-ink/65">Customers can’t book home visits until you add one.</p></div>
+<% } else { %>
+  <div class="a-card !p-0">
+    <ul class="divide-y divide-ink/10">
+      <% zones.forEach((z, i) => { %>
+        <li class="a-row px-4 sm:px-6 <%= z.active ? '' : 'is-muted' %>">
+          <%- include('../partials/move', { action: `/admin/zones/${z.id}/move`, first: i === 0, last: i === zones.length - 1, label: z.name }) %>
+          <a href="/admin/zones/<%= z.id %>" class="a-row-main">
+            <span class="a-thumb a-thumb-empty" aria-hidden="true"><%- include('../partials/icon', { name: 'zones' }) %></span>
+            <span class="min-w-0">
+              <span class="block truncate font-medium"><%= z.name %></span>
+              <span class="block text-sm text-ink/65"><%= z._count.bookings %> booking<%= z._count.bookings === 1 ? '' : 's' %> all-time</span>
+            </span>
+          </a>
+          <div class="a-row-stats">
+            <span><span class="block text-xs uppercase tracking-[0.14em] text-ink/55">Fee</span><span class="tabular-nums font-medium"><%= naira(z.feeKobo) %></span></span>
+            <span><span class="block text-xs uppercase tracking-[0.14em] text-ink/55">Travel</span><span class="tabular-nums font-medium"><%= z.travelBufferMin %> min</span></span>
+          </div>
+          <span class="a-live <%= z.active ? 'is-on' : '' %> pointer-events-none"><span class="a-live-dot" aria-hidden="true"></span><%= z.active ? 'On' : 'Off' %></span>
+          <a href="/admin/zones/<%= z.id %>" class="a-row-go" aria-label="Edit <%= z.name %>"><%- include('../partials/icon', { name: 'chevron' }) %></a>
+        </li>
+      <% }) %>
+    </ul>
+  </div>
+<% } %>

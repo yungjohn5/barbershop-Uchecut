@@ -1,11 +1,11 @@
-// Admin dashboard (Wave A): sign-in, Today, bookings, calendar, staff bookings.
+// Admin dashboard: sign-in, Today, bookings, calendar, staff bookings; owner sections in ./catalog.js.
 // Routes stay thin; rules live in services/adminBookings.js and services/booking.js.
 const express = require('express');
 const { z } = require('zod');
 const env = require('../../config/env');
 const prisma = require('../../lib/prisma');
 const { loginLimiter, apiLimiter } = require('../../middleware/rateLimits');
-const { loadAdmin, requireAdmin, safeNext } = require('../../middleware/admin');
+const { loadAdmin, requireAdmin, requireRole, safeNext } = require('../../middleware/admin');
 const { SlotTakenError, ValidationError, HttpError, NotFoundError } = require('../../lib/errors');
 const { isValidDateStr, toShopDate, addDays } = require('../../lib/time');
 const { normaliseNgPhone } = require('../../lib/phone');
@@ -17,37 +17,19 @@ const flow = require('../../services/bookingFlow');
 const settingsService = require('../../services/settings');
 
 const router = express.Router();
-const asyncRoute = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
+const { asyncRoute, setFlash, view, back, idParam } = require('./helpers');
 
 router.use(loadAdmin);
-
-// ---------------------------------------------------------------- helpers
-function takeFlash(req) {
-  const f = req.session.adminFlash;
-  delete req.session.adminFlash;
-  return f || null;
-}
-function setFlash(req, type, message) {
-  req.session.adminFlash = { type, message };
-}
-function view(req, res, name, data = {}) {
-  res.render(`admin/${name}`, { layout: 'layouts/admin', flash: takeFlash(req), ...data });
-}
-const back = (req, fallback) => {
-  const ref = req.get('referer') || '';
-  try {
-    const u = new URL(ref);
-    return u.pathname.startsWith('/admin') ? u.pathname + u.search : fallback;
-  } catch {
-    return fallback;
-  }
-};
-const idParam = (req) => Number.parseInt(req.params.id, 10);
 
 // ---------------------------------------------------------------- sign in / out
 router.get('/login', (req, res) => {
   if (req.admin) return res.redirect(safeNext(req.query.next));
-  view(req, res, 'login', { title: 'Sign in', next: safeNext(req.query.next), email: '', error: null });
+  view(req, res, 'login', {
+    title: 'Sign in',
+    next: safeNext(req.query.next),
+    email: '',
+    error: null,
+  });
 });
 
 router.post(
@@ -58,7 +40,12 @@ router.post(
     const result = await authenticate(email, req.body.password);
     if (!result.ok) {
       res.status(401);
-      return view(req, res, 'login', { title: 'Sign in', next: safeNext(req.body.next), email, error: result.reason });
+      return view(req, res, 'login', {
+        title: 'Sign in',
+        next: safeNext(req.body.next),
+        email,
+        error: result.reason,
+      });
     }
     // New session id on sign-in (prevents session fixation).
     req.session.regenerate((err) => {
@@ -83,7 +70,9 @@ router.use(requireAdmin);
 // Sidebar badge: upcoming home-visit requests awaiting confirmation.
 router.use(
   asyncRoute(async (req, res, next) => {
-    res.locals.pendingCount = await prisma.booking.count({ where: { status: 'PENDING', startsAt: { gte: new Date() } } });
+    res.locals.pendingCount = await prisma.booking.count({
+      where: { status: 'PENDING', startsAt: { gte: new Date() } },
+    });
     next();
   }),
 );
@@ -93,7 +82,12 @@ router.get(
   '/',
   asyncRoute(async (req, res) => {
     const data = await adminBookings.todayOverview();
-    view(req, res, 'dashboard', { title: 'Today', nav: 'today', ...data, actionsFor: (b) => adminBookings.allowedActions(b, data.now) });
+    view(req, res, 'dashboard', {
+      title: 'Today',
+      nav: 'today',
+      ...data,
+      actionsFor: (b) => adminBookings.allowedActions(b, data.now),
+    });
   }),
 );
 
@@ -116,12 +110,26 @@ router.get(
     const f = parsed.success ? parsed.data : {};
     const [result, barbers] = await Promise.all([
       adminBookings.listBookings(
-        { scope: f.scope, q: f.q, from: f.from, to: f.to, barberId: f.barber, type: f.type, status: f.status },
+        {
+          scope: f.scope,
+          q: f.q,
+          from: f.from,
+          to: f.to,
+          barberId: f.barber,
+          type: f.type,
+          status: f.status,
+        },
         { page: f.page || 1 },
       ),
       prisma.barber.findMany({ orderBy: [{ sortOrder: 'asc' }, { id: 'asc' }] }),
     ]);
-    view(req, res, 'bookings/index', { title: 'Bookings', nav: 'bookings', filters: f, barbers, ...result });
+    view(req, res, 'bookings/index', {
+      title: 'Bookings',
+      nav: 'bookings',
+      filters: f,
+      barbers,
+      ...result,
+    });
   }),
 );
 
@@ -136,7 +144,10 @@ router.get(
         orderBy: { sortOrder: 'asc' },
         include: { services: { where: { active: true }, orderBy: { sortOrder: 'asc' } } },
       }),
-      prisma.barber.findMany({ where: { active: true }, orderBy: [{ sortOrder: 'asc' }, { id: 'asc' }] }),
+      prisma.barber.findMany({
+        where: { active: true },
+        orderBy: [{ sortOrder: 'asc' }, { id: 'asc' }],
+      }),
     ]);
     const days = flow.dateStrip({ today: ctx.today, days: 30, openWeekdays: ctx.openWeekdays });
     view(req, res, 'bookings/new', {
@@ -166,7 +177,10 @@ router.post(
     const values = {
       type: b.type === 'HOME' ? 'HOME' : 'SHOP',
       zoneId: b.zoneId ? Number(b.zoneId) : null,
-      serviceIds: [].concat(b.serviceIds || []).map(Number).filter((n) => n > 0),
+      serviceIds: []
+        .concat(b.serviceIds || [])
+        .map(Number)
+        .filter((n) => n > 0),
       barberId: b.barberId && b.barberId !== 'any' ? Number(b.barberId) : 'any',
       date: b.date,
       startsAt: b.startsAt,
@@ -247,7 +261,9 @@ router.post(
   asyncRoute(async (req, res) => {
     const id = idParam(req);
     try {
-      const { message } = await adminBookings.applyAction(id, String(req.body.action || ''), { reason: req.body.reason });
+      const { message } = await adminBookings.applyAction(id, String(req.body.action || ''), {
+        reason: req.body.reason,
+      });
       setFlash(req, 'success', message);
     } catch (err) {
       if (!(err instanceof HttpError)) throw err;
@@ -338,7 +354,11 @@ router.post(
       res.redirect(303, `/admin/bookings/${booking.id}`);
     } catch (err) {
       if (!(err instanceof HttpError)) throw err;
-      setFlash(req, 'error', err instanceof SlotTakenError ? 'That time was just taken. Pick another.' : err.message);
+      setFlash(
+        req,
+        'error',
+        err instanceof SlotTakenError ? 'That time was just taken. Pick another.' : err.message,
+      );
       res.redirect(303, `/admin/bookings/${booking.id}/reschedule`);
     }
   }),
@@ -361,6 +381,13 @@ router.get(
   }),
 );
 
+// ---------------------------------------------------------------- owner: catalogue and staff (wave B)
+router.use(
+  ['/services', '/categories', '/barbers', '/zones', '/products', '/gallery'],
+  requireRole('OWNER'),
+);
+router.use(require('./catalog'));
+
 // ---------------------------------------------------------------- admin JSON
 router.get(
   '/api/slots',
@@ -371,12 +398,18 @@ router.get(
       .split(',')
       .map(Number)
       .filter((n) => n > 0);
-    if (!date || !services.length) return res.json({ date, slots: [], error: services.length ? 'Pick a date.' : 'Choose a service first.' });
+    if (!date || !services.length)
+      return res.json({
+        date,
+        slots: [],
+        error: services.length ? 'Pick a date.' : 'Choose a service first.',
+      });
     try {
       const result = await getSlots(
         {
           date,
-          barberId: req.query.barber && req.query.barber !== 'any' ? Number(req.query.barber) : 'any',
+          barberId:
+            req.query.barber && req.query.barber !== 'any' ? Number(req.query.barber) : 'any',
           serviceIds: services,
           type: req.query.type === 'HOME' ? 'HOME' : 'SHOP',
           zoneId: req.query.zone ? Number(req.query.zone) : null,
@@ -401,7 +434,13 @@ router.get(
     if (!phone) return res.json({ customer: null });
     const c = await prisma.customer.findUnique({
       where: { phone },
-      select: { id: true, name: true, email: true, noShowCount: true, _count: { select: { bookings: true } } },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        noShowCount: true,
+        _count: { select: { bookings: true } },
+      },
     });
     res.json({ customer: c });
   }),

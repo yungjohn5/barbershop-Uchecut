@@ -25,7 +25,12 @@ beforeEach(async () => {
   await prisma.$executeRawUnsafe('TRUNCATE "session", "Admin" RESTART IDENTITY');
   fx = await seedFixtures();
   await prisma.admin.create({
-    data: { email: EMAIL, name: 'Ada Owner', role: 'OWNER', passwordHash: await hashPassword(PASSWORD) },
+    data: {
+      email: EMAIL,
+      name: 'Ada Owner',
+      role: 'OWNER',
+      passwordHash: await hashPassword(PASSWORD),
+    },
   });
 });
 afterAll(async () => {
@@ -50,7 +55,13 @@ async function signIn() {
   return { agent, csrf: csrfOf(home.text) };
 }
 
-function book({ type = 'SHOP', date = DATE(), min = 660, phone = '08030000001', actor = 'customer' } = {}) {
+function book({
+  type = 'SHOP',
+  date = DATE(),
+  min = 660,
+  phone = '08030000001',
+  actor = 'customer',
+} = {}) {
   return createBooking(
     {
       type,
@@ -92,12 +103,19 @@ describe('authenticate', () => {
 
 describe('admin routes', () => {
   test('signed-out visitors are sent to the login page; the API answers 401', async () => {
-    await request(app).get('/admin/bookings').expect(302).expect('Location', '/admin/login?next=%2Fadmin%2Fbookings');
+    await request(app)
+      .get('/admin/bookings')
+      .expect(302)
+      .expect('Location', '/admin/login?next=%2Fadmin%2Fbookings');
     await request(app).get('/admin/api/slots').expect(401);
   });
 
   test('login needs a CSRF token and rejects a wrong password with 401', async () => {
-    await request(app).post('/admin/login').type('form').send({ email: EMAIL, password: PASSWORD }).expect(403);
+    await request(app)
+      .post('/admin/login')
+      .type('form')
+      .send({ email: EMAIL, password: PASSWORD })
+      .expect(403);
     const agent = request.agent(app);
     const page = await agent.get('/admin/login');
     const res = await agent
@@ -121,7 +139,9 @@ describe('admin routes', () => {
     const detail = await agent.get(`/admin/bookings/${b.id}`).expect(200);
     expect(detail.text).toContain('Kemi Ade');
     expect(detail.text).toContain(`/manage/${b.manageToken}`);
-    const cal = await agent.get(`/admin/calendar?date=${DATE()}&barber=${fx.homeBarber.id}`).expect(200);
+    const cal = await agent
+      .get(`/admin/calendar?date=${DATE()}&barber=${fx.homeBarber.id}`)
+      .expect(200);
     expect(cal.text).toContain(`/admin/bookings/${b.id}`);
     await agent.get('/admin/bookings/99999').expect(404);
   });
@@ -138,9 +158,17 @@ describe('status actions', () => {
     const { agent, csrf } = await signIn();
     const b = await book({ type: 'HOME' });
     expect(b.status).toBe('PENDING');
-    await agent.post(`/admin/bookings/${b.id}/status`).type('form').send({ _csrf: csrf, action: 'complete' }).expect(303);
+    await agent
+      .post(`/admin/bookings/${b.id}/status`)
+      .type('form')
+      .send({ _csrf: csrf, action: 'complete' })
+      .expect(303);
     expect((await prisma.booking.findUnique({ where: { id: b.id } })).status).toBe('PENDING');
-    await agent.post(`/admin/bookings/${b.id}/status`).type('form').send({ _csrf: csrf, action: 'confirm' }).expect(303);
+    await agent
+      .post(`/admin/bookings/${b.id}/status`)
+      .type('form')
+      .send({ _csrf: csrf, action: 'confirm' })
+      .expect(303);
     const after = await prisma.booking.findUnique({ where: { id: b.id } });
     expect(after.status).toBe('CONFIRMED');
     expect(after.confirmedAt).not.toBeNull();
@@ -172,8 +200,14 @@ describe('status actions', () => {
   test('staff notes are saved', async () => {
     const { agent, csrf } = await signIn();
     const b = await book();
-    await agent.post(`/admin/bookings/${b.id}/notes`).type('form').send({ _csrf: csrf, staffNotes: 'Prefers scissors' }).expect(303);
-    expect((await prisma.booking.findUnique({ where: { id: b.id } })).staffNotes).toBe('Prefers scissors');
+    await agent
+      .post(`/admin/bookings/${b.id}/notes`)
+      .type('form')
+      .send({ _csrf: csrf, staffNotes: 'Prefers scissors' })
+      .expect(303);
+    expect((await prisma.booking.findUnique({ where: { id: b.id } })).staffNotes).toBe(
+      'Prefers scissors',
+    );
   });
 });
 
@@ -181,7 +215,9 @@ describe('staff bookings', () => {
   test('staff home visits are confirmed straight away and marked STAFF', async () => {
     const { agent, csrf } = await signIn();
     const slots = await agent
-      .get(`/admin/api/slots?date=${DATE()}&barber=any&services=${fx.cut.id}&type=HOME&zone=${fx.zone.id}`)
+      .get(
+        `/admin/api/slots?date=${DATE()}&barber=any&services=${fx.cut.id}&type=HOME&zone=${fx.zone.id}`,
+      )
       .expect(200);
     const startsAt = slots.body.slots[0].startsAt;
     const res = await agent
@@ -220,8 +256,12 @@ describe('staff bookings', () => {
   test('staff slots ignore the customer lead time', async () => {
     const { agent } = await signIn();
     const today = toShopDate(new Date());
-    const staff = await agent.get(`/admin/api/slots?date=${today}&barber=any&services=${fx.cut.id}&type=SHOP`).expect(200);
-    const customer = await request(app).get(`/api/slots?date=${today}&barber=any&services=${fx.cut.id}&type=SHOP`);
+    const staff = await agent
+      .get(`/admin/api/slots?date=${today}&barber=any&services=${fx.cut.id}&type=SHOP`)
+      .expect(200);
+    const customer = await request(app).get(
+      `/api/slots?date=${today}&barber=any&services=${fx.cut.id}&type=SHOP`,
+    );
     const count = (r) => (r.body.slots || []).length;
     expect(count(staff)).toBeGreaterThanOrEqual(count(customer));
   });
@@ -239,7 +279,9 @@ describe('staff bookings', () => {
   test('staff can move a booking to another free time', async () => {
     const { agent, csrf } = await signIn();
     const b = await book();
-    const page = await agent.get(`/admin/bookings/${b.id}/reschedule?date=${DATE()}&barber=${fx.homeBarber.id}`).expect(200);
+    const page = await agent
+      .get(`/admin/bookings/${b.id}/reschedule?date=${DATE()}&barber=${fx.homeBarber.id}`)
+      .expect(200);
     const slots = [...page.text.matchAll(/name="startsAt" value="([^"]+)"/g)].map((m) => m[1]);
     const target = slots.find((s) => s !== b.startsAt.toISOString());
     await agent
@@ -248,7 +290,9 @@ describe('staff bookings', () => {
       .send({ _csrf: csrf, startsAt: target, barberId: String(fx.homeBarber.id) })
       .expect(303)
       .expect('Location', `/admin/bookings/${b.id}`);
-    expect((await prisma.booking.findUnique({ where: { id: b.id } })).startsAt.toISOString()).toBe(target);
+    expect((await prisma.booking.findUnique({ where: { id: b.id } })).startsAt.toISOString()).toBe(
+      target,
+    );
   });
 });
 

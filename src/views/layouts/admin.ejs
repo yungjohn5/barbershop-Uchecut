@@ -24,7 +24,14 @@
           { key: 'bookings', href: '/admin/bookings', label: 'Bookings', icon: 'bookings', badge: locals.pendingCount },
           { key: 'calendar', href: '/admin/calendar', label: 'Calendar', icon: 'calendar' },
         ] },
-      ]; %>
+      ];
+      if (isOwner) groups.push({ label: 'Shop', items: [
+        { key: 'services', href: '/admin/services', label: 'Services', icon: 'services' },
+        { key: 'barbers', href: '/admin/barbers', label: 'Barbers', icon: 'barbers' },
+        { key: 'zones', href: '/admin/zones', label: 'Zones', icon: 'zones' },
+        { key: 'products', href: '/admin/products', label: 'Products', icon: 'products' },
+        { key: 'gallery', href: '/admin/gallery', label: 'Gallery', icon: 'gallery' },
+      ] }); %>
       <div class="a-shell">
         <aside id="admin-nav" class="a-sidebar keep-dark" aria-label="Admin" data-a-nav>
           <div class="flex items-center justify-between px-6 pb-6 pt-7">

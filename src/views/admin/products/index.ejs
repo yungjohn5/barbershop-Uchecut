@@ -1,0 +1,30 @@
+<header class="a-page-head">
+  <div>
+    <p class="eyebrow">Shop shelf</p>
+    <h1 class="a-title"><%= products.length %> <em class="accent">product<%= products.length === 1 ? '' : 's' %></em></h1>
+    <p class="mt-2 text-ink/65">Shown in the products row on the home page. Sold in the shop, not online.</p>
+  </div>
+  <a href="/admin/products/new" class="btn-primary">New product <span class="arrow" aria-hidden="true">→</span></a>
+</header>
+
+<% if (!products.length) { %>
+  <div class="a-empty"><p class="font-serif text-3xl">No products yet.</p></div>
+<% } %>
+
+<div class="grid grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-3 2xl:grid-cols-4">
+  <% products.forEach((p, i) => { %>
+    <article class="a-tile <%= p.visible ? '' : 'is-muted' %>">
+      <a href="/admin/products/<%= p.id %>" class="a-tile-photo">
+        <% if (p.imageUrl) { %><img src="<%= p.imageUrl %>-400.webp" alt="" loading="lazy" /><% } else { %><span class="a-image-empty" aria-hidden="true"><%- include('../partials/icon', { name: 'products' }) %></span><% } %>
+        <% if (!p.visible) { %><span class="a-type bg-surface absolute left-3 top-3">Hidden</span><% } %>
+      </a>
+      <div class="flex items-start gap-2 p-4">
+        <a href="/admin/products/<%= p.id %>" class="min-w-0 flex-1">
+          <span class="line-clamp-2 font-medium leading-snug"><%= p.name %></span>
+          <span class="block text-sm tabular-nums text-ink/65"><%= p.priceKobo !== null ? naira(p.priceKobo) : 'No price shown' %></span>
+        </a>
+        <%- include('../partials/move', { action: `/admin/products/${p.id}/move`, first: i === 0, last: i === products.length - 1, label: p.name }) %>
+      </div>
+    </article>
+  <% }) %>
+</div>
