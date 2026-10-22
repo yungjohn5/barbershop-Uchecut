@@ -1,0 +1,27 @@
+<% const e = errors || {}; %>
+<header class="a-page-head">
+  <div class="flex items-center gap-4">
+    <span class="a-avatar a-avatar-lg <%= admin.role === 'OWNER' ? 'is-owner' : '' %>" aria-hidden="true"><%= admin.name.trim()[0] %></span>
+    <div>
+      <p class="eyebrow">Your account</p>
+      <h1 class="a-title !mt-2"><%= admin.name %></h1>
+      <p class="mt-1 text-ink/65"><%= admin.email %> · <%= admin.role === 'OWNER' ? 'Owner' : 'Staff' %></p>
+    </div>
+  </div>
+</header>
+
+<form method="post" action="/admin/account/password" class="a-card max-w-xl" data-a-form>
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+  <h2 class="a-h3">Change password</h2>
+  <p class="mt-1 text-sm text-ink/65">At least 12 characters with letters and a number. Other devices will be signed out.</p>
+  <div class="mt-5 grid gap-4">
+    <label class="a-field <%= e.current ? 'has-error' : '' %>"><span>Current password</span><input name="current" type="password" autocomplete="current-password" required />
+      <% if (e.current) { %><p class="field-error"><%= e.current %></p><% } %></label>
+    <label class="a-field <%= e.password ? 'has-error' : '' %>"><span>New password</span><input name="password" type="password" autocomplete="new-password" minlength="12" required />
+      <% if (e.password) { %><p class="field-error"><%= e.password %></p><% } %></label>
+    <label class="a-field <%= e.confirm ? 'has-error' : '' %>"><span>Confirm new password</span><input name="confirm" type="password" autocomplete="new-password" minlength="12" required />
+      <% if (e.confirm) { %><p class="field-error"><%= e.confirm %></p><% } %></label>
+  </div>
+  <button type="submit" class="btn-primary mt-6" data-a-submit>Change password <span class="arrow" aria-hidden="true">→</span></button>
+</form>
+<% if (admin.lastLoginAt) { %><p class="mt-6 text-sm text-ink/60">Signed in <%= formatShort(admin.lastLoginAt) %> at <%= formatTime(admin.lastLoginAt) %>.</p><% } %>

@@ -56,6 +56,8 @@ const formatDay = (instant) => formatInTimeZone(new Date(instant), TIMEZONE, 'EE
 /** Shop date string "2026-10-22" → "22 Oct" (no timezone shift: it is already a shop date). */
 const formatShortDate = (dateStr) =>
   formatInTimeZone(new Date(`${dateStr}T12:00:00Z`), 'UTC', 'd MMM');
+/** "22 Oct 2026" in shop time. */
+const formatDate = (instant) => formatInTimeZone(new Date(instant), TIMEZONE, 'd MMM yyyy');
 
 module.exports = {
   naira,
@@ -70,4 +72,5 @@ module.exports = {
   formatShort,
   formatDay,
   formatShortDate,
+  formatDate,
 };

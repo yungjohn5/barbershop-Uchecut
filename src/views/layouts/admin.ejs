@@ -23,6 +23,7 @@
           { key: 'today', href: '/admin', label: 'Today', icon: 'today' },
           { key: 'bookings', href: '/admin/bookings', label: 'Bookings', icon: 'bookings', badge: locals.pendingCount },
           { key: 'calendar', href: '/admin/calendar', label: 'Calendar', icon: 'calendar' },
+          { key: 'customers', href: '/admin/customers', label: 'Customers', icon: 'customers' },
         ] },
       ];
       if (isOwner) groups.push({ label: 'Shop', items: [
@@ -31,6 +32,11 @@
         { key: 'zones', href: '/admin/zones', label: 'Zones', icon: 'zones' },
         { key: 'products', href: '/admin/products', label: 'Products', icon: 'products' },
         { key: 'gallery', href: '/admin/gallery', label: 'Gallery', icon: 'gallery' },
+      ] });
+      if (isOwner) groups.push({ label: 'Business', items: [
+        { key: 'reports', href: '/admin/reports', label: 'Reports', icon: 'reports' },
+        { key: 'settings', href: '/admin/settings', label: 'Settings', icon: 'settings' },
+        { key: 'users', href: '/admin/users', label: 'Users', icon: 'users' },
       ] }); %>
       <div class="a-shell">
         <aside id="admin-nav" class="a-sidebar keep-dark" aria-label="Admin" data-a-nav>
@@ -46,7 +52,7 @@
           <div class="px-4">
             <a href="/admin/bookings/new" class="btn-primary w-full justify-center <%= nav === 'new' ? 'ring-2 ring-amber-light/60' : '' %>">New booking <span class="arrow" aria-hidden="true">→</span></a>
           </div>
-          <nav class="mt-8 flex-1 overflow-y-auto px-3 pb-6">
+          <nav class="no-scrollbar mt-6 flex-1 overflow-y-auto px-3 pb-6">
             <% groups.forEach((g) => { %>
               <p class="a-nav-group"><%= g.label %></p>
               <ul class="space-y-1">
@@ -64,11 +70,13 @@
           </nav>
           <div class="border-t border-paper/10 px-4 py-5">
             <div class="flex items-center gap-3 px-2">
-              <span class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-amber font-serif text-lg text-night"><%= admin.name[0] %></span>
-              <div class="min-w-0 flex-1">
-                <p class="truncate text-sm font-medium text-paper"><%= admin.name %></p>
-                <p class="text-xs text-paper/55"><%= isOwner ? 'Owner' : 'Staff' %></p>
-              </div>
+              <a href="/admin/account" class="a-me <%= nav === 'account' ? 'is-active' : '' %>" title="Your account">
+                <span class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-amber font-serif text-lg text-night"><%= admin.name[0] %></span>
+                <span class="min-w-0 flex-1">
+                  <span class="block truncate text-sm font-medium text-paper"><%= admin.name %></span>
+                  <span class="block text-xs text-paper/55"><%= isOwner ? 'Owner' : 'Staff' %> · Account</span>
+                </span>
+              </a>
               <%- include('../partials/theme-toggle', { tone: 'light', id: 'admin' }) %>
             </div>
             <div class="mt-4 grid grid-cols-2 gap-2">

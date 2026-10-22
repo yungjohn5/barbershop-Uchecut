@@ -243,6 +243,43 @@
     });
   }
 
+  // Selects that apply as soon as they change (e.g. sort order).
+  $$('[data-auto-submit]').forEach(function (sel) {
+    sel.addEventListener('change', function () {
+      if (sel.form) sel.form.submit();
+    });
+  });
+
+  // Ask before destructive one-click actions.
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-confirm]');
+    if (btn && !window.confirm(btn.getAttribute('data-confirm'))) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  });
+
+  // Suggest a strong password: 4 words of random letters + digits, easy to read out.
+  $$('[data-generate-password]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var field = $('[data-password-field]', btn.closest('form') || document);
+      if (!field || !window.crypto) return;
+      var letters = 'abcdefghjkmnpqrstuvwxyz';
+      var bytes = new Uint8Array(16);
+      window.crypto.getRandomValues(bytes);
+      var parts = [];
+      for (var i = 0; i < 3; i++) {
+        var w = '';
+        for (var j = 0; j < 4; j++) w += letters[bytes[i * 4 + j] % letters.length];
+        parts.push(w);
+      }
+      parts.push(String(100 + ((bytes[12] * 256 + bytes[13]) % 900)));
+      field.value = parts.join('-');
+      field.focus();
+      field.select();
+    });
+  });
+
   // Submit once: no double uploads on slow connections.
   $$('[data-a-form]').forEach(function (f) {
     f.addEventListener('submit', function () {

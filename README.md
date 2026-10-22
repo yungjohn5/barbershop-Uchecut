@@ -5,9 +5,8 @@ Customers book an in-shop appointment or a home visit without creating an accoun
 and pay on the day. One Node.js app serves the site, the booking engine and (soon)
 the owner's dashboard.
 
-> **Status:** Phases 1–3 complete (foundation, booking engine, public site, booking wizard,
-> confirmation and manage link). Phase 4 in progress: the admin dashboard's daily screens and
-> the owner's catalogue and team screens are done; customers, reports, settings and users are next.
+> **Status:** Phases 1–4 complete: foundation, booking engine, public site, booking wizard,
+> confirmation and manage link, and the full admin dashboard. Notifications and launch are next.
 > See [Roadmap](#roadmap).
 > "Victory" and all copy, prices, zones and photos are **placeholders** until the client signs off.
 
@@ -66,6 +65,10 @@ the owner's dashboard.
   - **Zones:** fee and travel time.
   - **Products and gallery:** photo upload with live preview, captions, barber tags, show/hide and reorder.
   - Anything with booking history is hidden, never deleted.
+- **Customers:** search by name, phone (however it's typed) or email, and sort by last visit, visits, spend or no-shows. Each customer has a profile with a visit timeline, total spend, their usual service, staff notes, and a "Book them in" shortcut.
+- **Reports (owner):** presets or a custom range, booked vs taken revenue with change against the previous period, a revenue-by-day chart, and breakdowns by barber, service, weekday and zone. Also shows the cancellation and no-show rates and the home and staff share.
+- **Settings (owner):** booking rules (lead times, window, cutoff, slot step), shop details and socials, and every line of home-page copy. All are validated, take effect at once, and have a "restore defaults" option.
+- **Users (owner):** add staff or owners, edit, reset passwords (with a strong-password suggester) and deactivate. Deactivated users are signed out at once, and there is always at least one owner. Everyone can change their own password under **Account**.
 
 ---
 
@@ -188,7 +191,7 @@ uchecut/
 │   ├── config/               # env validation, constants and default settings
 │   ├── lib/                  # prisma, logger, errors, phone, time, ids, sms, mailer, view helpers
 │   ├── middleware/           # csrf, rate limits, zod validate(), error handler
-│   ├── services/             # business logic: availability, booking, bookingFlow, adminAuth, adminBookings, catalog, barbers, images, content, settings
+│   ├── services/             # business logic: availability, booking, bookingFlow, admin*, catalog, barbers, customers, reports, images, content, settings*
 │   ├── routes/               # public pages, booking wizard, JSON API, admin/
 │   ├── styles/input.css      # Tailwind source + component styles
 │   └── views/                # layouts, partials (home sections), pages
@@ -295,6 +298,7 @@ npm test
   - the JSON API and the home page
   - admin sign-in and lockout, route guards, status actions, staff bookings, reschedule, the week calendar
   - owner-only access, catalogue CRUD rules, weekly hours and time off, and multipart uploads behind CSRF
+  - customers, reports, settings taking effect on the public site, user management and session sign-out
 
 ---
 
@@ -342,7 +346,7 @@ Stop the other process, or set `PORT` in `.env`.
 | 1 | Foundation: app shell, schema, migrations, seed | ✅ Done |
 | 2 | Booking engine, transactional create, JSON API, tests | ✅ Done |
 | 3 | Public site and booking wizard, confirmation, manage link | ✅ Done |
-| 4 | Admin dashboard: Today, bookings, staff booking, calendar ✅ · services, barbers, zones, products, gallery ✅ · customers, reports, settings, users | 🟡 In progress |
+| 4 | Admin dashboard: Today, bookings, staff booking, calendar, catalogue, team, customers, reports, settings, users | ✅ Done |
 | 5 | Email/SMS notifications, reminders, auto-cancel job, deployment | ⬜ |
 
 **Needed from the client:**

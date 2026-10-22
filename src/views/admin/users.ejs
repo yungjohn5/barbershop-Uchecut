@@ -1,0 +1,79 @@
+<% const nf = newForm.values || { role: 'STAFF' }; const ne = newForm.errors || {}; %>
+<header class="a-page-head">
+  <div>
+    <p class="eyebrow">Team access</p>
+    <h1 class="a-title"><%= users.filter((u) => u.active).length %> <em class="accent">active account<%= users.filter((u) => u.active).length === 1 ? '' : 's' %></em></h1>
+    <p class="mt-2 max-w-xl text-ink/65">Staff handle bookings and customers. Owners also manage the catalogue, team, reports and settings.</p>
+  </div>
+  <a href="#new" class="btn-primary">Add account <span class="arrow" aria-hidden="true">→</span></a>
+</header>
+
+<div class="grid grid-cols-1 gap-4">
+  <% users.forEach((u) => { const me = u.id === admin.id; const locked = u.lockedUntil && u.lockedUntil > now; %>
+    <article class="a-card a-user <%= u.active ? '' : 'is-muted' %>">
+      <div class="flex min-w-0 flex-1 items-center gap-4">
+        <span class="a-avatar a-avatar-lg <%= u.role === 'OWNER' ? 'is-owner' : '' %>" aria-hidden="true"><%= u.name.trim()[0] %></span>
+        <div class="min-w-0">
+          <p class="flex flex-wrap items-center gap-2">
+            <span class="font-medium"><%= u.name %></span>
+            <% if (me) { %><span class="a-type">You</span><% } %>
+            <span class="a-type <%= u.role === 'OWNER' ? 'a-type-home' : '' %>"><%= u.role === 'OWNER' ? 'Owner' : 'Staff' %></span>
+            <% if (!u.active) { %><span class="a-type a-type-warn">Deactivated</span><% } %>
+            <% if (locked) { %><span class="a-type a-type-warn">Locked until <%= formatTime(u.lockedUntil) %></span><% } %>
+          </p>
+          <p class="truncate text-sm text-ink/65"><%= u.email %></p>
+          <p class="text-xs text-ink/55"><%= u.lastLoginAt ? `Last signed in ${formatShort(u.lastLoginAt)} · ${formatTime(u.lastLoginAt)}` : 'Never signed in' %></p>
+        </div>
+      </div>
+      <div class="a-user-actions">
+        <details class="a-pop">
+          <summary class="btn-ghost !min-h-[2.4rem] !px-4 !py-2 text-sm">Edit</summary>
+          <form method="post" action="/admin/users/<%= u.id %>" class="a-pop-panel grid gap-3">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+            <label class="a-field"><span>Name</span><input name="name" value="<%= u.name %>" maxlength="60" required /></label>
+            <label class="a-field"><span>Role</span>
+              <select name="role" <%= me ? 'disabled' : '' %>><option value="STAFF" <%= u.role === 'STAFF' ? 'selected' : '' %>>Staff</option><option value="OWNER" <%= u.role === 'OWNER' ? 'selected' : '' %>>Owner</option></select>
+            </label>
+            <% if (me) { %><input type="hidden" name="role" value="<%= u.role %>" /><% } %>
+            <button type="submit" class="btn-primary justify-center">Save</button>
+          </form>
+        </details>
+        <% if (!me) { %>
+          <details class="a-pop">
+            <summary class="btn-ghost !min-h-[2.4rem] !px-4 !py-2 text-sm">Reset password</summary>
+            <form method="post" action="/admin/users/<%= u.id %>/password" class="a-pop-panel grid gap-3">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+              <label class="a-field"><span>New password</span><input name="password" type="text" minlength="12" autocomplete="new-password" required data-password-field /></label>
+              <button type="button" class="link-u justify-self-start text-sm" data-generate-password>Suggest a strong one</button>
+              <p class="text-xs text-ink/60">At least 12 characters with letters and a number. They’ll be signed out everywhere.</p>
+              <button type="submit" class="btn-primary justify-center">Reset password</button>
+            </form>
+          </details>
+          <form method="post" action="/admin/users/<%= u.id %>/active">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+            <input type="hidden" name="active" value="<%= u.active ? 'false' : 'true' %>" />
+            <button type="submit" class="<%= u.active ? 'a-danger-link' : 'link-u text-sm' %>" <%- u.active ? `data-confirm="Deactivate ${u.name}? They’ll be signed out straight away."` : '' %>><%= u.active ? 'Deactivate' : 'Reactivate' %></button>
+          </form>
+        <% } %>
+      </div>
+    </article>
+  <% }) %>
+</div>
+
+<form id="new" method="post" action="/admin/users" class="a-card mt-8 scroll-mt-24" data-a-form>
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+  <h2 class="a-h3">Add an account</h2>
+  <p class="mt-1 text-sm text-ink/65">Choose a temporary password and share it privately. They can change it under “Account”.</p>
+  <div class="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <label class="a-field <%= ne.name ? 'has-error' : '' %>"><span>Name</span><input name="name" value="<%= nf.name || '' %>" maxlength="60" required />
+      <% if (ne.name) { %><p class="field-error"><%= ne.name %></p><% } %></label>
+    <label class="a-field <%= ne.email ? 'has-error' : '' %>"><span>Email</span><input name="email" type="email" value="<%= nf.email || '' %>" autocomplete="off" required />
+      <% if (ne.email) { %><p class="field-error"><%= ne.email %></p><% } %></label>
+    <label class="a-field <%= ne.role ? 'has-error' : '' %>"><span>Role</span>
+      <select name="role"><option value="STAFF" <%= nf.role !== 'OWNER' ? 'selected' : '' %>>Staff</option><option value="OWNER" <%= nf.role === 'OWNER' ? 'selected' : '' %>>Owner</option></select></label>
+    <label class="a-field <%= ne.password ? 'has-error' : '' %>"><span>Temporary password</span><input name="password" type="text" minlength="12" autocomplete="new-password" required data-password-field />
+      <button type="button" class="link-u justify-self-start text-xs" data-generate-password>Suggest a strong one</button>
+      <% if (ne.password) { %><p class="field-error"><%= ne.password %></p><% } %></label>
+  </div>
+  <div class="mt-6 flex justify-end"><button type="submit" class="btn-primary" data-a-submit>Create account <span class="arrow" aria-hidden="true">→</span></button></div>
+</form>

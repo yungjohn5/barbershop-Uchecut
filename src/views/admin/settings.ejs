@@ -1,0 +1,125 @@
+<%
+  const b = forms.booking; const s = forms.shop; const h = forms.home;
+  const fe = (f, k) => (f.errors[k] ? `<p class="field-error">${f.errors[k].replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c])}</p>` : '');
+  const ec = (f, k) => (f.errors[k] ? 'has-error' : '');
+  const resetBtn = (section) => `<button type="submit" name="reset" value="1" class="a-danger-link" data-confirm="Restore these settings to the built-in defaults?">Restore defaults</button>`;
+%>
+<header class="a-page-head">
+  <div>
+    <p class="eyebrow">Settings</p>
+    <h1 class="a-title">How the shop <em class="accent">runs</em></h1>
+    <p class="mt-2 max-w-xl text-ink/65">Changes apply to the website and booking wizard straight away.</p>
+  </div>
+</header>
+
+<nav class="a-tabs no-scrollbar" aria-label="Sections">
+  <a href="#booking">Booking rules</a><a href="#shop">Shop details</a><a href="#home">Home page copy</a>
+</nav>
+
+<form id="booking" method="post" action="/admin/settings/booking" class="a-card scroll-mt-24" data-a-form>
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+  <div class="flex flex-wrap items-end justify-between gap-3">
+    <div>
+      <h2 class="a-h3">Booking rules</h2>
+      <p class="mt-1 text-sm text-ink/65">What customers can book online. Staff bookings ignore lead times and the cutoff.</p>
+    </div>
+    <%- resetBtn('booking') %>
+  </div>
+  <div class="mt-6 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+    <label class="a-field <%= ec(b, 'leadTimeShopMin') %>"><span>Shop lead time</span>
+      <span class="a-money a-suffix"><input name="leadTimeShopMin" type="number" min="0" max="72" step="0.25" value="<%= b.values.leadTimeShopMin %>" /><span aria-hidden="true">hours</span></span>
+      <small class="field-hint !mt-0 !pl-0">Earliest a shop visit can be booked from now.</small><%- fe(b, 'leadTimeShopMin') %></label>
+    <label class="a-field <%= ec(b, 'leadTimeHomeMin') %>"><span>Home-visit lead time</span>
+      <span class="a-money a-suffix"><input name="leadTimeHomeMin" type="number" min="0" max="168" step="0.25" value="<%= b.values.leadTimeHomeMin %>" /><span aria-hidden="true">hours</span></span>
+      <small class="field-hint !mt-0 !pl-0">Gives you time to confirm and travel.</small><%- fe(b, 'leadTimeHomeMin') %></label>
+    <label class="a-field <%= ec(b, 'bookingWindowDays') %>"><span>Booking window</span>
+      <span class="a-money a-suffix"><input name="bookingWindowDays" type="number" min="1" max="180" step="1" value="<%= b.values.bookingWindowDays %>" /><span aria-hidden="true">days</span></span>
+      <small class="field-hint !mt-0 !pl-0">How far ahead customers can book.</small><%- fe(b, 'bookingWindowDays') %></label>
+    <label class="a-field <%= ec(b, 'cancelCutoffMin') %>"><span>Cancellation cutoff</span>
+      <span class="a-money a-suffix"><input name="cancelCutoffMin" type="number" min="0" max="72" step="0.25" value="<%= b.values.cancelCutoffMin %>" /><span aria-hidden="true">hours</span></span>
+      <small class="field-hint !mt-0 !pl-0">Customers can change or cancel until this long before.</small><%- fe(b, 'cancelCutoffMin') %></label>
+    <label class="a-field <%= ec(b, 'homeAutoCancelHours') %>"><span>Unconfirmed home visits expire after</span>
+      <span class="a-money a-suffix"><input name="homeAutoCancelHours" type="number" min="1" max="72" step="1" value="<%= b.values.homeAutoCancelHours %>" /><span aria-hidden="true">hours</span></span>
+      <small class="field-hint !mt-0 !pl-0">Used by the auto-cancel job (Phase 5).</small><%- fe(b, 'homeAutoCancelHours') %></label>
+    <label class="a-field <%= ec(b, 'slotStepMin') %>"><span>Start times every</span>
+      <select name="slotStepMin">
+        <% [5, 10, 15, 20, 30, 60].forEach((m) => { %><option value="<%= m %>" <%= Number(b.values.slotStepMin) === m ? 'selected' : '' %>><%= m %> minutes</option><% }) %>
+      </select>
+      <small class="field-hint !mt-0 !pl-0">15 suits most shops.</small><%- fe(b, 'slotStepMin') %></label>
+  </div>
+  <div class="mt-6">
+    <%- include('partials/switch', { name: 'allowBufferOutsideShift', checked: b.values.allowBufferOutsideShift === true || b.values.allowBufferOutsideShift === 'on', label: 'Allow travel time outside working hours', hint: 'Lets a home visit start right at opening, with the barber travelling beforehand.' }) %>
+  </div>
+  <div class="mt-8 flex justify-end"><button type="submit" class="btn-primary" data-a-submit>Save booking rules <span class="arrow" aria-hidden="true">→</span></button></div>
+</form>
+
+<form id="shop" method="post" action="/admin/settings/shop" class="a-card mt-6 scroll-mt-24" data-a-form>
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+  <div class="flex flex-wrap items-end justify-between gap-3">
+    <div>
+      <h2 class="a-h3">Shop details</h2>
+      <p class="mt-1 text-sm text-ink/65">Shown in the header, footer, contact links and confirmation pages.</p>
+    </div>
+    <%- resetBtn('shop') %>
+  </div>
+  <div class="mt-6 grid gap-5 sm:grid-cols-2">
+    <label class="a-field <%= ec(s, 'name') %>"><span>Shop name</span><input name="name" value="<%= s.values.name %>" maxlength="60" /><%- fe(s, 'name') %></label>
+    <label class="a-field <%= ec(s, 'tagline') %>"><span>Tagline</span><input name="tagline" value="<%= s.values.tagline %>" maxlength="120" /><%- fe(s, 'tagline') %></label>
+    <label class="a-field <%= ec(s, 'phone') %>"><span>Phone</span><input name="phone" type="tel" value="<%= s.values.phone %>" /><%- fe(s, 'phone') %></label>
+    <label class="a-field <%= ec(s, 'whatsapp') %>"><span>WhatsApp number</span><input name="whatsapp" inputmode="numeric" value="<%= s.values.whatsapp %>" placeholder="2348031234567" />
+      <small class="field-hint !mt-0 !pl-0">Country code, no plus sign or spaces.</small><%- fe(s, 'whatsapp') %></label>
+    <label class="a-field sm:col-span-2 <%= ec(s, 'email') %>"><span>Email</span><input name="email" type="email" value="<%= s.values.email %>" /><%- fe(s, 'email') %></label>
+    <label class="a-field <%= ec(s, 'address') %>"><span>Address</span><textarea name="address" rows="3"><%= s.values.address %></textarea>
+      <small class="field-hint !mt-0 !pl-0">One line per row, up to 4.</small><%- fe(s, 'address') %></label>
+    <label class="a-field <%= ec(s, 'hoursText') %>"><span>Opening hours text</span><textarea name="hoursText" rows="3"><%= s.values.hoursText %></textarea>
+      <small class="field-hint !mt-0 !pl-0">Shown in the footer. Bookable times come from each barber’s hours.</small><%- fe(s, 'hoursText') %></label>
+  </div>
+  <p class="mt-8 text-xs font-medium uppercase tracking-[0.16em] text-ink/65">Social links <span class="normal-case tracking-normal text-ink/50">(leave blank to hide)</span></p>
+  <div class="mt-3 grid gap-5 sm:grid-cols-2">
+    <% [['instagram', 'Instagram'], ['tiktok', 'TikTok'], ['x', 'X'], ['youtube', 'YouTube']].forEach(([k, label]) => { %>
+      <label class="a-field <%= ec(s, k) %>"><span><%= label %></span><input name="<%= k %>" type="url" value="<%= s.values[k] || '' %>" placeholder="https://" /><%- fe(s, k) %></label>
+    <% }) %>
+  </div>
+  <div class="mt-8 flex justify-end"><button type="submit" class="btn-primary" data-a-submit>Save shop details <span class="arrow" aria-hidden="true">→</span></button></div>
+</form>
+
+<form id="home" method="post" action="/admin/settings/home" class="a-card mt-6 scroll-mt-24" data-a-form>
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+  <div class="flex flex-wrap items-end justify-between gap-3">
+    <div>
+      <h2 class="a-h3">Home page copy</h2>
+      <p class="mt-1 text-sm text-ink/65">Wrap one word in *asterisks* to set it in the gold italic accent, e.g. “The Modern *Ritual*”.</p>
+    </div>
+    <%- resetBtn('home') %>
+  </div>
+  <%
+    const groups = [
+      ['Hero', [['heroLines', 'Headline (3 lines)', 3, 'One line per row, exactly 3.'], ['heroText', 'Intro paragraph', 3]]],
+      ['Intro', [['introTitle', 'Title', 0], ['introText', 'Text', 4]]],
+      ['Services', [['servicesTitle', 'Title', 0], ['servicesText', 'Text', 3]]],
+      ['Craft', [['craftTitle', 'Title', 0], ['craftText', 'Text', 3], ['craftNote', 'Note', 2]]],
+      ['Barbers', [['barbersTitle', 'Title', 0]]],
+      ['Home visits', [['homeTitle', 'Title', 0], ['homeText', 'Text', 3]]],
+      ['Products', [['productsTitle', 'Title', 0], ['productsText', 'Text', 3]]],
+      ['Footer', [['footerText', 'Call to action', 2]]],
+    ];
+  %>
+  <div class="mt-6 space-y-3">
+    <% groups.forEach(([label, fields], gi) => { const open = gi === 0 || fields.some(([k]) => h.errors[k]); %>
+      <details class="a-fold" <%= open ? 'open' : '' %>>
+        <summary><span class="font-medium"><%= label %></span><span class="truncate text-sm text-ink/55"><%= plain(String(h.values[fields[0][0]] || '').split('\n')[0]) %></span></summary>
+        <div class="grid gap-4 pb-5 pt-1">
+          <% fields.forEach(([k, l, rows, hint]) => { %>
+            <label class="a-field <%= ec(h, k) %>"><span><%= l %></span>
+              <% if (rows) { %><textarea name="<%= k %>" rows="<%= rows %>"><%= h.values[k] %></textarea><% } else { %><input name="<%= k %>" value="<%= h.values[k] %>" /><% } %>
+              <% if (hint) { %><small class="field-hint !mt-0 !pl-0"><%= hint %></small><% } %><%- fe(h, k) %></label>
+          <% }) %>
+        </div>
+      </details>
+    <% }) %>
+  </div>
+  <div class="mt-8 flex flex-wrap items-center justify-end gap-3">
+    <a href="/" class="link-u text-sm" target="_blank" rel="noopener">Open the home page ↗</a>
+    <button type="submit" class="btn-primary" data-a-submit>Save home page copy <span class="arrow" aria-hidden="true">→</span></button>
+  </div>
+</form>

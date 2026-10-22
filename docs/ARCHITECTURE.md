@@ -275,7 +275,8 @@ Wizard state is kept in the session between steps, so a refresh never loses the 
 - `/admin` Today; `/admin/bookings` (list with scope chips, search and filters), `/admin/bookings/new` (staff booking), `/admin/bookings/:id` (detail), `POST /admin/bookings/:id/status` (`confirm | complete | noShow | cancel | undo`), `POST /admin/bookings/:id/notes`, `/admin/bookings/:id/reschedule`, `/admin/calendar?date=&barber=`
 - Admin JSON: `GET /admin/api/slots` (staff rules: no lead time), `GET /admin/api/customer?phone=` (returning-customer lookup). Signed-out requests get 401 JSON; pages redirect to `/admin/login?next=`.
 - OWNER only (STAFF get a 403 page): `/admin/services` (+ `/new`, `/:id`, `/:id/active`, `/:id/move`, `/:id/delete`), `/admin/categories` (`POST` add, `/:id` rename, `/:id/move`, `/:id/delete`), `/admin/barbers` (+ `/new`, `/:id` profile, `/:id/hours`, `/:id/time-off`, `/:id/time-off/:offId/delete`, `/:id/move`), `/admin/zones`, `/admin/products`, `/admin/gallery` (each with `/new`, `/:id`, `/:id/move`, `/:id/delete`)
-- Still to come (wave C): `/admin/customers`, `/admin/reports`, `/admin/settings`, `/admin/users`
+- All admins: `/admin/customers` (search by name, phone or email; sort), `/admin/customers/:id` (history, stats, `POST` name/email/notes), `/admin/account` (+ `POST /admin/account/password`). `/admin/bookings/new?phone=&name=` prefills the staff form.
+- OWNER only: `/admin/reports?preset=week|lastweek|month|lastmonth|30d|90d` or `?from=&to=`, `/admin/settings` (+ `POST /admin/settings/booking|shop|home`, with `reset=1` to restore defaults), `/admin/users` (+ `POST /admin/users`, `/:id`, `/:id/active`, `/:id/password`)
 
 ## Page map from the design
 
@@ -355,6 +356,18 @@ A no-show adds 1 to `Customer.noShowCount`; undoing it takes 1 off. Every change
 - Weekly hours: one shift per day in Lagos wall-clock minutes. Saving replaces the barber's whole week in one transaction and lists any upcoming bookings that now fall outside it. Those bookings are not changed.
 - Time off: all-day ranges run from 00:00 on the first date to 24:00 on the last, and ranges are capped at a year. Adding time off lists the overlapping bookings but does not cancel them; the owner decides.
 
+**Reports** (`services/reports.js`). "Booked" revenue is every booking that still stands (pending, confirmed, completed); "taken" is completed visits only. Both use `Booking.totalKobo`; service breakdowns use the `BookingService` price snapshots. Each period is compared with the equal-length period before it. The no-show rate is out of visits that were due (completed + no-show). The average ticket is rounded to whole naira. Charts are inline SVG rendered on the server, so they need no script and no style attributes.
+
+**Settings** (`services/settingsAdmin.js`). Three sections are saved as `Setting` rows. Booking rules are typed in hours (quarter-hour steps) and stored in minutes; the slot step is one of 5/10/15/20/30/60. Shop details and home copy are stored as one object each. Social links must be `https://` URLs, and the hero needs exactly three lines. Saving clears the in-process settings cache; with several PM2 workers, other workers pick up the change within 30 s. "Restore defaults" deletes the section's rows.
+
+**Users** (`services/adminUsers.js`):
+- Owners create accounts with a temporary password (same policy: 12+ characters, letters and a number).
+- There is always at least one active owner.
+- You can't change your own role or deactivate yourself.
+- Deactivating an account or resetting its password deletes that admin's rows from the `session` table, so they are signed out at once.
+- Changing your own password signs out your other devices and keeps the current one.
+- PRG form state never stores password fields in the session.
+
 **Uploads.** Image forms are `multipart/form-data`. `middleware/upload.js` parses them (memory storage, one file, 8 MB cap) before CSRF protection runs, so the hidden `_csrf` field is checked as usual. The file only reaches a handler after CSRF and the OWNER check pass. `sharp` decodes the buffer, rejects anything that isn't a JPG/PNG/WebP/AVIF/HEIF image or is under 400 px wide, applies EXIF rotation and writes WebP. Replaced or deleted images are removed from disk, and `removeUpload` only touches files inside `/uploads/<kind>/`. The sharp file cache is off because it holds Windows file handles open. The CSP allows `blob:` images so the picker can preview a photo before upload.
 
 ## Notifications, security and deployment
@@ -399,7 +412,7 @@ Build runs in five phases, each ending in something the client can click; the av
 1. **Foundation:** repo, Express app, Prisma schema + migrations, seed data (categories, services, 2 barbers, 4 zones), layout + Tailwind setup.
 2. **Booking engine:** `availability.js` with Jest tests (shift edges, buffers, overlaps, time off, "any barber"), transactional create, the `/api/slots` endpoint.
 3. **Public site + booking flow:** the six home sections, service/barber/contact pages, 4-step booking wizard, confirmation and manage link.
-4. **Admin dashboard:** login, today view, bookings, calendar, CRUD screens, settings, home-request confirmation.
+4. **Admin dashboard:** ✅ login, today view, bookings, calendar, staff bookings, CRUD screens, customers, reports, settings, users, home-request confirmation.
 5. **Notifications + launch:** email/SMS templates, reminder cron, auto-cancel job, security pass, DigitalOcean deploy, real content and photos.
 
 **Open questions for the client**

@@ -33,7 +33,12 @@ function keepForm(req, key, values, err) {
   for (const d of err.details || [])
     errors[d.path || '_form'] = errors[d.path || '_form'] || d.message;
   if (!Object.keys(errors).length) errors._form = err.message;
-  const { _csrf, ...rest } = values || {};
+  // Never keep secrets in the session: password fields are dropped, not redisplayed.
+  const rest = Object.fromEntries(
+    Object.entries(values || {}).filter(
+      ([k]) => k !== '_csrf' && !/password|current|confirm/i.test(k),
+    ),
+  );
   req.session.adminForms = { ...(req.session.adminForms || {}), [key]: { values: rest, errors } };
 }
 function takeForm(req, key) {

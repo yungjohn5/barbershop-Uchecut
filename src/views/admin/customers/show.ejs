@@ -1,0 +1,73 @@
+<% const c = customer; const v = values; const e = errors || {}; const wa = `https://wa.me/${c.phone.replace(/^\+/, '')}`; %>
+<nav class="text-sm text-ink/65" aria-label="Breadcrumb"><a href="/admin/customers" class="link-u">Customers</a> <span aria-hidden="true">/</span> <%= c.name %></nav>
+<header class="a-page-head">
+  <div class="flex items-center gap-4">
+    <span class="a-avatar a-avatar-lg" aria-hidden="true"><%= c.name.trim()[0] %></span>
+    <div class="min-w-0">
+      <h1 class="a-title !mt-0"><%= c.name %></h1>
+      <p class="mt-1 text-ink/70"><%= fmtPhone(c.phone) %><%= c.email ? ` · ${c.email}` : '' %></p>
+    </div>
+  </div>
+  <div class="flex flex-wrap gap-2">
+    <a href="tel:<%= c.phone %>" class="btn-ghost">Call</a>
+    <a href="<%= wa %>" rel="noopener" class="btn-ghost">WhatsApp</a>
+    <a href="/admin/bookings/new?phone=<%= encodeURIComponent(c.phone) %>&name=<%= encodeURIComponent(c.name) %>" class="btn-primary">Book them in <span class="arrow" aria-hidden="true">→</span></a>
+  </div>
+</header>
+
+<section class="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4" aria-label="At a glance">
+  <div class="a-stat"><p class="a-stat-label">Visits</p><p class="a-stat-value"><%= stats.visits %></p><p class="a-stat-foot"><%= stats.completed %> completed</p></div>
+  <div class="a-stat"><p class="a-stat-label">Spent</p><p class="a-stat-value text-[clamp(1.6rem,3vw,2.4rem)]"><%= naira(stats.spentKobo) %></p><p class="a-stat-foot">completed visits</p></div>
+  <div class="a-stat <%= stats.noShows ? 'is-alert' : '' %>"><p class="a-stat-label">No-shows</p><p class="a-stat-value"><%= c.noShowCount %></p><p class="a-stat-foot"><%= stats.cancelled %> cancelled</p></div>
+  <div class="a-stat"><p class="a-stat-label">Last visit</p><p class="a-stat-value text-[clamp(1.4rem,2.6vw,2rem)]"><%= stats.lastVisit ? formatShort(stats.lastVisit) : '—' %></p><p class="a-stat-foot"><%= stats.favourite ? `Usually: ${stats.favourite}` : `Customer since ${formatShort(c.createdAt)}` %></p></div>
+</section>
+
+<div class="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_24rem]">
+  <section aria-labelledby="hist-h">
+    <div class="flex items-end justify-between gap-4">
+      <h2 id="hist-h" class="a-h2">Bookings</h2>
+      <% if (stats.nextVisit) { %><p class="text-sm text-ink/65">Next: <a href="/admin/bookings/<%= stats.nextVisit.id %>" class="font-medium text-ink hover:underline"><%= formatShort(stats.nextVisit.startsAt) %> · <%= formatTime(stats.nextVisit.startsAt) %></a></p><% } %>
+    </div>
+    <div class="a-card mt-4">
+      <% if (!c.bookings.length) { %>
+        <p class="a-empty-row">No bookings yet.</p>
+      <% } else { %>
+        <ol class="a-timeline">
+          <% c.bookings.forEach((b) => { %>
+            <li class="a-timeline-item <%= b.startsAt > now ? 'is-future' : '' %> <%= ['CANCELLED', 'NO_SHOW'].includes(b.status) ? 'is-muted' : '' %>">
+              <a href="/admin/bookings/<%= b.id %>" class="a-timeline-link">
+                <span class="a-timeline-date">
+                  <span class="font-serif text-xl leading-none"><%= formatShort(b.startsAt) %></span>
+                  <span class="text-xs tabular-nums text-ink/65"><%= formatTime(b.startsAt) %> · <%= formatDate(b.startsAt).slice(-4) %></span>
+                </span>
+                <span class="min-w-0 flex-1">
+                  <span class="block truncate font-medium"><%= b.services.map((s) => s.name).join(', ') %></span>
+                  <span class="block truncate text-sm text-ink/65"><%= b.reference %> · <%= b.barber.name %> · <%= b.type === 'HOME' ? `Home${b.zone ? `, ${b.zone.name}` : ''}` : 'Shop' %> · <%= naira(b.totalKobo) %></span>
+                </span>
+                <%- include('../partials/status', { status: b.status }) %>
+              </a>
+            </li>
+          <% }) %>
+        </ol>
+      <% } %>
+    </div>
+  </section>
+
+  <aside>
+    <form method="post" action="/admin/customers/<%= c.id %>" class="a-card xl:sticky xl:top-6" data-a-form>
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <h2 class="a-h3">Details &amp; notes</h2>
+      <p class="mt-1 text-sm text-ink/65">The phone number is how we recognise them, so it can’t be changed here.</p>
+      <div class="mt-5 grid gap-4">
+        <label class="a-field <%= e.name ? 'has-error' : '' %>"><span>Name</span><input name="name" value="<%= v.name || '' %>" maxlength="80" required />
+          <% if (e.name) { %><p class="field-error"><%= e.name %></p><% } %></label>
+        <label class="a-field <%= e.email ? 'has-error' : '' %>"><span>Email</span><input type="email" name="email" value="<%= v.email || '' %>" maxlength="120" />
+          <% if (e.email) { %><p class="field-error"><%= e.email %></p><% } %></label>
+        <label class="a-field <%= e.notes ? 'has-error' : '' %>"><span>Notes <em class="not-italic normal-case tracking-normal text-ink/50">(staff only)</em></span>
+          <textarea name="notes" rows="5" maxlength="1000" placeholder="Preferences, allergies, how they like their fade…"><%= v.notes || '' %></textarea>
+          <% if (e.notes) { %><p class="field-error"><%= e.notes %></p><% } %></label>
+      </div>
+      <button type="submit" class="btn-primary mt-5 w-full justify-center" data-a-submit>Save</button>
+    </form>
+  </aside>
+</div>

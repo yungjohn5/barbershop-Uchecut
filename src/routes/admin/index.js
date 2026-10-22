@@ -158,7 +158,11 @@ router.get(
       barbers,
       days,
       today: ctx.today,
-      values: req.session.staffDraft || {},
+      // ?phone=&name= prefill from a customer page; a saved draft (after errors) wins.
+      values: req.session.staffDraft || {
+        phone: String(req.query.phone || '').slice(0, 25),
+        name: String(req.query.name || '').slice(0, 80),
+      },
       errors: takeErrors(req),
     });
   }),
@@ -387,6 +391,7 @@ router.use(
   requireRole('OWNER'),
 );
 router.use(require('./catalog'));
+router.use(require('./business'));
 
 // ---------------------------------------------------------------- admin JSON
 router.get(
