@@ -38,6 +38,48 @@ function shopStatus({ now, hours, tz = TIMEZONE }) {
 }
 
 /**
+ * Pure: opening hours summarised for display, from the union of active barbers' shifts.
+ * Consecutive days with the same hours are grouped, the week reads Monday → Sunday, and
+ * closed days are listed separately.
+ * e.g. { groups: [{ days: 'Mon–Fri', time: '10:00–20:00' }, { days: 'Sat', time: '10:00–18:00' }],
+ *        closed: ['Sun'], text: 'Mon–Fri 10:00–20:00 · Sat 10:00–18:00' }
+ */
+function hoursSummary(hours) {
+  const week = [1, 2, 3, 4, 5, 6, 0];
+  const range = (day) => {
+    const shifts = hours.filter((h) => h.weekday === day);
+    if (!shifts.length) return null;
+    const start = Math.min(...shifts.map((h) => h.startMin));
+    const end = Math.max(...shifts.map((h) => h.endMin));
+    return `${minutesToHHMM(start)}–${minutesToHHMM(end)}`;
+  };
+
+  const runs = [];
+  for (const day of week) {
+    const time = range(day);
+    const last = runs[runs.length - 1];
+    if (last && last.time === time) last.days.push(day);
+    else runs.push({ time, days: [day] });
+  }
+  const label = (days) =>
+    days.length === 7
+      ? 'Daily'
+      : days.length === 1
+        ? DAY_NAMES[days[0]]
+        : `${DAY_NAMES[days[0]]}–${DAY_NAMES[days[days.length - 1]]}`;
+
+  const groups = runs.filter((r) => r.time).map((r) => ({ days: label(r.days), time: r.time }));
+  const closed = runs.filter((r) => !r.time).flatMap((r) => r.days.map((d) => DAY_NAMES[d]));
+  return {
+    groups,
+    closed,
+    text: groups.length
+      ? groups.map((g) => `${g.days} ${g.time}`).join(' · ')
+      : 'Hours coming soon',
+  };
+}
+
+/**
  * Pure: headline facts for the hero strip, derived from live data so they never drift.
  * services: [{ priceKobo, homeAvailable }], zones: [{ feeKobo }]
  */
@@ -85,7 +127,8 @@ async function getHomeContent({ db = prisma, now = new Date() } = {}) {
     products,
     facts: homeFacts({ services, zones, barbers }),
     status: shopStatus({ now, hours }),
+    hours: hoursSummary(hours),
   };
 }
 
-module.exports = { getHomeContent, homeFacts, shopStatus };
+module.exports = { getHomeContent, homeFacts, shopStatus, hoursSummary };

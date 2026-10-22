@@ -109,7 +109,6 @@
   if (est) {
     var svcSel = $('[data-est-service]', est);
     var zoneSel = $('[data-est-zone]', est);
-    var link = $('[data-est-link]');
     var naira = function (kobo) {
       return '₦' + (kobo / 100).toLocaleString('en-NG', { maximumFractionDigits: 2 });
     };
@@ -135,7 +134,6 @@
         totalEl.textContent = naira(total);
       }
       shown = total;
-      if (link) link.href = '/book?type=HOME&service=' + svcSel.value + '&zone=' + zoneSel.value;
     };
     svcSel.addEventListener('change', update);
     zoneSel.addEventListener('change', update);

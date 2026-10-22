@@ -4,7 +4,7 @@
           both width and height so short laptops and landscape phones keep the card in view.
   Card    fills the rest of the viewport (minus the facts strip on lg+), full-bleed up to 150rem.
 %>
-<section id="top" class="relative [--band:clamp(3.25rem,min(10.5vw,15svh),15rem)] [--strip:0.75rem] lg:[--strip:4.75rem]" data-hero>
+<section id="top" class="relative [--band:clamp(3.25rem,min(10.5vw,15svh),15rem)] [--strip:0.75rem] lg:[--strip:6rem] xl:[--strip:4.75rem]" data-hero>
   <div aria-hidden="true" class="pointer-events-none absolute inset-x-0 top-0 flex select-none justify-center overflow-hidden">
     <span class="outline-word whitespace-nowrap font-serif text-[27.5vw] leading-[0.78]" data-hero-word><%= shop.name.split(' ')[0] %></span>
   </div>
@@ -61,7 +61,10 @@
     <dl class="grid grid-cols-1 border-x border-b border-ink/10 bg-paper-deep/70 sm:grid-cols-3 lg:h-[calc(var(--strip)-0.75rem)]">
       <div class="flex items-center justify-between gap-4 border-b border-ink/10 px-5 py-4 sm:flex-col sm:items-start sm:justify-center sm:gap-1 sm:border-b-0 sm:border-r xl:flex-row xl:items-center xl:justify-between xl:gap-4 lg:px-8 lg:py-0" data-hero-fade>
         <dt class="text-[0.7rem] uppercase tracking-[0.2em] text-ink/65">Open</dt>
-        <dd class="text-right text-[0.95rem] font-medium sm:text-left xl:text-right"><%= shop.hoursText[0] %></dd>
+        <dd class="text-right text-[0.95rem] font-medium sm:text-left xl:text-right">
+          <% hours.groups.forEach((g, i) => { %><% if (i) { %><span class="hidden text-ink/40 xl:inline"> · </span><% } %><span class="block whitespace-nowrap xl:inline"><%= g.days %> <%= g.time %></span><% }) %>
+          <% if (!hours.groups.length) { %>Hours coming soon<% } %>
+        </dd>
       </div>
       <div class="flex items-center justify-between gap-4 border-b border-ink/10 px-5 py-4 sm:flex-col sm:items-start sm:justify-center sm:gap-1 sm:border-b-0 sm:border-r xl:flex-row xl:items-center xl:justify-between xl:gap-4 lg:px-8 lg:py-0" data-hero-fade>
         <dt class="text-[0.7rem] uppercase tracking-[0.2em] text-ink/65">Services</dt>

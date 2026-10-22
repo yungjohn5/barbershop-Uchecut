@@ -91,6 +91,11 @@ describe('JSON API', () => {
       expect(res.text).toContain(`id="${id}"`);
     }
     expect(res.text).toContain('Take the Chair');
+    // Hero strip lists every open day (fixture barbers work 10:00–20:00 daily).
+    expect(res.text).toContain('Daily 10:00–20:00');
+    // Home-visit CTAs never pre-pick a service or zone.
+    expect(res.text).toContain('href="/book?type=HOME"');
+    expect(res.text).not.toMatch(/book?type=HOME&(amp;)?(service|zone)=/);
     expect(res.text).toContain('Home Barber'); // barbers from DB
     expect(res.text).toContain('Does home visits');
     expect(res.text).toContain('+ ₦3,000'); // zone fee

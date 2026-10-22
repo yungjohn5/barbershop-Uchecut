@@ -99,3 +99,46 @@ describe('shopStatus', () => {
     expect(plain('The *Ritual*')).toBe('The Ritual');
   });
 });
+
+describe('hoursSummary', () => {
+  const { hoursSummary } = require('../../src/services/content');
+  const shift = (weekday, startMin, endMin) => ({ weekday, startMin, endMin });
+
+  test('groups Mon–Fri and lists Saturday separately; Sunday closed', () => {
+    const hours = [...[1, 2, 3, 4, 5].map((d) => shift(d, 600, 1200)), shift(6, 600, 1080)];
+    expect(hoursSummary(hours)).toEqual({
+      groups: [
+        { days: 'Mon–Fri', time: '10:00–20:00' },
+        { days: 'Sat', time: '10:00–18:00' },
+      ],
+      closed: ['Sun'],
+      text: 'Mon–Fri 10:00–20:00 · Sat 10:00–18:00',
+    });
+  });
+
+  test('union across barbers: earliest start, latest finish per day', () => {
+    const hours = [
+      shift(1, 600, 1080),
+      shift(1, 660, 1200),
+      ...[2, 3, 4, 5].map((d) => shift(d, 600, 1200)),
+    ];
+    expect(hoursSummary(hours).groups[0]).toEqual({ days: 'Mon–Fri', time: '10:00–20:00' });
+  });
+
+  test('every day the same reads "Daily"; a gap mid-week splits the run', () => {
+    expect(hoursSummary([0, 1, 2, 3, 4, 5, 6].map((d) => shift(d, 540, 1260))).text).toBe(
+      'Daily 09:00–21:00',
+    );
+    const gap = [1, 2, 4, 5].map((d) => shift(d, 600, 1200));
+    expect(hoursSummary(gap).text).toBe('Mon–Tue 10:00–20:00 · Thu–Fri 10:00–20:00');
+    expect(hoursSummary(gap).closed).toEqual(['Wed', 'Sat', 'Sun']);
+  });
+
+  test('no hours yet', () => {
+    expect(hoursSummary([])).toEqual({
+      groups: [],
+      closed: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+      text: 'Hours coming soon',
+    });
+  });
+});
