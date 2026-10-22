@@ -37,7 +37,7 @@
         <p class="eyebrow !text-paper/50">Find us</p>
         <address class="mt-4 space-y-1.5 text-[0.98rem] not-italic">
           <% shop.address.forEach((line) => { %><span class="block"><%= line %></span><% }) %>
-          <a href="tel:<%= shop.phone %>" class="link-u mt-3 inline-block hover:text-amber-light"><%= shop.phone %></a>
+          <a href="tel:<%= shop.phone %>" class="link-u mt-3 inline-block hover:text-amber-light"><%= fmtPhone(shop.phone) %></a>
           <br /><a href="mailto:<%= shop.email %>" class="link-u mt-1.5 inline-block hover:text-amber-light"><%= shop.email %></a>
         </address>
       </div>

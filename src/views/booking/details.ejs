@@ -29,7 +29,7 @@
           <input id="f-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder=" " required value="<%= values.phone || '' %>" aria-describedby="h-phone<%= err('phone') ? ' e-phone' : '' %>" <%- err('phone') ? 'aria-invalid="true"' : '' %> />
           <label for="f-phone">Phone number</label>
           <p id="h-phone" class="field-hint">Nigerian mobile, e.g. 0803 123 4567</p>
-          <% if (err('phone')) { %><p id="e-phone" class="field-error"><%= errors.phone === 'Invalid phone number' ? 'Enter a valid Nigerian mobile number.' : 'Please enter your phone number.' %></p><% } %>
+          <% if (err('phone')) { %><p id="e-phone" class="field-error"><%= values.phone ? 'Enter a valid Nigerian mobile, e.g. 0803 123 4567.' : 'Please enter your phone number.' %></p><% } %>
         </div>
 
         <div class="field-float <%= err('email') ? 'has-error' : '' %>" data-b-reveal>

@@ -13,4 +13,10 @@ function normaliseNgPhone(input) {
   return `+234${digits}`;
 }
 
-module.exports = { normaliseNgPhone };
+// "+2348030000002" → "+234 803 000 0002" for display; anything else is returned unchanged.
+function formatNgPhone(e164) {
+  const m = /^\+234(\d{3})(\d{3})(\d{4})$/.exec(String(e164 || ''));
+  return m ? `+234 ${m[1]} ${m[2]} ${m[3]}` : String(e164 || '');
+}
+
+module.exports = { normaliseNgPhone, formatNgPhone };

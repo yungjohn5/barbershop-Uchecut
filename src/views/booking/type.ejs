@@ -8,7 +8,7 @@
       <h1 class="mt-4 text-[clamp(2.2rem,4.4vw,3.75rem)] leading-[1.02]" data-b-reveal>Where shall we <em class="accent">meet</em>?</h1>
       <p class="mt-4 max-w-xl text-[1.02rem] text-ink/70" data-b-reveal>Come into the shop, or have your barber come to you anywhere we cover in Lagos.</p>
 
-      <form id="step-form" method="post" action="/book/type" class="booking-type mt-10" novalidate>
+      <form id="step-form" method="post" action="/book/type" class="booking-type mt-10" novalidate data-type-form>
         <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
         <fieldset>
           <legend class="sr-only">Visit type</legend>
@@ -19,14 +19,14 @@
             ]; %>
             <% types.forEach((t) => { %>
               <label class="choice group flex items-center gap-4 sm:block" data-b-reveal>
-                <input type="radio" name="type" value="<%= t.value %>" class="sr-only" required <%= ctx.type === t.value ? 'checked' : '' %> <%= t.value === 'HOME' && !ctx.zones.length ? 'disabled' : '' %> />
+                <input type="radio" name="type" value="<%= t.value %>" class="sr-only" aria-labelledby="type-<%= t.value %>-title" aria-describedby="type-<%= t.value %>-text" required <%= ctx.type === t.value ? 'checked' : '' %> <%= t.value === 'HOME' && !ctx.zones.length ? 'disabled' : '' %> />
                 <span class="block w-[4.5rem] shrink-0 overflow-hidden rounded-[0.9rem] min-[400px]:w-28 sm:w-auto">
                   <img src="<%= src(t.img, t.widths) %>" srcset="<%= srcset(t.img, t.widths) %>" sizes="(min-width: 640px) 30vw, 90vw" alt="" class="aspect-square w-full object-cover sm:aspect-[16/10] transition-transform duration-[1.2s] ease-expo group-hover:scale-[1.04]" />
                 </span>
                 <span class="flex min-w-0 flex-1 items-start justify-between gap-3 sm:mt-5 sm:gap-4">
                   <span>
-                    <span class="block font-serif text-[1.4rem] leading-tight sm:text-[1.75rem]"><%= t.title %></span>
-                    <span class="mt-1 block text-sm text-ink/70 sm:mt-1.5 sm:text-[0.95rem]"><%= t.text %></span>
+                    <span class="block font-serif text-[1.4rem] leading-tight sm:text-[1.75rem]" id="type-<%= t.value %>-title"><%= t.title %></span>
+                    <span class="mt-1 block text-sm text-ink/70 sm:mt-1.5 sm:text-[0.95rem]" id="type-<%= t.value %>-text"><%= t.text %></span>
                     <span class="mt-2 inline-block text-sm font-medium text-amber-dark sm:mt-3"><%= t.meta %></span>
                   </span>
                   <span class="choice-check shrink-0" aria-hidden="true"></span>
@@ -41,10 +41,10 @@
           <div class="mt-4 grid gap-3 sm:grid-cols-2">
             <% ctx.zones.forEach((z) => { %>
               <label class="choice choice-row">
-                <input type="radio" name="zoneId" value="<%= z.id %>" class="sr-only" <%= ctx.zone && ctx.zone.id === z.id ? 'checked' : '' %> />
+                <input type="radio" name="zoneId" value="<%= z.id %>" class="sr-only" aria-labelledby="zone-<%= z.id %>-name" aria-describedby="zone-<%= z.id %>-fee" data-zone-name="<%= z.name %>" data-fee="<%= z.feeKobo %>" <%= ctx.zone && ctx.zone.id === z.id ? 'checked' : '' %> />
                 <span class="flex flex-1 items-center justify-between gap-4">
-                  <span class="font-medium"><%= z.name %></span>
-                  <span class="tabular-nums text-ink/65">+ <%= naira(z.feeKobo) %></span>
+                  <span class="font-medium" id="zone-<%= z.id %>-name"><%= z.name %></span>
+                  <span class="tabular-nums text-ink/65" id="zone-<%= z.id %>-fee">+ <%= naira(z.feeKobo) %> travel fee</span>
                 </span>
                 <span class="choice-check shrink-0" aria-hidden="true"></span>
               </label>

@@ -46,7 +46,7 @@
     <div class="locked-note mt-8" data-b-reveal>
       <p class="font-medium"><%= check.reason %></p>
       <div class="mt-5 flex flex-col gap-3 sm:flex-row">
-        <a href="tel:<%= shop.phone %>" class="btn-ghost">Call <%= shop.phone %></a>
+        <a href="tel:<%= shop.phone %>" class="btn-ghost">Call <%= fmtPhone(shop.phone) %></a>
         <a href="https://wa.me/<%= shop.whatsapp %>?text=<%= wa %>" rel="noopener" class="btn-ghost">WhatsApp us</a>
         <% if (booking.status === 'CANCELLED' || booking.status === 'COMPLETED') { %><a href="/book" class="btn-primary">Book again <span class="arrow" aria-hidden="true">→</span></a><% } %>
       </div>

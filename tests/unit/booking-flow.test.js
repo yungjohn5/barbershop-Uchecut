@@ -139,3 +139,43 @@ describe('buildIcs', () => {
     expect(ics).toContain('STATUS:CANCELLED');
   });
 });
+
+describe('firstAvailableDate', () => {
+  test('skips closed days and days without slots', async () => {
+    const asked = [];
+    const slotsFor = async (date) => {
+      asked.push(date);
+      return { slots: date === '2026-10-20' ? [{ time: '10:00' }] : [], error: null };
+    };
+    // 2026-10-18 is a Sunday (closed): not queried at all.
+    const r = await flow.firstAvailableDate({
+      today: '2026-10-17',
+      window: 30,
+      openWeekdays: new Set([1, 2, 3, 4, 5, 6]),
+      slotsFor,
+    });
+    expect(r.date).toBe('2026-10-20');
+    expect(r.result.slots).toHaveLength(1);
+    expect(asked).toEqual(['2026-10-17', '2026-10-19', '2026-10-20']);
+  });
+
+  test('falls back to the first open date when nothing is free', async () => {
+    const r = await flow.firstAvailableDate({
+      today: '2026-10-18',
+      window: 30,
+      openWeekdays: new Set([1, 2, 3, 4, 5]),
+      slotsFor: async () => ({ slots: [], error: null }),
+      maxDays: 3,
+    });
+    expect(r.date).toBe('2026-10-19');
+  });
+});
+
+describe('formatNgPhone', () => {
+  const { formatNgPhone } = require('../../src/lib/phone');
+  test('groups +234 numbers for display', () => {
+    expect(formatNgPhone('+2348030000002')).toBe('+234 803 000 0002');
+    expect(formatNgPhone('+447911123456')).toBe('+447911123456');
+    expect(formatNgPhone(null)).toBe('');
+  });
+});

@@ -41,4 +41,6 @@ function rich(text) {
 // Plain version of the same copy (for aria-labels, titles).
 const plain = (text) => String(text).replace(/\*/g, '');
 
-module.exports = { naira, duration, srcset, src, pad2, rich, plain };
+const { formatNgPhone: fmtPhone } = require('./phone');
+
+module.exports = { naira, duration, srcset, src, pad2, rich, plain, fmtPhone };

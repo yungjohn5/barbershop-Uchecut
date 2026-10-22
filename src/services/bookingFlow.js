@@ -214,6 +214,25 @@ function firstOpenDate(today, openWeekdays, window = 30) {
   return today;
 }
 
+/**
+ * First date (from today, within the window) whose slots are non-empty. `slotsFor(date)`
+ * resolves to { slots, error }. Skips closed weekdays without querying; checks at most
+ * `maxDays` open days, then falls back to the first open date.
+ * Returns { date, result } so the caller can render without a second lookup.
+ */
+async function firstAvailableDate({ today, window, openWeekdays, slotsFor, maxDays = 14 }) {
+  let checked = 0;
+  for (let i = 0; i <= window && checked < maxDays; i += 1) {
+    const date = addDays(today, i);
+    if (!openWeekdays.has(weekdayOf(date))) continue;
+    checked += 1;
+    const result = await slotsFor(date);
+    if (result.slots.length) return { date, result };
+  }
+  const date = firstOpenDate(today, openWeekdays, window);
+  return { date, result: await slotsFor(date) };
+}
+
 /** Minutes → instant for a date string (re-exported for routes). */
 const atShopTime = wallClockToUtc;
 
@@ -229,5 +248,6 @@ module.exports = {
   formatTime,
   loadContext,
   firstOpenDate,
+  firstAvailableDate,
   atShopTime,
 };

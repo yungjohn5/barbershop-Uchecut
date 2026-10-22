@@ -6,7 +6,8 @@
     <dd>
       <% if (booking.type === 'HOME') { %>
         <span class="block font-medium">Home visit<%= booking.zone ? ` · ${booking.zone.name}` : '' %></span>
-        <span class="text-ink/70"><%= booking.address %><%= booking.landmark ? ` (near ${booking.landmark})` : '' %></span>
+        <span class="block text-ink/70"><%= booking.address %></span>
+        <% if (booking.landmark) { %><span class="block text-ink/70">Landmark: <%= booking.landmark %></span><% } %>
       <% } else { %>
         <span class="block font-medium">At the shop</span>
         <span class="text-ink/70"><%= shop.address.join(', ') %></span>

@@ -13,7 +13,7 @@
       </h1>
       <p class="mx-auto mt-4 max-w-md text-center text-[1.02rem] text-paper/75">
         <%= pending
-          ? `Your barber will call ${booking.customer.phone} to confirm the visit before setting off.`
+          ? `Your barber will call ${fmtPhone(booking.customer.phone)} to confirm the visit before setting off.`
           : `See you ${day}, ${booking.customer.name.split(' ')[0]}. Your chair will be ready.` %>
       </p>
       <div class="mt-8 flex flex-col items-center gap-2">

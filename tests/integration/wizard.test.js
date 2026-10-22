@@ -153,13 +153,19 @@ describe('booking wizard', () => {
     expect(services.text).toContain('Cut');
     expect(services.text).not.toMatch(/value="\d+"[^>]*data-name="Shave"/);
 
-    const missing = await ctx.agent
+    // Post/Redirect/Get: errors come back on a GET, so a refresh never resubmits.
+    await ctx.agent
       .post('/book')
       .type('form')
       .send({ _csrf: ctx.csrf, name: 'Ada Obi', phone: '08031234567' })
-      .expect(422);
+      .expect(303)
+      .expect('Location', '/book/details');
+    const missing = await ctx.agent.get('/book/details').expect(200);
     expect(missing.text).toContain('Please enter the address for the visit.');
     expect(missing.text).toContain('value="Ada Obi"'); // keeps what was typed
+    const refreshed = await ctx.agent.get('/book/details').expect(200);
+    expect(refreshed.text).not.toContain('Please enter the address for the visit.'); // shown once
+    expect(refreshed.text).toContain('value="Ada Obi"');
 
     const ok = await ctx.agent
       .post('/book')
@@ -221,5 +227,91 @@ describe('booking wizard', () => {
     await request(app)
       .get(`/manage/${'a'.repeat(43)}`)
       .expect(404);
+  });
+});
+
+describe('booking polish', () => {
+  test('a typed but invalid phone gets the "valid Nigerian mobile" message', async () => {
+    const { agent, csrf } = await walkToDetails();
+    await agent
+      .post('/book')
+      .type('form')
+      .send({ _csrf: csrf, name: 'Ada Obi', phone: '12345' })
+      .expect(303);
+    const page = await agent.get('/book/details').expect(200);
+    expect(page.text).toContain('Enter a valid Nigerian mobile, e.g. 0803 123 4567.');
+    expect(page.text).not.toContain('Please enter your phone number.');
+
+    await agent
+      .post('/book')
+      .type('form')
+      .send({ _csrf: csrf, name: 'Ada Obi', phone: '' })
+      .expect(303);
+    expect((await agent.get('/book/details')).text).toContain('Please enter your phone number.');
+  });
+
+  test('home visits open on the first date with free times, not today', async () => {
+    const { agent, csrf } = await startAgent();
+    await agent
+      .post('/book/type')
+      .type('form')
+      .send({ _csrf: csrf, type: 'HOME', zoneId: fx.zone.id });
+    await agent
+      .post('/book/services')
+      .type('form')
+      .send({ _csrf: csrf, serviceIds: [fx.cut.id] });
+    const page = await agent.get('/book/time').expect(200);
+    const today = toShopDate(new Date());
+    expect(page.text).not.toMatch(new RegExp(`data-date="${today}"`));
+    expect(slotsOf(page.text).length).toBeGreaterThan(0);
+  });
+
+  test('empty day: "Any barber" hint only when a specific barber is selected', async () => {
+    const { agent, csrf } = await startAgent();
+    await agent
+      .post('/book/type')
+      .type('form')
+      .send({ _csrf: csrf, type: 'HOME', zoneId: fx.zone.id });
+    await agent
+      .post('/book/services')
+      .type('form')
+      .send({ _csrf: csrf, serviceIds: [fx.cut.id] });
+    const today = toShopDate(new Date()); // never bookable for a home visit (24 h lead time)
+    const any = await agent.get(`/book/time?date=${today}&barber=any`).expect(200);
+    expect(any.text).toContain('No free times on this day.');
+    expect(any.text).not.toContain('choose “Any barber”');
+    const one = await agent.get(`/book/time?date=${today}&barber=${fx.homeBarber.id}`).expect(200);
+    expect(one.text).toContain('choose “Any barber”');
+  });
+
+  test('step 1 shows the travel fee once an area is picked; areas have accessible names', async () => {
+    const { agent, csrf } = await startAgent();
+    await agent
+      .post('/book/type')
+      .type('form')
+      .send({ _csrf: csrf, type: 'HOME', zoneId: fx.zone.id });
+    const page = await agent.get('/book').expect(200);
+    expect(page.text).toMatch(/data-sum-total>\+₦3,000 <span[^>]*>travel<\/span>/);
+    expect(page.text).toContain(`aria-labelledby="zone-${fx.zone.id}-name"`);
+    expect(page.text).toContain(`id="zone-${fx.zone.id}-name">Lekki</span>`);
+  });
+
+  test('confirmation shows "Landmark: …" and a formatted phone number', async () => {
+    const ctx = await walkToDetails({ type: 'HOME', zoneId: fx.zone.id });
+    const res = await ctx.agent
+      .post('/book')
+      .type('form')
+      .send({
+        _csrf: ctx.csrf,
+        name: 'Ada Obi',
+        phone: '08031234567',
+        address: '12 Admiralty Way',
+        landmark: 'Near the filling station',
+      })
+      .expect(302);
+    const page = await ctx.agent.get(res.headers.location).expect(200);
+    expect(page.text).toContain('Landmark: Near the filling station');
+    expect(page.text).not.toContain('(near Near');
+    expect(page.text).toContain('+234 803 123 4567');
   });
 });

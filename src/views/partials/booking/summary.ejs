@@ -4,17 +4,21 @@
   Params: summary, cta (button label), formId, canContinue
 %>
 <% const formId = locals.formId || 'step-form'; %>
+<%# Before services are chosen a home visit shows its travel fee; otherwise a dash. %>
+<% const totalHtml = summary.services.length
+  ? naira(summary.totalKobo)
+  : summary.type === 'HOME' && summary.zone
+    ? `+${naira(summary.zone.feeKobo)} <span class="font-sans text-sm text-ink/65">travel</span>`
+    : '—'; %>
 <% const body = () => { %>
   <div class="flex items-center justify-between gap-3">
     <p class="eyebrow">Your booking</p>
     <% if (summary.type) { %>
-      <span class="rounded-full border border-ink/15 px-3 py-1 text-xs font-medium"><%= summary.type === 'HOME' ? 'Home visit' : 'In shop' %></span>
+      <span class="rounded-full border border-ink/15 px-3 py-1 text-xs font-medium" data-sum-type><%= summary.type === 'HOME' ? 'Home visit' : 'In shop' %></span>
     <% } %>
   </div>
   <dl class="mt-5 space-y-4 text-[0.95rem]">
-    <% if (summary.zone) { %>
-      <div class="sum-row"><dt>Area</dt><dd><%= summary.zone.name %></dd></div>
-    <% } %>
+    <div class="sum-row" data-sum-area-row <%= summary.zone ? '' : 'hidden' %>><dt>Area</dt><dd data-sum-area><%= summary.zone ? summary.zone.name : '' %></dd></div>
     <div class="sum-row">
       <dt>Services</dt>
       <dd data-sum-services>
@@ -28,13 +32,13 @@
     <div class="sum-row"><dt>When</dt><dd data-sum-when><%= summary.when || '—' %></dd></div>
   </dl>
   <div class="mt-6 space-y-2 border-t border-ink/10 pt-5 text-[0.95rem]">
-    <div class="flex justify-between gap-3"><span class="text-ink/65">Services</span><span class="tabular-nums" data-sum-subtotal><%= summary.services.length ? naira(summary.subtotalKobo) : '—' %></span></div>
+    <div class="flex justify-between gap-3"><span class="text-ink/65">Services</span><span class="tabular-nums" data-sum-subtotal data-kobo="<%= summary.services.length ? summary.subtotalKobo : 0 %>"><%= summary.services.length ? naira(summary.subtotalKobo) : '—' %></span></div>
     <% if (summary.type === 'HOME') { %>
       <div class="flex justify-between gap-3"><span class="text-ink/65">Travel fee</span><span class="tabular-nums" data-sum-fee data-fee="<%= summary.homeFeeKobo %>"><%= naira(summary.homeFeeKobo) %></span></div>
     <% } %>
     <div class="flex items-baseline justify-between gap-3 pt-2">
       <span class="font-medium">Total</span>
-      <span class="font-serif text-3xl tabular-nums" data-sum-total><%= summary.services.length ? naira(summary.totalKobo) : '—' %></span>
+      <span class="font-serif text-3xl tabular-nums" data-sum-total><%- totalHtml %></span>
     </div>
     <p class="pt-1 text-xs text-ink/65">Pay on the day: cash or transfer. Nothing to pay now.</p>
   </div>
@@ -54,7 +58,7 @@
   <div class="flex items-center gap-3 px-4 py-3">
     <button type="button" class="flex min-h-[2.75rem] flex-1 flex-col items-start text-left" data-sheet-toggle aria-expanded="false">
       <span class="text-[0.7rem] uppercase tracking-[0.18em] text-ink/65">Total <span class="sheet-caret" aria-hidden="true">⌃</span></span>
-      <span class="font-serif text-2xl leading-tight tabular-nums" data-sum-total><%= summary.services.length ? naira(summary.totalKobo) : '—' %></span>
+      <span class="font-serif text-2xl leading-tight tabular-nums" data-sum-total><%- totalHtml %></span>
     </button>
     <% if (locals.cta) { %>
       <button type="submit" form="<%= formId %>" class="btn-primary shrink-0 !px-6" data-continue <%= locals.canContinue === false ? 'disabled' : '' %>><%= cta %> <span class="arrow" aria-hidden="true">→</span></button>

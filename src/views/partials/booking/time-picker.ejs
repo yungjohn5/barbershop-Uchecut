@@ -64,7 +64,7 @@
       <% } else if (!groups.length) { %>
         <div class="slots-empty">
           <p class="font-serif text-2xl">No free times on this day.</p>
-          <p class="mt-2 text-sm text-ink/65">Try another date or choose “Any barber” for more options.</p>
+          <p class="mt-2 text-sm text-ink/65"><%= barberId === 'any' ? 'Try another date.' : 'Try another date or choose “Any barber” for more options.' %></p>
         </div>
       <% } else { %>
         <% groups.forEach((g) => { %>

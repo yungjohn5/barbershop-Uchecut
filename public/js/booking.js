@@ -106,6 +106,46 @@
     servicesForm.addEventListener('change', updateServices);
   }
 
+  // ------------------------------------------------------------ visit step: live summary
+  // Picking a zone shows its travel fee straight away (or services + fee when services are
+  // already in the draft, e.g. from a service card link).
+  var typeForm = $('[data-type-form]');
+  if (typeForm) {
+    var subEl = $('[data-sum-subtotal]');
+    var subtotalKobo = subEl ? Number(subEl.getAttribute('data-kobo')) || 0 : 0;
+    var setTotal = function (kobo, travelOnly) {
+      $$('[data-sum-total]').forEach(function (el) {
+        el.textContent = '';
+        if (kobo == null) {
+          el.textContent = '—';
+          return;
+        }
+        el.appendChild(document.createTextNode((travelOnly ? '+' : '') + naira(kobo)));
+        if (travelOnly) {
+          var t = document.createElement('span');
+          t.className = 'font-sans text-sm text-ink/65';
+          t.textContent = ' travel';
+          el.appendChild(t);
+        }
+      });
+    };
+    var updateType = function () {
+      var picked = typeForm.querySelector('input[name="type"]:checked');
+      var type = picked ? picked.value : null;
+      var zone = type === 'HOME' ? typeForm.querySelector('input[name="zoneId"]:checked') : null;
+      var fee = zone ? Number(zone.getAttribute('data-fee')) : 0;
+      if (type) setAll('[data-sum-type]', type === 'HOME' ? 'Home visit' : 'In shop');
+      $$('[data-sum-area-row]').forEach(function (row) {
+        row.hidden = !zone;
+      });
+      setAll('[data-sum-area]', zone ? zone.getAttribute('data-zone-name') : '');
+      if (subtotalKobo) setTotal(subtotalKobo + fee, false);
+      else if (zone) setTotal(fee, true);
+      else setTotal(null);
+    };
+    typeForm.addEventListener('change', updateType);
+  }
+
   // ------------------------------------------------------------ time picker
   var picker = $('[data-time-picker]');
   if (picker) {
@@ -160,7 +200,10 @@
         if (!error) {
           var h = document.createElement('p');
           h.className = 'mt-2 text-sm text-ink/65';
-          h.textContent = 'Try another date or choose “Any barber” for more options.';
+          h.textContent =
+            state.barber === 'any'
+              ? 'Try another date.'
+              : 'Try another date or choose “Any barber” for more options.';
           empty.appendChild(h);
         }
         slotsBox.appendChild(empty);

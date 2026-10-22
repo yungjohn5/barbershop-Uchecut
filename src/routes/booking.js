@@ -30,6 +30,11 @@ function takeFlash(req) {
   delete req.session.flash;
   return f || null;
 }
+function takeFormErrors(req) {
+  const e = req.session.formErrors;
+  delete req.session.formErrors;
+  return e || {};
+}
 function setFlash(req, type, message) {
   req.session.flash = { type, message };
 }
@@ -170,18 +175,31 @@ router.get(
     barberId = barberId === 'any' ? 'any' : Number(barberId);
     if (barberId !== 'any' && !ctx.barbers.some((b) => b.id === barberId)) barberId = 'any';
 
-    const fromDraft = draft.startsAt ? new Date(draft.startsAt).toISOString().slice(0, 10) : null;
+    const fromDraft = draft.startsAt ? toShopDate(new Date(draft.startsAt)) : null;
     let date = isValidDateStr(req.query.date) ? req.query.date : fromDraft;
-    if (!date || date < ctx.today || date > lastDate)
-      date = flow.firstOpenDate(ctx.today, ctx.openWeekdays, window);
+    const slotsFor = (d) =>
+      safeSlots({
+        date: d,
+        barberId,
+        serviceIds: ctx.chosenIds,
+        type: ctx.type,
+        zoneId: ctx.zone ? ctx.zone.id : null,
+      });
 
-    const { slots, error } = await safeSlots({
-      date,
-      barberId,
-      serviceIds: ctx.chosenIds,
-      type: ctx.type,
-      zoneId: ctx.zone ? ctx.zone.id : null,
-    });
+    // No date chosen yet: open on the first day that actually has free times (home visits
+    // never have any today because of the 24-hour lead time).
+    let result;
+    if (!date || date < ctx.today || date > lastDate) {
+      ({ date, result } = await flow.firstAvailableDate({
+        today: ctx.today,
+        window,
+        openWeekdays: ctx.openWeekdays,
+        slotsFor,
+      }));
+    } else {
+      result = await slotsFor(date);
+    }
+    const { slots, error } = result;
     await renderStep(req, res, 'time', 'booking/time', {
       date,
       barberId,
@@ -239,7 +257,7 @@ router.get(
   asyncRoute(async (req, res) =>
     renderStep(req, res, 'details', 'booking/details', {
       values: draftOf(req).customer || {},
-      errors: {},
+      errors: takeFormErrors(req),
     }),
   ),
 );
@@ -290,8 +308,10 @@ router.post(
           errors[key] = errors[key] || d.message;
         }
         if (!Object.keys(errors).length) errors._form = err.message;
-        res.status(422);
-        return renderStep(req, res, 'details', 'booking/details', { values, errors });
+        // Post/Redirect/Get: show the errors on a GET so a refresh never resubmits the form.
+        // The typed values are already in draft.customer.
+        req.session.formErrors = errors;
+        return res.redirect(303, '/book/details');
       }
       throw err;
     }
