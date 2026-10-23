@@ -45,7 +45,7 @@
           <div class="flex items-center gap-3">
             <% if (lane.barber.photoUrl) { %><img src="<%= lane.barber.photoUrl %>-500.webp" alt="" class="h-10 w-10 rounded-full object-cover object-top" /><% } %>
             <div class="flex-1">
-              <p class="font-medium"><%= lane.barber.name %></p>
+              <p class="flex flex-wrap items-center gap-2 font-medium"><%= lane.barber.name %><% if (!lane.barber.active) { %><span class="a-type a-type-warn">Inactive</span><% } %></p>
               <p class="text-xs text-ink/65"><%= lane.working ? `${lane.bookings.length} booking${lane.bookings.length === 1 ? '' : 's'}` : 'Not working today' %></p>
             </div>
           </div>

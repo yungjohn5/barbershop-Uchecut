@@ -1,12 +1,20 @@
 const logger = require('../lib/logger');
 const { NotFoundError } = require('../lib/errors');
 const { DEFAULT_SETTINGS } = require('../config/constants');
+const env = require('../config/env');
 
 const wantsJson = (req) =>
   req.originalUrl.startsWith('/api/') || req.accepts(['html', 'json']) === 'json';
 
+// The internal route is only shown while developing; visitors get a plain message.
 function notFound(req, _res, next) {
-  next(new NotFoundError(`No route for ${req.method} ${req.path}`));
+  next(
+    new NotFoundError(
+      env.isDev
+        ? `No route for ${req.method} ${req.path}`
+        : 'This page doesn’t exist or may have moved.',
+    ),
+  );
 }
 
 function errorHandler(err, req, res, _next) {

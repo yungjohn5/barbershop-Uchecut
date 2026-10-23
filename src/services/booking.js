@@ -79,7 +79,7 @@ const backoffMs = (attempt) => 10 + Math.floor(Math.random() * 50 * 2 ** attempt
 
 // ---------------------------------------------------------------------------
 
-async function attemptCreate(db, input, { now, settings, phone, hooks, staff = false }) {
+async function attemptCreate(db, input, { now, settings, phone, hooks, staff = false, adminName }) {
   return db.$transaction(
     async (tx) => {
       const date = toShopDate(input.startsAt);
@@ -185,6 +185,13 @@ async function attemptCreate(db, input, { now, settings, phone, hooks, staff = f
               durationMin: s.durationMin,
             })),
           },
+          events: {
+            create: {
+              type: 'CREATED',
+              actor: staff ? 'STAFF' : 'CUSTOMER',
+              byName: staff ? adminName || null : null,
+            },
+          },
         },
         include: { services: true, barber: true, customer: true, zone: true },
       });
@@ -207,7 +214,7 @@ async function attemptCreate(db, input, { now, settings, phone, hooks, staff = f
  */
 async function createBooking(
   rawInput,
-  { now = new Date(), db = prisma, hooks = {}, actor = 'customer' } = {},
+  { now = new Date(), db = prisma, hooks = {}, actor = 'customer', adminName } = {},
 ) {
   const parsed = bookingInputSchema.safeParse(rawInput);
   if (!parsed.success) {
@@ -227,7 +234,7 @@ async function createBooking(
   const base = await settingsService.getAll();
   const settings = staff ? staffSettings(base) : base;
   return withTxRetry('createBooking', () =>
-    attemptCreate(db, input, { now, settings, phone, hooks, staff }),
+    attemptCreate(db, input, { now, settings, phone, hooks, staff, adminName }),
   );
 }
 
@@ -325,12 +332,16 @@ async function requireModifiable(db, token, now, { staff = false } = {}) {
 /** Cancel via the manage link (before the cutoff). Frees the slot immediately. */
 async function cancelBooking(token, { now = new Date(), reason, db = prisma } = {}) {
   await requireModifiable(db, token, now);
+  const cancelReason = reason
+    ? String(reason).trim().slice(0, 300) || null
+    : 'Cancelled by customer';
   return db.booking.update({
     where: { manageToken: token },
     data: {
       status: 'CANCELLED',
       cancelledAt: now,
-      cancelReason: reason ? String(reason).trim().slice(0, 300) || null : 'Cancelled by customer',
+      cancelReason,
+      events: { create: { type: 'CANCELLED', actor: 'CUSTOMER', note: cancelReason } },
     },
     include: bookingInclude,
   });
@@ -345,7 +356,7 @@ async function cancelBooking(token, { now = new Date(), reason, db = prisma } = 
 async function rescheduleBooking(
   token,
   { startsAt, barberId = 'any' },
-  { now = new Date(), db = prisma, staff = false } = {},
+  { now = new Date(), db = prisma, staff = false, adminName } = {},
 ) {
   const start = new Date(startsAt);
   if (Number.isNaN(start.getTime())) throw new ValidationError('Choose a new time.');
@@ -382,6 +393,11 @@ async function rescheduleBooking(
         await tx.$executeRaw`SELECT pg_advisory_xact_lock(${BOOKING_LOCK_NAMESPACE}::int, ${nextBarber}::int)`;
         const endsAt = new Date(start.getTime() + selection.serviceMin * MIN);
         const isHome = booking.type === 'HOME';
+        const toBarber =
+          nextBarber === booking.barberId
+            ? booking.barber
+            : await tx.barber.findUnique({ where: { id: nextBarber }, select: { name: true } });
+        const needsReconfirm = isHome && !staff && booking.status === 'CONFIRMED';
         return tx.booking.update({
           where: { id: booking.id },
           data: {
@@ -393,6 +409,20 @@ async function rescheduleBooking(
             // A customer moving a home visit needs re-confirming; staff moves stay confirmed.
             status: isHome && !staff ? 'PENDING' : 'CONFIRMED',
             confirmedAt: isHome && !staff ? null : (booking.confirmedAt ?? now),
+            events: {
+              create: {
+                type: 'RESCHEDULED',
+                actor: staff ? 'STAFF' : 'CUSTOMER',
+                byName: staff ? adminName || null : null,
+                note: needsReconfirm ? 'Home visit needs confirming again' : null,
+                data: {
+                  from: booking.startsAt.toISOString(),
+                  to: start.toISOString(),
+                  fromBarber: booking.barber.name,
+                  toBarber: toBarber ? toBarber.name : null,
+                },
+              },
+            },
           },
           include: bookingInclude,
         });

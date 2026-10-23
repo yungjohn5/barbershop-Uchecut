@@ -15,11 +15,11 @@
           <div class="grid gap-4 sm:grid-cols-2">
             <% const types = [
               { value: 'SHOP', title: 'In the shop', text: 'Your chair is ready when you walk in. Confirmed instantly.', meta: 'No travel fee', img: '/images/site/craft-a', widths: [500, 900] },
-              { value: 'HOME', title: 'Home visit', text: 'Your barber brings the full kit to your home or office.', meta: ctx.zones.length ? `From +${naira(Math.min(...ctx.zones.map((z) => z.feeKobo)))} travel` : 'Coming soon', img: '/images/site/home-visit', widths: [700, 1300] },
+              { value: 'HOME', title: 'Home visit', text: 'Your barber brings the full kit to your home or office.', meta: homeOpen ? `From +${naira(Math.min(...ctx.zones.map((z) => z.feeKobo)))} travel` : 'Paused right now. Message us on WhatsApp.', img: '/images/site/home-visit', widths: [700, 1300] },
             ]; %>
             <% types.forEach((t) => { %>
               <label class="choice group flex items-center gap-4 sm:block" data-b-reveal>
-                <input type="radio" name="type" value="<%= t.value %>" class="sr-only" aria-labelledby="type-<%= t.value %>-title" aria-describedby="type-<%= t.value %>-text" required <%= ctx.type === t.value ? 'checked' : '' %> <%= t.value === 'HOME' && !ctx.zones.length ? 'disabled' : '' %> />
+                <input type="radio" name="type" value="<%= t.value %>" class="sr-only" aria-labelledby="type-<%= t.value %>-title" aria-describedby="type-<%= t.value %>-text" required <%= ctx.type === t.value && !(t.value === 'HOME' && !homeOpen) ? 'checked' : '' %> <%= t.value === 'HOME' && !homeOpen ? 'disabled' : '' %> />
                 <span class="block w-[4.5rem] shrink-0 overflow-hidden rounded-[0.9rem] min-[400px]:w-28 sm:w-auto">
                   <img src="<%= src(t.img, t.widths) %>" srcset="<%= srcset(t.img, t.widths) %>" sizes="(min-width: 640px) 30vw, 90vw" alt="" class="aspect-square w-full object-cover sm:aspect-[16/10] transition-transform duration-[1.2s] ease-expo group-hover:scale-[1.04]" />
                 </span>

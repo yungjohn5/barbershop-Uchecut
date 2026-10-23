@@ -68,7 +68,15 @@ const ACTION_DONE = {
   undo: 'Status restored to confirmed.',
 };
 
-async function applyAction(id, action, { now = new Date(), reason, db = prisma } = {}) {
+const EVENT_FOR = {
+  confirm: 'CONFIRMED',
+  complete: 'COMPLETED',
+  noShow: 'NO_SHOW',
+  cancel: 'CANCELLED',
+  undo: 'RESTORED',
+};
+
+async function applyAction(id, action, { now = new Date(), reason, adminName, db = prisma } = {}) {
   return db.$transaction(async (tx) => {
     const booking = await tx.booking.findUnique({ where: { id } });
     if (!booking) throw new HttpError(404, 'Booking not found.');
@@ -76,7 +84,17 @@ async function applyAction(id, action, { now = new Date(), reason, db = prisma }
       throw new HttpError(409, 'That action isn’t available for this booking right now.');
     }
     const { data, noShowDelta } = transitionFor(booking, action, { now, reason });
-    const updated = await tx.booking.update({ where: { id }, data, include });
+    const event = {
+      type: EVENT_FOR[action],
+      actor: 'STAFF',
+      byName: adminName || null,
+      note: action === 'cancel' ? data.cancelReason : null,
+    };
+    const updated = await tx.booking.update({
+      where: { id },
+      data: { ...data, events: { create: event } },
+      include,
+    });
     if (noShowDelta) {
       const c = await tx.customer.findUnique({ where: { id: booking.customerId } });
       await tx.customer.update({
@@ -97,7 +115,10 @@ async function updateStaffNotes(id, notes, { db = prisma } = {}) {
 
 async function getBooking(id, { db = prisma } = {}) {
   if (!Number.isInteger(id) || id <= 0) return null;
-  return db.booking.findUnique({ where: { id }, include });
+  return db.booking.findUnique({
+    where: { id },
+    include: { ...include, events: { orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] } },
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -195,8 +216,18 @@ async function todayOverview({ now = new Date(), db = prisma } = {}) {
     db.booking.count({
       where: { startsAt: { gte: weekStart, lt: weekEnd }, status: { not: 'CANCELLED' } },
     }),
+    // Active barbers, plus any inactive barber who still has bookings today.
     db.barber.findMany({
-      where: { active: true },
+      where: {
+        OR: [
+          { active: true },
+          {
+            bookings: {
+              some: { startsAt: { gte: dayStart, lt: dayEnd }, status: { not: 'CANCELLED' } },
+            },
+          },
+        ],
+      },
       orderBy: [{ sortOrder: 'asc' }, { id: 'asc' }],
       include: { hours: { where: { weekday: wd } } },
     }),
@@ -247,8 +278,16 @@ async function weekCalendar({ date, barberId, now = new Date(), db = prisma }) {
   const start = weekStartOf(isValidDateStr(date) ? date : toShopDate(now));
   const from = wallClockToUtc(start, 0);
   const to = wallClockToUtc(addDays(start, 7), 0);
+  // Active barbers, plus inactive ones who still have bookings from this week on, so
+  // their appointments never vanish from the calendar.
   const barbers = await db.barber.findMany({
-    where: { active: true },
+    where: {
+      OR: [
+        { active: true },
+        { bookings: { some: { startsAt: { gte: from }, status: { in: ACTIVE_STATUSES } } } },
+        { bookings: { some: { startsAt: { gte: from, lt: to }, status: { not: 'CANCELLED' } } } },
+      ],
+    },
     orderBy: [{ sortOrder: 'asc' }, { id: 'asc' }],
   });
   const barber = barbers.find((b) => b.id === barberId) || barbers[0] || null;

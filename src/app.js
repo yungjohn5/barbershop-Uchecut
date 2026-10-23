@@ -12,6 +12,7 @@ const env = require('./config/env');
 const { csrfProtection, exposeCsrfToken } = require('./middleware/csrf');
 const { notFound, errorHandler } = require('./middleware/errorHandler');
 const settingsService = require('./services/settings');
+const { homeVisitsOpen } = require('./services/content');
 
 function createApp({ sessionPool } = {}) {
   const app = express();
@@ -52,6 +53,7 @@ function createApp({ sessionPool } = {}) {
     }),
   );
   Object.assign(app.locals, require('./lib/viewHelpers'));
+  app.locals.credits = require('./config/credits'); // studio ad + footer credit
   app.use(express.urlencoded({ extended: false, limit: '50kb' }));
   app.use(express.json({ limit: '50kb' }));
 
@@ -85,6 +87,8 @@ function createApp({ sessionPool } = {}) {
   app.use(async (req, res, next) => {
     try {
       res.locals.shop = await settingsService.get('shop');
+      // Public pages hide home-visit buttons when nobody can take one (see services/content.js).
+      res.locals.homeOpen = req.path.startsWith('/admin') ? true : await homeVisitsOpen();
       res.locals.currentPath = req.path;
       res.locals.page = null; // pages set their own, e.g. 'home'
       next();

@@ -16,7 +16,7 @@
 </header>
 
 <section class="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4" aria-label="At a glance">
-  <div class="a-stat"><p class="a-stat-label">Visits</p><p class="a-stat-value"><%= stats.visits %></p><p class="a-stat-foot"><%= stats.completed %> completed</p></div>
+  <div class="a-stat"><p class="a-stat-label">Bookings</p><p class="a-stat-value"><%= stats.visits %></p><p class="a-stat-foot"><%= stats.completed %> completed · cancelled not counted</p></div>
   <div class="a-stat"><p class="a-stat-label">Spent</p><p class="a-stat-value text-[clamp(1.6rem,3vw,2.4rem)]"><%= naira(stats.spentKobo) %></p><p class="a-stat-foot">completed visits</p></div>
   <div class="a-stat <%= stats.noShows ? 'is-alert' : '' %>"><p class="a-stat-label">No-shows</p><p class="a-stat-value"><%= c.noShowCount %></p><p class="a-stat-foot"><%= stats.cancelled %> cancelled</p></div>
   <div class="a-stat"><p class="a-stat-label">Last visit</p><p class="a-stat-value text-[clamp(1.4rem,2.6vw,2rem)]"><%= stats.lastVisit ? formatShort(stats.lastVisit) : '—' %></p><p class="a-stat-foot"><%= stats.favourite ? `Usually: ${stats.favourite}` : `Customer since ${formatShort(c.createdAt)}` %></p></div>

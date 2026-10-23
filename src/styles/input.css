@@ -3517,3 +3517,153 @@ button.a-live:hover {
     white-space: nowrap;
   }
 }
+
+/* Booking history timeline */
+.a-history {
+  position: relative;
+  display: grid;
+  gap: 1rem;
+}
+.a-history::before {
+  content: '';
+  position: absolute;
+  left: 0.28rem;
+  top: 0.5rem;
+  bottom: 0.5rem;
+  width: 1px;
+  background: rgb(var(--ink) / 0.12);
+}
+.a-history-item {
+  position: relative;
+  padding-left: 1.4rem;
+  font-size: 0.92rem;
+}
+.a-history-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.4rem;
+  height: 0.6rem;
+  width: 0.6rem;
+  border-radius: 9999px;
+  background: rgb(var(--ink) / 0.35);
+  box-shadow: 0 0 0 3px rgb(var(--surface));
+}
+.a-history-confirmed::before,
+.a-history-completed::before,
+.a-history-restored::before {
+  background: #2e7d5a;
+}
+.a-history-rescheduled::before {
+  background: #b8833e;
+}
+.a-history-cancelled::before,
+.a-history-no_show::before {
+  background: #c4543a;
+}
+
+/* Short calendar bookings (under 30 min): one line, start time + name; full details on hover. */
+.cal-short {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.35rem;
+  padding-top: 0.1rem;
+  padding-bottom: 0.1rem;
+  white-space: nowrap;
+}
+.cal-short .cal-event-end,
+.cal-short .cal-event-meta {
+  display: none;
+}
+.cal-short .cal-event-name {
+  min-width: 0;
+}
+
+/* ---------- Studio ad (Cyberninja Innovations) ---------- */
+.studio {
+  position: relative;
+  overflow: hidden;
+  border-radius: 2rem;
+  background: rgb(var(--ink));
+  color: rgb(var(--paper));
+  padding: 2.5rem 1.4rem;
+  box-shadow: 0 60px 120px -70px rgb(0 0 0 / 0.75);
+}
+@media (min-width: 640px) {
+  .studio {
+    padding: 3.25rem 2.75rem;
+  }
+}
+@media (min-width: 1024px) {
+  .studio {
+    padding: 4.5rem 4rem;
+  }
+}
+.studio-glow {
+  position: absolute;
+  inset: -40% -10% auto auto;
+  height: 32rem;
+  width: 32rem;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgb(184 131 62 / 0.28), transparent 65%);
+  pointer-events: none;
+}
+.studio-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  border-radius: 9999px;
+  border: 1px solid rgb(var(--paper) / 0.15);
+  padding: 0.3rem 0.85rem 0.3rem 0.35rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgb(var(--paper) / 0.7);
+}
+.studio-badge > span {
+  border-radius: 9999px;
+  background: #d9a863;
+  padding: 0.15rem 0.55rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: #141414;
+}
+.studio-chip {
+  border-radius: 9999px;
+  border: 1px solid rgb(var(--paper) / 0.14);
+  padding: 0.35rem 0.85rem;
+  font-size: 0.8rem;
+  color: rgb(var(--paper) / 0.78);
+}
+.studio-card {
+  display: flex;
+  gap: 0.9rem;
+  border-radius: 1.2rem;
+  border: 1px solid rgb(var(--paper) / 0.09);
+  background: rgb(var(--paper) / 0.035);
+  padding: 1.05rem 1.1rem;
+  transition:
+    border-color 0.4s,
+    background-color 0.4s,
+    transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@media (hover: hover) and (pointer: fine) {
+  .studio-card:hover {
+    transform: translateY(-2px);
+    border-color: rgb(217 168 99 / 0.45);
+    background: rgb(var(--paper) / 0.06);
+  }
+}
+.studio-icon {
+  display: grid;
+  height: 2.6rem;
+  width: 2.6rem;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 0.85rem;
+  background: rgb(217 168 99 / 0.14);
+  color: #d9a863;
+}
+.site-credit {
+  font-size: 0.8rem;
+}

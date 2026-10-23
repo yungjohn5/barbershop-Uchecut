@@ -1,4 +1,4 @@
-<% const sorts = [['recent', 'Last visit'], ['visits', 'Most visits'], ['spent', 'Top spend'], ['noshows', 'No-shows'], ['name', 'Name A–Z'], ['newest', 'Newest']]; %>
+<% const sorts = [['recent', 'Last visit'], ['visits', 'Most bookings'], ['spent', 'Top spend'], ['noshows', 'No-shows'], ['name', 'Name A–Z'], ['newest', 'Newest']]; %>
 <% const qs = (over) => Object.entries({ q, sort, ...over }).filter(([, v]) => v !== '' && v !== undefined && v !== null).map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join('&'); %>
 <header class="a-page-head">
   <div>
@@ -35,7 +35,7 @@
     <div class="a-table-wrap">
       <table class="a-table">
         <thead>
-          <tr><th>Customer</th><th>Phone</th><th>Visits</th><th>Spent</th><th>Last visit</th><th><span class="sr-only">Open</span></th></tr>
+          <tr><th>Customer</th><th>Phone</th><th>Bookings</th><th>Spent</th><th>Last visit</th><th><span class="sr-only">Open</span></th></tr>
         </thead>
         <tbody>
           <% rows.forEach((c) => { %>
@@ -50,7 +50,7 @@
                 </span>
               </td>
               <td data-label="Phone" class="tabular-nums"><%= fmtPhone(c.phone) %></td>
-              <td data-label="Visits">
+              <td data-label="Bookings">
                 <span class="tabular-nums font-medium"><%= c.visits %></span>
                 <% if (c.noShowCount) { %><span class="a-type a-type-warn ml-1"><%= c.noShowCount %> no-show<%= c.noShowCount > 1 ? 's' : '' %></span><% } %>
               </td>

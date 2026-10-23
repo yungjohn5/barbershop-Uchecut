@@ -241,6 +241,14 @@ async function deleteTimeOff(barberId, id, { db = prisma } = {}) {
   if (!count) throw new NotFoundError('Time off not found');
 }
 
+/** A barber's upcoming pending/confirmed bookings (they stand even if the barber is deactivated). */
+const upcomingBookings = (barberId, { now = new Date(), db = prisma } = {}) =>
+  db.booking.findMany({
+    where: { barberId, status: { in: ACTIVE_STATUSES }, startsAt: { gte: now } },
+    select: { id: true, reference: true, startsAt: true },
+    orderBy: { startsAt: 'asc' },
+  });
+
 /** Hours as form values: { [weekday]: { open, start, end } }. */
 function hoursForForm(hours) {
   const out = {};
@@ -266,5 +274,6 @@ module.exports = {
   bookingsOutsideHours,
   addTimeOff,
   deleteTimeOff,
+  upcomingBookings,
   hoursForForm,
 };

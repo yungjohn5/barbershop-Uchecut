@@ -29,6 +29,23 @@ enum BookingSource {
   STAFF
 }
 
+// Booking history (audit log): one row per change, shown on the admin booking page.
+enum BookingEventType {
+  CREATED
+  CONFIRMED
+  RESCHEDULED
+  CANCELLED
+  COMPLETED
+  NO_SHOW
+  RESTORED
+}
+
+enum BookingActor {
+  CUSTOMER
+  STAFF
+  SYSTEM
+}
+
 enum AdminRole {
   OWNER
   STAFF
@@ -172,6 +189,7 @@ model Booking {
   customer      Customer         @relation(fields: [customerId], references: [id])
   zone          Zone?            @relation(fields: [zoneId], references: [id])
   services      BookingService[]
+  events        BookingEvent[]
   confirmedAt   DateTime?        @db.Timestamptz(3)
   cancelledAt   DateTime?        @db.Timestamptz(3)
   cancelReason  String?
@@ -255,4 +273,18 @@ model Session {
 
   @@index([expire], map: "IDX_session_expire")
   @@map("session")
+}
+
+model BookingEvent {
+  id        Int              @id @default(autoincrement())
+  bookingId Int
+  booking   Booking          @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  type      BookingEventType
+  actor     BookingActor
+  byName    String? // staff member's name at the time
+  note      String? // e.g. cancellation reason
+  data      Json? // e.g. { from, to, fromBarber, toBarber } for a reschedule
+  createdAt DateTime         @default(now()) @db.Timestamptz(3)
+
+  @@index([bookingId, createdAt])
 }

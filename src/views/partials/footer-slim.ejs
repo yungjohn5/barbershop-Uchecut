@@ -1,7 +1,10 @@
 <%# Compact footer for the booking flow: keeps focus on the task. %>
 <footer class="border-t border-ink/10">
   <div class="mx-auto flex max-w-[88rem] flex-col gap-4 px-5 pb-36 pt-8 text-sm text-ink/65 sm:px-8 lg:flex-row lg:items-center lg:justify-between lg:px-10 lg:pb-10">
-    <p>© <%= new Date().getFullYear() %> <%= shop.name %> · Lagos · <%= shop.hoursText.join(' · ') %></p>
+    <div class="grid gap-1.5">
+      <p>© <%= new Date().getFullYear() %> <%= shop.name %> · Lagos · <%= shop.hoursText.join(' · ') %></p>
+      <%- include('credit', { tone: 'dark' }) %>
+    </div>
     <div class="flex flex-wrap items-center gap-x-6 gap-y-2">
       <a href="tel:<%= shop.phone %>" class="link-u hover:text-ink"><%= fmtPhone(shop.phone) %></a>
       <a href="https://wa.me/<%= shop.whatsapp %>" rel="noopener" class="link-u hover:text-ink">WhatsApp</a>

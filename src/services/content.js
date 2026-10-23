@@ -131,4 +131,24 @@ async function getHomeContent({ db = prisma, now = new Date() } = {}) {
   };
 }
 
-module.exports = { getHomeContent, homeFacts, shopStatus, hoursSummary };
+/**
+ * Can customers book a home visit right now? Needs an active barber who does home visits,
+ * has working hours and offers at least one active home-visit service, plus an active zone.
+ */
+async function homeVisitsOpen({ db = prisma } = {}) {
+  const [barber, zone] = await Promise.all([
+    db.barber.findFirst({
+      where: {
+        active: true,
+        doesHomeService: true,
+        hours: { some: {} },
+        services: { some: { service: { active: true, homeAvailable: true } } },
+      },
+      select: { id: true },
+    }),
+    db.zone.findFirst({ where: { active: true }, select: { id: true } }),
+  ]);
+  return Boolean(barber && zone);
+}
+
+module.exports = { getHomeContent, homeFacts, shopStatus, hoursSummary, homeVisitsOpen };

@@ -37,7 +37,7 @@
         </label>
       </div>
       <div class="mt-6 grid gap-5 sm:grid-cols-2">
-        <%- include('../partials/switch', { name: 'active', checked: v.active, label: 'Taking bookings', hint: 'Off hides them from the site and the wizard.' }) %>
+        <%- include('../partials/switch', { name: 'active', checked: v.active, label: 'Taking bookings', hint: upcomingCount ? `Off hides them from the site and the wizard. Their ${upcomingCount} upcoming booking${upcomingCount > 1 ? 's' : ''} still stand${upcomingCount > 1 ? '' : 's'}.` : 'Off hides them from the site and the wizard.' }) %>
         <%- include('../partials/switch', { name: 'doesHomeService', checked: v.doesHomeService, label: 'Does home visits', hint: 'Can be booked for home visits.' }) %>
       </div>
     </section>

@@ -20,7 +20,7 @@
 
 <nav class="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:px-0" aria-label="Barber">
   <% barbers.forEach((b) => { %>
-    <a href="/admin/calendar?date=<%= start %>&barber=<%= b.id %>" class="a-chip <%= barber && barber.id === b.id ? 'is-active' : '' %>"><%= b.name %></a>
+    <a href="/admin/calendar?date=<%= start %>&barber=<%= b.id %>" class="a-chip <%= barber && barber.id === b.id ? 'is-active' : '' %>"><%= b.name %><% if (!b.active) { %> <span class="text-xs opacity-70">(inactive)</span><% } %></a>
   <% }) %>
 </nav>
 
@@ -59,8 +59,9 @@
           <% d.events.forEach((e) => { const b = e.booking; %>
             <% if (e.from > e.blockFrom) { %><span class="cal-buffer" data-top="<%= pct(e.blockFrom) %>" data-h="<%= pct(e.from) - pct(e.blockFrom) %>"></span><% } %>
             <% if (e.blockTo > e.to) { %><span class="cal-buffer" data-top="<%= pct(e.to) %>" data-h="<%= pct(e.blockTo) - pct(e.to) %>"></span><% } %>
-            <a href="/admin/bookings/<%= b.id %>" class="cal-event cal-<%= b.type.toLowerCase() %> cal-s-<%= b.status.toLowerCase() %>" data-top="<%= pct(e.from) %>" data-h="<%= pct(e.to) - pct(e.from) %>">
-              <span class="cal-event-time"><%= formatTime(b.startsAt) %>–<%= formatTime(b.endsAt) %></span>
+            <% const tip = `${formatTime(b.startsAt)}–${formatTime(b.endsAt)} · ${b.customer.name}\n${b.services.map((s) => s.name).join(', ')}${b.zone ? ` · ${b.zone.name}` : ''}`; %>
+            <a href="/admin/bookings/<%= b.id %>" class="cal-event cal-<%= b.type.toLowerCase() %> cal-s-<%= b.status.toLowerCase() %> <%= e.to - e.from < 30 ? 'cal-short' : '' %>" data-top="<%= pct(e.from) %>" data-h="<%= pct(e.to) - pct(e.from) %>" title="<%= tip %>" aria-label="<%= tip.replace('\n', ', ') %>">
+              <span class="cal-event-time"><%= formatTime(b.startsAt) %><span class="cal-event-end">–<%= formatTime(b.endsAt) %></span></span>
               <span class="cal-event-name"><%= b.customer.name %></span>
               <span class="cal-event-meta"><%= b.services.map((s) => s.name).join(', ') %><%= b.zone ? ` · ${b.zone.name}` : '' %></span>
             </a>

@@ -22,7 +22,8 @@
         <div class="flash flash-error mt-8 !mb-0" role="alert"><span class="flash-icon" aria-hidden="true">!</span><p><%= error %></p></div>
       <% } %>
 
-      <form method="post" action="/admin/login" class="mt-8 grid gap-4" novalidate>
+      <%# next= is in the URL too, so a reload after a failed attempt keeps it. %>
+      <form method="post" action="/admin/login<%= next && next !== '/admin' ? `?next=${encodeURIComponent(next)}` : '' %>" class="mt-8 grid gap-4" novalidate>
         <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
         <input type="hidden" name="next" value="<%= next %>" />
         <div class="field-float">

@@ -84,7 +84,7 @@ Business logic lives in `services/`, so routes stay thin and the availability en
 
 ## Data model
 
-Fifteen Prisma models cover the catalogue, staff schedules, zones, bookings, content and sessions; a booking always belongs to one barber, one customer and one or more services.
+Sixteen Prisma models cover the catalogue, staff schedules, zones, bookings and their history, content and sessions; a booking always belongs to one barber, one customer and one or more services.
 
 | Table | Purpose | Key relations |
 | --- | --- | --- |
@@ -97,6 +97,7 @@ Fifteen Prisma models cover the catalogue, staff schedules, zones, bookings, con
 | `Customer` | Name, phone (unique), email, notes, no-show count | has many `Booking` |
 | `Booking` | Date/time, type (SHOP/HOME), status, address, totals, manage token, `source` (WEB/STAFF), `staffNotes` (admin only) | belongs to `Barber`, `Customer`, optional `Zone` |
 | `BookingService` | Join table with price/duration snapshot at booking time | `Booking` × `Service` |
+| `BookingEvent` | Booking history: CREATED, CONFIRMED, RESCHEDULED (from/to, barbers), CANCELLED, COMPLETED, NO_SHOW, RESTORED; actor CUSTOMER/STAFF/SYSTEM and the staff member's name | belongs to `Booking` (cascade) |
 | `BarberService` | Explicit join: which services each barber offers | `Barber` × `Service` |
 | `Admin` | Dashboard users: email, password hash, role (OWNER/STAFF), lockout fields | — |
 | `Session` | `connect-pg-simple` store (table `session`), modelled in Prisma so migrations own it; the store runs with `createTableIfMissing: false` | — |
@@ -278,6 +279,10 @@ Wizard state is kept in the session between steps, so a refresh never loses the 
 - All admins: `/admin/customers` (search by name, phone or email; sort), `/admin/customers/:id` (history, stats, `POST` name/email/notes), `/admin/account` (+ `POST /admin/account/password`). `/admin/bookings/new?phone=&name=` prefills the staff form.
 - OWNER only: `/admin/reports?preset=week|lastweek|month|lastmonth|30d|90d` or `?from=&to=`, `/admin/settings` (+ `POST /admin/settings/booking|shop|home`, with `reset=1` to restore defaults), `/admin/users` (+ `POST /admin/users`, `/:id`, `/:id/active`, `/:id/password`)
 
+**Home visits on or off.** `content.homeVisitsOpen()` is true only when an active barber does home visits, has working hours and offers at least one active home-visit service, and at least one zone is active. When it's false, the "Book a home visit" buttons are hidden, the home-visit section offers WhatsApp instead, step 1 of the wizard shows home visits as paused, and `POST /book/type` refuses `HOME`. `/api/zones` and `/api/services` send `Cache-Control: no-cache`, so changes show at once.
+
+**Studio ad and credit.** An unnumbered, clearly labelled "Ad" section before the footer promotes Cyberninja Innovations, the studio that built the site. Every footer (main, booking flow, admin sidebar) says "Designed & built by Cyberninja Innovations". The copy, services, contacts and links (with UTM tags) all live in `src/config/credits.js`.
+
 ## Page map from the design
 
 The home page follows the reference's six sections in order, adapted with a home-service section and real booking CTAs; the visual language is reinterpreted, not cloned.
@@ -329,6 +334,12 @@ The owner runs the whole shop from `/admin`: today's schedule first, then everyt
 | Reports | Bookings and revenue (expected vs completed) by week, barber, service, zone | OWNER |
 
 Staff accounts can be linked to a `Barber` later, so each barber sees only their own schedule; that is a v1.1 toggle, not a v1 requirement.
+
+**Booking history.** Every change writes a `BookingEvent` in the same transaction as the change: creation (online or by staff), staff status actions, customer and staff reschedules (with from/to times and barbers, and a note when a home visit needs confirming again), and customer cancellations. The booking page shows it as a timeline. Existing bookings were backfilled from `createdAt`, `confirmedAt` and `cancelledAt` by the `booking_events` migration.
+
+**Inactive barbers.** Switching "Taking bookings" off stops new bookings only. Existing bookings stand, so Today and the Calendar also list any inactive barber who still has bookings (marked "Inactive"), and saving the change lists their upcoming bookings so staff can move or cancel them.
+
+**Customer counts.** "Bookings" means bookings that weren't cancelled, past and upcoming, everywhere (`customers.customerStats`): customer list, customer page and booking page. The list shows the last *past* visit and, separately, the next upcoming one.
 
 **Status rules** (`services/adminBookings.js`, `allowedActions`):
 

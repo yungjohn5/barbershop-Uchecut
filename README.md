@@ -54,7 +54,7 @@ the owner's dashboard.
 **Admin dashboard** (`/admin`)
 - **Today:** a greeting, four stat cards (bookings, requests awaiting confirmation, expected and taken revenue, this week), each barber's schedule with one-tap Complete / No-show, and the home-visit request queue with Confirm / Cancel.
 - **Bookings:** Upcoming / Today / Pending / Past / All, search by name, phone or reference, filters for barber, type, status and dates. A table on desktop that becomes cards on phones.
-- **Booking detail:** all the facts, status actions, cancel with a reason, staff-only notes, the customer's history and no-show count, Call / WhatsApp buttons, and the customer's manage link to copy.
+- **Booking detail:** all the facts, status actions, cancel with a reason, and staff-only notes. Also the customer's upcoming and past bookings with their no-show count, Call / WhatsApp buttons, the customer's manage link to copy, and a full **history** of who booked, confirmed, moved or cancelled it, and when.
 - **New booking:** for walk-ins and phone bookings. Free times load live, returning customers are filled in from their phone number, and the total includes the travel fee. No lead time, and home visits are confirmed straight away.
 - **Reschedule:** the same barber, date and time picker as the public wizard, with staff rules applied.
 - **Calendar:** a week per barber with travel buffers, closed hours and time off shaded, a red "now" line, and sideways scrolling on phones.
@@ -235,6 +235,10 @@ As a final safety net, the `Booking_no_overlap` constraint makes overlapping act
 bookings impossible even if the application has a bug.
 
 ---
+
+## Credits
+
+Designed and built by [Cyberninja Innovations](https://cyberninjainnovations.com/). The home page has a short section about the studio, and every footer carries the credit. Edit both in `src/config/credits.js`.
 
 ## Front end
 

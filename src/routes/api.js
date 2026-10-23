@@ -21,7 +21,8 @@ router.get(
       orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
       select: { id: true, name: true, feeKobo: true, travelBufferMin: true },
     });
-    res.set('Cache-Control', 'public, max-age=60');
+    // Revalidate every time (ETag → 304), so a zone or service switched off disappears at once.
+    res.set('Cache-Control', 'no-cache');
     res.json({ zones });
   }),
 );
@@ -45,7 +46,8 @@ router.get(
         category: { select: { id: true, name: true, slug: true } },
       },
     });
-    res.set('Cache-Control', 'public, max-age=60');
+    // Revalidate every time (ETag → 304), so a zone or service switched off disappears at once.
+    res.set('Cache-Control', 'no-cache');
     res.json({ services });
   }),
 );

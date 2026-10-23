@@ -2,7 +2,9 @@
   const b = forms.booking; const s = forms.shop; const h = forms.home;
   const fe = (f, k) => (f.errors[k] ? `<p class="field-error">${f.errors[k].replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c])}</p>` : '');
   const ec = (f, k) => (f.errors[k] ? 'has-error' : '');
-  const resetBtn = (section) => `<button type="submit" name="reset" value="1" class="a-danger-link" data-confirm="Restore these settings to the built-in defaults?">Restore defaults</button>`;
+  // The reset button belongs to its own small form (form="reset-…"), so pressing Enter in the
+  // settings form always submits Save, never Restore defaults.
+  const resetBtn = (section) => `<button type="submit" form="reset-${section}" class="a-danger-link" data-confirm="Restore these settings to the built-in defaults?">Restore defaults</button>`;
 %>
 <header class="a-page-head">
   <div>
@@ -123,3 +125,10 @@
     <button type="submit" class="btn-primary" data-a-submit>Save home page copy <span class="arrow" aria-hidden="true">→</span></button>
   </div>
 </form>
+
+<% ['booking', 'shop', 'home'].forEach((section) => { %>
+  <form id="reset-<%= section %>" method="post" action="/admin/settings/<%= section %>" hidden>
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+    <input type="hidden" name="reset" value="1" />
+  </form>
+<% }) %>

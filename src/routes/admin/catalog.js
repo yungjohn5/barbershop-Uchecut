@@ -190,8 +190,10 @@ async function barberPage(req, res, barber) {
   const hoursForm = takeForm(req, `hours-${barber && barber.id}`);
   const offForm = takeForm(req, `off-${barber && barber.id}`);
   const categories = await catalog.listCatalogue();
+  const upcoming = barber ? await barbers.upcomingBookings(barber.id) : [];
   const v = profile.values;
   view(req, res, 'barbers/form', {
+    upcomingCount: upcoming.length,
     title: barber ? barber.name : 'New barber',
     nav: 'barbers',
     barber,
@@ -275,7 +277,17 @@ router.post(
     (req) => `/admin/barbers/${idParam(req)}`,
     async (req, res) => {
       const b = await barbers.saveProfile(idParam(req), req.body, { file: req.file });
-      setFlash(req, 'success', `${b.name}’s profile saved.`);
+      const upcoming = b.active ? [] : await barbers.upcomingBookings(b.id);
+      if (upcoming.length) {
+        // Deactivating stops new bookings; existing ones stand and stay on Today and the Calendar.
+        setFlash(
+          req,
+          'error',
+          `${b.name} is no longer taking new bookings, but still has ${upcoming.length} upcoming booking${upcoming.length > 1 ? 's' : ''}: ${list(upcoming)}. They stay on Today and the Calendar. Move or cancel them if ${b.name} won’t be in.`,
+        );
+      } else {
+        setFlash(req, 'success', `${b.name}’s profile saved.`);
+      }
       res.redirect(303, `/admin/barbers/${b.id}`);
     },
   ),

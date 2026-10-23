@@ -77,7 +77,12 @@
           </div>
         <% } %>
         <p class="mt-6 text-sm leading-relaxed text-paper/55">Home visits are confirmed by phone before your barber sets off. Not in a listed area? Message us; we may still be able to come to you.</p>
-        <a href="/book?type=HOME" class="btn-primary mt-8" data-hide-pill>Book a home visit <span class="arrow" aria-hidden="true">→</span></a>
+        <% if (locals.homeOpen !== false) { %>
+          <a href="/book?type=HOME" class="btn-primary mt-8" data-hide-pill>Book a home visit <span class="arrow" aria-hidden="true">→</span></a>
+        <% } else { %>
+          <p class="mt-8 rounded-2xl border border-paper/15 px-5 py-4 text-sm text-paper/75"><strong class="font-medium text-paper">Home visits are paused right now.</strong> Message us and we’ll let you know when your barber can come to you.</p>
+          <a href="https://wa.me/<%= shop.whatsapp %>" rel="noopener" class="btn-primary mt-5" data-hide-pill>Message us on WhatsApp <span class="arrow" aria-hidden="true">→</span></a>
+        <% } %>
       </div>
     </div>
   </div>

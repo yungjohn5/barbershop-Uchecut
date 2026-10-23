@@ -10,6 +10,7 @@ const { isValidDateStr, addDays, toShopDate } = require('../lib/time');
 const { buildIcs } = require('../lib/ics');
 const { getSlots, computeDay } = require('../services/availability');
 const flow = require('../services/bookingFlow');
+const { homeVisitsOpen } = require('../services/content');
 const {
   createBooking,
   cancelBooking,
@@ -115,6 +116,15 @@ router.post(
     }
     const { type, zoneId } = parsed.data;
     const draft = draftOf(req);
+    if (type === 'HOME' && !(await homeVisitsOpen())) {
+      delete draft.type;
+      setFlash(
+        req,
+        'error',
+        'Home visits are paused right now. Book in the shop, or message us on WhatsApp.',
+      );
+      return res.redirect('/book');
+    }
     if (type === 'HOME' && !zoneId) {
       draft.type = 'HOME';
       setFlash(req, 'error', 'Choose your area for the home visit.');

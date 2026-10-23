@@ -11,6 +11,7 @@ const { isValidDateStr, toShopDate, addDays } = require('../../lib/time');
 const { normaliseNgPhone } = require('../../lib/phone');
 const { authenticate } = require('../../services/adminAuth');
 const adminBookings = require('../../services/adminBookings');
+const customers = require('../../services/customers');
 const { getSlots, computeDay, staffSettings } = require('../../services/availability');
 const { createBooking, rescheduleBooking } = require('../../services/booking');
 const flow = require('../../services/bookingFlow');
@@ -42,7 +43,7 @@ router.post(
       res.status(401);
       return view(req, res, 'login', {
         title: 'Sign in',
-        next: safeNext(req.body.next),
+        next: safeNext(req.body.next || req.query.next),
         email,
         error: result.reason,
       });
@@ -51,7 +52,9 @@ router.post(
     req.session.regenerate((err) => {
       if (err) return next(err);
       req.session.adminId = result.admin.id;
-      req.session.save((e) => (e ? next(e) : res.redirect(safeNext(req.body.next))));
+      req.session.save((e) =>
+        e ? next(e) : res.redirect(safeNext(req.body.next || req.query.next)),
+      );
     });
   }),
 );
@@ -209,7 +212,7 @@ router.post(
           landmark: values.landmark || undefined,
           notes: values.notes || undefined,
         },
-        { actor: 'staff' },
+        { actor: 'staff', adminName: req.admin.name },
       );
       delete req.session.staffDraft;
       setFlash(req, 'success', `Booked ${booking.reference} for ${booking.customer.name}.`);
@@ -239,17 +242,23 @@ router.get(
   asyncRoute(async (req, res, next) => {
     const booking = await adminBookings.getBooking(idParam(req));
     if (!booking) return next(new NotFoundError('Booking not found'));
-    const history = await prisma.booking.findMany({
-      where: { customerId: booking.customerId, id: { not: booking.id } },
+    const now = new Date();
+    const all = await prisma.booking.findMany({
+      where: { customerId: booking.customerId },
       orderBy: { startsAt: 'desc' },
-      take: 5,
       include: { services: true },
     });
+    // Same counting rule as the Customers pages (customerStats): cancelled ones don't count.
+    const customerStats = customers.customerStats(all, now);
+    const others = all.filter((b) => b.id !== booking.id);
+    const isUpcoming = (b) => b.startsAt > now && ['PENDING', 'CONFIRMED'].includes(b.status);
     view(req, res, 'bookings/show', {
       title: booking.reference,
       nav: 'bookings',
       booking,
-      history,
+      customerStats,
+      upcoming: others.filter(isUpcoming).reverse().slice(0, 5),
+      past: others.filter((b) => !isUpcoming(b)).slice(0, 5),
       actions: adminBookings.allowedActions(booking, new Date()),
       when: flow.formatWhen(booking.startsAt),
       day: flow.formatDay(booking.startsAt),
@@ -267,6 +276,7 @@ router.post(
     try {
       const { message } = await adminBookings.applyAction(id, String(req.body.action || ''), {
         reason: req.body.reason,
+        adminName: req.admin.name,
       });
       setFlash(req, 'success', message);
     } catch (err) {
@@ -352,7 +362,7 @@ router.post(
       await rescheduleBooking(
         booking.manageToken,
         { startsAt: req.body.startsAt, barberId: req.body.barberId || 'any' },
-        { staff: true },
+        { staff: true, adminName: req.admin.name },
       );
       setFlash(req, 'success', 'Booking moved.');
       res.redirect(303, `/admin/bookings/${booking.id}`);

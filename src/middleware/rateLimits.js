@@ -1,5 +1,6 @@
 const { rateLimit } = require('express-rate-limit');
 const { HttpError } = require('../lib/errors');
+const { safeNext } = require('./admin');
 
 const common = { standardHeaders: 'draft-8', legacyHeaders: false };
 const skip = () => process.env.NODE_ENV === 'test';
@@ -49,7 +50,7 @@ const loginLimiter = rateLimit({
       layout: 'layouts/admin',
       title: 'Sign in',
       flash: null,
-      next: '/admin',
+      next: safeNext((req.body && req.body.next) || req.query.next),
       email: String((req.body && req.body.email) || ''),
       error: `Too many sign-in attempts from this connection. Try again in ${min} minute${min === 1 ? '' : 's'}.`,
     });
