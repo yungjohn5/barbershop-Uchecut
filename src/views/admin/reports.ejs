@@ -23,19 +23,22 @@
   </div>
 </header>
 
-<nav class="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:px-0" aria-label="Period">
+<%# The custom-range popover sits outside the scrolling chip row so it isn't clipped. %>
+<div class="flex items-center gap-2">
+<nav class="no-scrollbar -ml-4 flex min-w-0 flex-1 gap-2 overflow-x-auto pl-4 sm:ml-0 sm:pl-0" aria-label="Period">
   <% Object.entries(presets).forEach(([key, label]) => { %>
     <a href="/admin/reports?preset=<%= key %>" class="a-chip <%= range.preset === key ? 'is-active' : '' %>" <%- range.preset === key ? 'aria-current="page"' : '' %>><%= label %></a>
   <% }) %>
+</nav>
   <details class="a-pop shrink-0">
     <summary class="a-chip <%= range.preset === 'custom' ? 'is-active' : '' %>">Custom…</summary>
-    <form method="get" action="/admin/reports" class="a-pop-panel a-pop-left grid gap-3">
+    <form method="get" action="/admin/reports" class="a-pop-panel grid gap-3">
       <label class="a-field"><span>From</span><input type="date" name="from" value="<%= range.from %>" required /></label>
       <label class="a-field"><span>To</span><input type="date" name="to" value="<%= range.to %>" required /></label>
       <button type="submit" class="btn-primary justify-center">Show</button>
     </form>
   </details>
-</nav>
+</div>
 
 <section class="mt-6 grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4" aria-label="Headline numbers">
   <div class="a-stat">

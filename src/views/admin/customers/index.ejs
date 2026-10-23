@@ -55,7 +55,7 @@
                 <% if (c.noShowCount) { %><span class="a-type a-type-warn ml-1"><%= c.noShowCount %> no-show<%= c.noShowCount > 1 ? 's' : '' %></span><% } %>
               </td>
               <td data-label="Spent" class="tabular-nums"><%= naira(c.spent) %></td>
-              <td data-label="Last visit"><%= c.lastAt ? formatShort(c.lastAt) : '—' %></td>
+              <td data-label="Last visit"><%= c.lastAt ? formatShort(c.lastAt) : '—' %><% if (c.nextAt) { %><span class="block text-xs text-amber-dark">Next · <%= formatShort(c.nextAt) %></span><% } %></td>
               <td class="a-table-go"><a href="/admin/customers/<%= c.id %>" aria-label="Open <%= c.name %>"><%- include('../partials/icon', { name: 'chevron' }) %></a></td>
             </tr>
           <% }) %>

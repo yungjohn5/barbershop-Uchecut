@@ -1,6 +1,17 @@
+<%
+  const headings = {
+    403: 'That didn’t go through.',
+    404: 'We couldn’t find that page.',
+    429: 'Too many attempts.',
+  };
+%>
 <section class="mx-auto max-w-3xl px-4 py-24 sm:px-6">
   <p class="eyebrow">Error <%= status %></p>
-  <h1 class="mt-4 text-5xl"><%= status === 404 ? 'We couldn’t find that page.' : 'Something went wrong.' %></h1>
+  <h1 class="mt-4 text-5xl"><%= headings[status] || 'Something went wrong.' %></h1>
   <p class="mt-6 text-ink/70"><%= message %></p>
-  <a href="/" class="btn-ghost mt-10">Back to home</a>
+  <% if (status === 403) { %><p class="mt-3 text-ink/70">Your session may have expired. Go back, refresh the page and try again.</p><% } %>
+  <div class="mt-10 flex flex-wrap gap-3">
+    <a href="/" class="btn-ghost">Back to home</a>
+    <% if (status === 429 && shop && shop.whatsapp) { %><a href="https://wa.me/<%= shop.whatsapp %>" rel="noopener" class="btn-primary">WhatsApp us <span class="arrow" aria-hidden="true">→</span></a><% } %>
+  </div>
 </section>

@@ -2244,7 +2244,14 @@ a.a-stat:hover {
   color: rgb(var(--paper));
   transform: translateX(2px);
 }
-@media (max-width: 767px) {
+/* Below the sidebar breakpoint the table is too narrow for 6–7 columns: rows become cards
+   (one column on phones, two on tablets). */
+@media (min-width: 640px) and (max-width: 1023px) {
+  .a-table tbody {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 1023px) {
   .a-table-wrap {
     border: 0;
     background: none;
@@ -2771,8 +2778,16 @@ a.a-stat:hover {
   color: rgb(var(--paper));
 }
 @media (max-width: 479px) {
+  /* Phones: the live/on pill drops under the name so the name and price get the width. */
   .a-row {
-    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-columns: auto minmax(0, 1fr);
+    row-gap: 0.35rem;
+  }
+  .a-row .a-live {
+    grid-column: 2;
+    justify-self: start;
+    min-height: 1.9rem;
+    margin-left: 4.15rem; /* thumb + gap, so it lines up with the text */
   }
   .a-row-go {
     display: none;
@@ -3458,13 +3473,47 @@ button.a-live:hover {
     border-top: 1px dashed rgb(var(--ink) / 0.12);
     padding-top: 0.9rem;
   }
-  .a-user-actions .a-pop-panel {
-    left: 0;
-    right: auto;
-  }
 }
 :root[data-theme='dark'] .a-chart-booked,
 :root[data-theme='dark'] .a-key-booked {
   fill: rgb(217 168 99 / 0.42);
   background: rgb(217 168 99 / 0.42);
+}
+
+/* Phones: popover panels become a bottom sheet so they never open off-screen. */
+@media (max-width: 639px) {
+  .a-pop-panel {
+    position: fixed;
+    inset: auto 0.75rem calc(0.75rem + env(safe-area-inset-bottom, 0px)) 0.75rem;
+    z-index: 70;
+    width: auto;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 -20px 60px -20px rgb(0 0 0 / 0.55);
+    animation: a-sheet-up 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+}
+@keyframes a-sheet-up {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+}
+
+/* Very small phones: one filter per row so select text isn’t cut off. */
+@media (max-width: 399px) {
+  .a-filters > .a-field {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Desktop tables: keep phone numbers, money and dates on one line. */
+@media (min-width: 1024px) {
+  .a-table td[data-label='Phone'],
+  .a-table td[data-label='Total'],
+  .a-table td[data-label='Spent'],
+  .a-table td[data-label='Last visit'],
+  .a-table td[data-label='When'] {
+    white-space: nowrap;
+  }
 }

@@ -66,6 +66,12 @@ describe('customers', () => {
     const all = await agent.get('/admin/customers').expect(200);
     expect(all.text).toContain('Kemi Ade');
     expect(all.text).toContain('Tobi Lawal');
+    for (const sort of ['recent', 'visits', 'spent', 'noshows', 'name', 'newest']) {
+      await agent.get(`/admin/customers?sort=${sort}`).expect(200);
+    }
+    // Both bookings are upcoming: shown as "Next", never as a past "last visit".
+    expect(all.text.match(/Next · /g)).toHaveLength(2);
+    expect(all.text).not.toMatch(/data-label="Last visit">[A-Z][a-z]{2} \d/);
 
     const byPhone = await agent.get('/admin/customers?q=0803%20000%200002').expect(200);
     expect(byPhone.text).toContain('Tobi Lawal');

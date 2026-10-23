@@ -390,7 +390,7 @@ SMS goes through Termii (good Nigerian delivery rates) behind a small `sms.send(
 **Security**
 
 - `helmet` headers, HTTPS only, `secure` + `httpOnly` + `sameSite=lax` session cookies.
-- CSRF tokens on every form; `express-rate-limit` on `/book`, `/api/slots` and `/admin/login`.
+- CSRF tokens on every form; `express-rate-limit` on booking submissions and manage-link actions (10 per 15 min), the JSON API (60 per min) and `/admin/login` (20 per 15 min), per IP. When a limit is hit, pages get the branded 429 page (minutes until reset, plus a WhatsApp button for bookings), the JSON API gets `{ error: { code: 'RATE_LIMITED', message } }`, and the login form is shown again with the message. Limits use the in-memory store, so each PM2 worker counts separately.
 - zod validation on every input; Nigerian phone numbers normalised to `+234…`.
 - Admin passwords hashed with bcrypt (cost 12); login lockout after 5 failed attempts.
 - Manage links use 32-byte random tokens; references are short and non-sequential.

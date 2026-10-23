@@ -5,13 +5,15 @@ const prisma = require('../lib/prisma');
 const { NotFoundError } = require('../lib/errors');
 const { parse } = require('./catalog');
 
+// Columns of the per-customer summary (see listCustomers).
 const SORTS = {
-  recent: Prisma.sql`last_at DESC NULLS LAST, c.id DESC`,
-  visits: Prisma.sql`visits DESC, last_at DESC NULLS LAST, c.id DESC`,
-  spent: Prisma.sql`spent DESC, c.id DESC`,
-  noshows: Prisma.sql`c."noShowCount" DESC, last_at DESC NULLS LAST, c.id DESC`,
-  name: Prisma.sql`lower(c.name) ASC, c.id ASC`,
-  newest: Prisma.sql`c."createdAt" DESC, c.id DESC`,
+  // Most recent activity: the last past visit, else the upcoming one.
+  recent: Prisma.sql`COALESCE(last_at, next_at) DESC NULLS LAST, id DESC`,
+  visits: Prisma.sql`visits DESC, last_at DESC NULLS LAST, id DESC`,
+  spent: Prisma.sql`spent DESC, id DESC`,
+  noshows: Prisma.sql`"noShowCount" DESC, last_at DESC NULLS LAST, id DESC`,
+  name: Prisma.sql`lower(name) ASC, id ASC`,
+  newest: Prisma.sql`"createdAt" DESC, id DESC`,
 };
 
 /** Pure: search text → { like, phone } patterns. "0803 123" matches +234803123… */
@@ -39,21 +41,29 @@ async function listCustomers(
     : Prisma.empty;
   const orderBy = SORTS[sort] || SORTS.recent;
   const offset = (Math.max(1, page) - 1) * pageSize;
+  // Summarise per customer first, then sort on the computed columns.
   const rows = await db.$queryRaw`
+    SELECT * FROM (
     SELECT c.id, c.name, c.phone, c.email, c."noShowCount", c."createdAt",
            COUNT(b.id) FILTER (WHERE b.status <> 'CANCELLED')::int AS visits,
            COALESCE(SUM(b."totalKobo") FILTER (WHERE b.status = 'COMPLETED'), 0)::int AS spent,
-           MAX(b."startsAt") FILTER (WHERE b.status <> 'CANCELLED') AS last_at,
+           MAX(b."startsAt") FILTER (WHERE b.status <> 'CANCELLED' AND b."startsAt" <= now()) AS last_at,
+           MIN(b."startsAt") FILTER (WHERE b.status IN ('PENDING', 'CONFIRMED') AND b."startsAt" > now()) AS next_at,
            COUNT(*) OVER ()::int AS total
     FROM "Customer" c
     LEFT JOIN "Booking" b ON b."customerId" = c.id
     ${where}
     GROUP BY c.id
+    ) summary
     ORDER BY ${orderBy}
     LIMIT ${pageSize} OFFSET ${offset}`;
   const total = rows.length ? rows[0].total : 0;
   return {
-    rows: rows.map(({ total: _t, last_at: lastAt, ...r }) => ({ ...r, lastAt })),
+    rows: rows.map(({ total: _t, last_at: lastAt, next_at: nextAt, ...r }) => ({
+      ...r,
+      lastAt,
+      nextAt,
+    })),
     total,
     page,
     pages: Math.max(1, Math.ceil(total / pageSize)),
