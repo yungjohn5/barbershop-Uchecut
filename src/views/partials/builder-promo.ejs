@@ -1,23 +1,76 @@
 <%#
   "Built by" section for Cyberninja Innovations, just above the footer on the home page.
-  Content in src/config/credits.js; shown when Settings → Shop details → "Show builder
-  section on home page" is on.
+  Copy and links in src/config/credits.js; shown when Settings → Shop details → "Show builder
+  section on home page" is on. The right-hand showcase is a live miniature of this very site
+  (decorative, hidden from screen readers); home.js adds the cursor spotlight and tilt.
 %>
+<% const chipIcons = [
+  '<path d="M4 5.5h16v13H4z"/><path d="M4 9h16M7 7.2h.01M9.5 7.2h.01"/>',
+  '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M8.5 3v4M15.5 3v4M8 14h3"/>',
+  '<path d="M3.5 7.5h10v8h-10zM13.5 10h3.5l3 3v2.5h-6.5"/><circle cx="7" cy="17" r="1.5"/><circle cx="17" cy="17" r="1.5"/>',
+  '<circle cx="12" cy="12" r="8"/><path d="M15.2 8.8l-1.9 4.5-4.5 1.9 1.9-4.5z"/>',
+]; %>
 <section id="built-by" class="builder bg-paper px-4 pb-20 pt-6 sm:px-8 lg:px-10 lg:pb-28" aria-labelledby="builder-title">
-  <div class="builder-panel keep-dark grain mx-auto max-w-[88rem]" data-reveal>
-    <div class="builder-glow" aria-hidden="true"></div>
-    <div class="relative grid gap-10 lg:grid-cols-12 lg:items-end lg:gap-12">
-      <div class="lg:col-span-7">
-        <p class="eyebrow !text-paper/60"><%= credits.eyebrow %></p>
-        <h2 id="builder-title" class="mt-5 text-[clamp(2.4rem,5vw,4.5rem)] leading-[1] text-paper">Cyberninja <em class="accent">Innovations</em></h2>
-        <p class="mt-6 max-w-2xl text-[1.05rem] leading-relaxed text-paper/70"><%= credits.line %></p>
-        <ul class="builder-chips mt-7" aria-label="Services">
-          <% credits.chips.forEach((chip) => { %><li class="builder-chip"><%= chip %></li><% }) %>
+  <div class="builder-panel keep-dark grain mx-auto max-w-[88rem]" data-builder>
+    <div class="builder-grid" aria-hidden="true"></div>
+    <div class="builder-orb builder-orb-a" aria-hidden="true"></div>
+    <div class="builder-orb builder-orb-b" aria-hidden="true"></div>
+    <div class="builder-spot" aria-hidden="true"></div>
+
+    <div class="relative grid items-center gap-14 lg:grid-cols-12 lg:gap-10">
+      <div class="lg:col-span-6">
+        <p class="builder-eyebrow" data-reveal><span class="builder-pulse" aria-hidden="true"></span><%= credits.eyebrow %></p>
+        <h2 id="builder-title" class="builder-title" data-split>Cyberninja <em class="accent">Innovations</em></h2>
+        <p class="mt-7 max-w-xl text-[1.06rem] leading-relaxed text-paper/70" data-reveal><%= credits.line %></p>
+        <ul class="builder-chips mt-8" aria-label="Services" data-reveal>
+          <% credits.chips.forEach((chip, i) => { %>
+            <li class="builder-chip"><svg class="builder-chip-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><%- chipIcons[i % chipIcons.length] %></svg><%= chip %></li>
+          <% }) %>
         </ul>
+        <div class="builder-ctas mt-10" data-reveal>
+          <a href="<%= credits.url %>" target="_blank" rel="noopener" class="btn-primary">Get a website like this <span class="arrow" aria-hidden="true">→</span></a>
+          <a href="<%= credits.whatsappUrl %>" target="_blank" rel="noopener" class="btn-ghost-light">Chat on WhatsApp</a>
+        </div>
       </div>
-      <div class="builder-ctas lg:col-span-5 lg:justify-end">
-        <a href="<%= credits.url %>" target="_blank" rel="noopener" class="btn-primary">Get a website like this <span class="arrow" aria-hidden="true">→</span></a>
-        <a href="<%= credits.whatsappUrl %>" target="_blank" rel="noopener" class="btn-ghost-light">Chat on WhatsApp</a>
+
+      <figure class="builder-showcase lg:col-span-6" aria-hidden="true" data-reveal>
+        <div class="builder-stage" data-builder-tilt>
+          <div class="builder-browser">
+            <div class="builder-chrome">
+              <span class="builder-dots"><i></i><i></i><i></i></span>
+              <span class="builder-url"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="11" width="12" height="9" rx="2"/><path d="M8.5 11V8a3.5 3.5 0 0 1 7 0v3"/></svg><%= shop.name %> · Book online</span>
+            </div>
+            <div class="builder-screen">
+              <img src="<%= src('/images/site/hero', [800, 1400]) %>" srcset="<%= srcset('/images/site/hero', [800, 1400]) %>" sizes="(min-width: 1024px) 34vw, 86vw" alt="" loading="lazy" />
+              <div class="builder-screen-shade"></div>
+              <div class="builder-screen-nav"><span class="font-serif"><%= shop.name.split(' ')[0] %></span><span class="builder-mini-btn">Book now</span></div>
+              <div class="builder-screen-copy">
+                <% (copy && copy.heroLines ? copy.heroLines : ['Sharp Lines.', 'Quiet Confidence.', 'Timeless Craft.']).forEach((l) => { %><span><%= plain(l) %></span><% }) %>
+              </div>
+            </div>
+          </div>
+
+          <div class="builder-float builder-float-a">
+            <p class="builder-float-label">Live slot engine</p>
+            <div class="builder-slots"><span>10:00</span><span>10:15</span><span class="is-on">10:30</span><span>10:45</span></div>
+          </div>
+
+          <div class="builder-float builder-float-b">
+            <p class="builder-float-label">Admin dashboard</p>
+            <svg class="builder-bars" viewBox="0 0 120 44" preserveAspectRatio="none">
+              <rect x="2" y="26" width="12" height="18" rx="2" /><rect x="19" y="18" width="12" height="26" rx="2" /><rect x="36" y="22" width="12" height="22" rx="2" /><rect x="53" y="10" width="12" height="34" rx="2" /><rect x="70" y="16" width="12" height="28" rx="2" /><rect class="is-on" x="87" y="4" width="12" height="40" rx="2" /><rect x="104" y="20" width="12" height="24" rx="2" />
+            </svg>
+          </div>
+
+          <div class="builder-float builder-float-c"><span class="builder-check">✓</span>Booking confirmed</div>
+        </div>
+        <figcaption class="builder-caption">This site, designed &amp; built by Cyberninja Innovations</figcaption>
+      </figure>
+    </div>
+
+    <div class="builder-ticker" aria-hidden="true">
+      <div class="marquee" data-marquee>
+        <% for (let r = 0; r < 4; r++) { credits.chips.forEach((chip) => { %><span class="builder-ticker-item"><%= chip %><i>✦</i></span><% }) } %>
       </div>
     </div>
   </div>

@@ -8,6 +8,47 @@
   var $$ = Site.$$;
   var gsap = window.gsap;
 
+  // -------------------------------------------------------- builder section
+  // Amber spotlight follows the pointer across the panel; the site preview tilts toward it.
+  // Mouse/trackpad only, and off for reduced motion.
+  var builder = $('[data-builder]');
+  var fine = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  var still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (builder && fine && !still) {
+    var stage = $('[data-builder-tilt]', builder);
+    var tiltX =
+      stage && gsap ? gsap.quickTo(stage, 'rotationY', { duration: 0.9, ease: 'power3' }) : null;
+    var tiltY =
+      stage && gsap ? gsap.quickTo(stage, 'rotationX', { duration: 0.9, ease: 'power3' }) : null;
+    if (stage && gsap) gsap.set(stage, { transformPerspective: 1200 });
+    var frame = 0;
+    builder.addEventListener('pointermove', function (e) {
+      if (frame) return;
+      frame = requestAnimationFrame(function () {
+        frame = 0;
+        var r = builder.getBoundingClientRect();
+        var x = (e.clientX - r.left) / r.width;
+        var y = (e.clientY - r.top) / r.height;
+        builder.style.setProperty('--mx', (x * 100).toFixed(1) + '%');
+        builder.style.setProperty('--my', (y * 100).toFixed(1) + '%');
+        if (tiltX) {
+          tiltX((x - 0.5) * 9);
+          tiltY((0.5 - y) * 7);
+        }
+      });
+    });
+    builder.addEventListener('pointerenter', function () {
+      builder.classList.add('is-lit');
+    });
+    builder.addEventListener('pointerleave', function () {
+      builder.classList.remove('is-lit');
+      if (tiltX) {
+        tiltX(0);
+        tiltY(0);
+      }
+    });
+  }
+
   // -------------------------------------------------------- services filter
   // Works without GSAP (just hides/shows); with GSAP the grid reflows via Flip.
   var grid = $('[data-svc-grid]');

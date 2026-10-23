@@ -302,8 +302,12 @@ describe('builder section and footer credit (Cyberninja Innovations)', () => {
       'SaaS &amp; logistics platforms',
       'Technical consulting',
     ]) {
-      expect(section).toContain(`<li class="builder-chip">${chip}</li>`);
+      expect(section).toContain(`</svg>${chip}</li>`);
     }
+    expect(section.match(/<li class="builder-chip">/g)).toHaveLength(4);
+    // the site preview and ticker are decoration only
+    expect(section).toMatch(/<figure class="builder-showcase[^"]*" aria-hidden="true"/);
+    expect(section).toContain('<div class="builder-ticker" aria-hidden="true">');
     expect(section).toContain(
       `<a href="${URL}" target="_blank" rel="noopener" class="btn-primary">Get a website like this`,
     );
