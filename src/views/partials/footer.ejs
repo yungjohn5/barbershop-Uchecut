@@ -44,10 +44,7 @@
     </div>
 
     <div class="mt-20 flex flex-col gap-4 border-t border-paper/10 pt-6 text-sm text-paper/50 sm:flex-row sm:items-center sm:justify-between">
-      <div class="grid gap-1.5">
-        <p>© <%= new Date().getFullYear() %> <%= shop.name %> · Lagos, Nigeria</p>
-        <%- include('credit', { tone: 'light' }) %>
-      </div>
+      <p>© <%= new Date().getFullYear() %> <%= shop.name %><% if (shop.showBuilderCredit !== false) { %> · Website by <a href="<%= credits.url %>" target="_blank" rel="noopener" class="link-u text-paper/75 hover:text-amber-light"><%= credits.name %></a><% } %></p>
       <div class="flex items-center gap-5">
         <% Object.entries(shop.socials || {}).filter(([, url]) => url).forEach(([name, url]) => { %>
           <a href="<%= url %>" rel="noopener" class="link-u capitalize hover:text-paper"><%= name === 'x' ? 'X' : name %></a>

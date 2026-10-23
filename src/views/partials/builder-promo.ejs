@@ -1,0 +1,24 @@
+<%#
+  "Built by" section for Cyberninja Innovations, just above the footer on the home page.
+  Content in src/config/credits.js; shown when Settings → Shop details → "Show builder
+  section on home page" is on.
+%>
+<section id="built-by" class="builder bg-paper px-4 pb-20 pt-6 sm:px-8 lg:px-10 lg:pb-28" aria-labelledby="builder-title">
+  <div class="builder-panel keep-dark grain mx-auto max-w-[88rem]" data-reveal>
+    <div class="builder-glow" aria-hidden="true"></div>
+    <div class="relative grid gap-10 lg:grid-cols-12 lg:items-end lg:gap-12">
+      <div class="lg:col-span-7">
+        <p class="eyebrow !text-paper/60"><%= credits.eyebrow %></p>
+        <h2 id="builder-title" class="mt-5 text-[clamp(2.4rem,5vw,4.5rem)] leading-[1] text-paper">Cyberninja <em class="accent">Innovations</em></h2>
+        <p class="mt-6 max-w-2xl text-[1.05rem] leading-relaxed text-paper/70"><%= credits.line %></p>
+        <ul class="builder-chips mt-7" aria-label="Services">
+          <% credits.chips.forEach((chip) => { %><li class="builder-chip"><%= chip %></li><% }) %>
+        </ul>
+      </div>
+      <div class="builder-ctas lg:col-span-5 lg:justify-end">
+        <a href="<%= credits.url %>" target="_blank" rel="noopener" class="btn-primary">Get a website like this <span class="arrow" aria-hidden="true">→</span></a>
+        <a href="<%= credits.whatsappUrl %>" target="_blank" rel="noopener" class="btn-ghost-light">Chat on WhatsApp</a>
+      </div>
+    </div>
+  </div>
+</section>

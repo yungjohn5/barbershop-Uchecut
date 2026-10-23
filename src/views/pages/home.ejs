@@ -6,4 +6,4 @@
 <%- include('../partials/home/barbers') %>
 <%- include('../partials/home/home-service') %>
 <%- include('../partials/home/products') %>
-<%- include('../partials/home/studio') %>
+<% if (shop.showBuilderSection !== false) { %><%- include('../partials/builder-promo') %><% } %>

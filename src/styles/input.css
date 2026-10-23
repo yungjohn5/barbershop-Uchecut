@@ -3579,8 +3579,9 @@ button.a-live:hover {
   min-width: 0;
 }
 
-/* ---------- Studio ad (Cyberninja Innovations) ---------- */
-.studio {
+/* ---------- Builder section (Cyberninja Innovations) ----------
+   Same tokens as the rest of the site: dark panel, serif heading, amber accent. */
+.builder-panel {
   position: relative;
   overflow: hidden;
   border-radius: 2rem;
@@ -3590,80 +3591,48 @@ button.a-live:hover {
   box-shadow: 0 60px 120px -70px rgb(0 0 0 / 0.75);
 }
 @media (min-width: 640px) {
-  .studio {
-    padding: 3.25rem 2.75rem;
+  .builder-panel {
+    padding: 3.5rem 3rem;
   }
 }
 @media (min-width: 1024px) {
-  .studio {
+  .builder-panel {
     padding: 4.5rem 4rem;
   }
 }
-.studio-glow {
+.builder-glow {
   position: absolute;
-  inset: -40% -10% auto auto;
-  height: 32rem;
-  width: 32rem;
+  inset: -45% -12% auto auto;
+  height: 34rem;
+  width: 34rem;
   border-radius: 9999px;
-  background: radial-gradient(circle, rgb(184 131 62 / 0.28), transparent 65%);
+  background: radial-gradient(circle, rgb(184 131 62 / 0.26), transparent 65%);
   pointer-events: none;
 }
-.studio-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
-  border-radius: 9999px;
-  border: 1px solid rgb(var(--paper) / 0.15);
-  padding: 0.3rem 0.85rem 0.3rem 0.35rem;
-  font-size: 0.72rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgb(var(--paper) / 0.7);
-}
-.studio-badge > span {
-  border-radius: 9999px;
-  background: #d9a863;
-  padding: 0.15rem 0.55rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  color: #141414;
-}
-.studio-chip {
-  border-radius: 9999px;
-  border: 1px solid rgb(var(--paper) / 0.14);
-  padding: 0.35rem 0.85rem;
-  font-size: 0.8rem;
-  color: rgb(var(--paper) / 0.78);
-}
-.studio-card {
+.builder-chips {
   display: flex;
-  gap: 0.9rem;
-  border-radius: 1.2rem;
-  border: 1px solid rgb(var(--paper) / 0.09);
-  background: rgb(var(--paper) / 0.035);
-  padding: 1.05rem 1.1rem;
-  transition:
-    border-color 0.4s,
-    background-color 0.4s,
-    transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
-@media (hover: hover) and (pointer: fine) {
-  .studio-card:hover {
-    transform: translateY(-2px);
-    border-color: rgb(217 168 99 / 0.45);
-    background: rgb(var(--paper) / 0.06);
+.builder-chip {
+  border-radius: 9999px;
+  border: 1px solid rgb(var(--paper) / 0.16);
+  padding: 0.4rem 0.95rem;
+  font-size: 0.85rem;
+  color: rgb(var(--paper) / 0.8);
+}
+.builder-ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+/* Phones: CTAs stack full-width. */
+@media (max-width: 639px) {
+  .builder-ctas {
+    flex-direction: column;
   }
-}
-.studio-icon {
-  display: grid;
-  height: 2.6rem;
-  width: 2.6rem;
-  flex-shrink: 0;
-  place-items: center;
-  border-radius: 0.85rem;
-  background: rgb(217 168 99 / 0.14);
-  color: #d9a863;
-}
-.site-credit {
-  font-size: 0.8rem;
+  .builder-ctas > a {
+    width: 100%;
+    justify-content: center;
+  }
 }

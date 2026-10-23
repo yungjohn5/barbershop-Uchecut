@@ -21,6 +21,9 @@ const DEFAULT_SETTINGS = {
     email: 'hello@example.com',
     hoursText: ['Mon–Fri · 10:00 – 20:00', 'Sat · 10:00 – 18:00', 'Sun · Closed'],
     socials: { instagram: '', tiktok: '', x: '', youtube: '' },
+    // Cyberninja Innovations promo section (home page) and footer credit; owner can switch off.
+    showBuilderSection: true,
+    showBuilderCredit: true,
   },
   // Home page copy (editable from the dashboard in Phase 4). Placeholder text until the client signs off.
   home: {

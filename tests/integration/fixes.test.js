@@ -264,19 +264,96 @@ test('10. short bookings show the name on one line with a hover tooltip', async 
   expect(tag).toMatch(/title="11:00–11:15 · Kemi Ade\nLine-up"/);
 });
 
-test('studio ad on the home page and the credit in every footer', async () => {
-  const credits = require('../../src/config/credits');
-  const home = (await request(app).get('/').expect(200)).text;
-  expect(home).toContain('id="built-by"');
-  expect(home).toContain('The studio behind this site');
-  for (const s of credits.services) expect(home).toContain(s.title.replace('&', '&amp;'));
-  // external links open in a new tab without giving the other site access to this one
-  const links = home.match(/<a [^>]*href="https:\/\/cyberninjainnovations\.com[^"]*"[^>]*>/g);
-  expect(links.length).toBeGreaterThanOrEqual(2);
-  for (const a of links) expect(a).toMatch(/target="_blank" rel="noopener"/);
-  expect(home).toContain('Designed &amp; built by');
-  // slim footer (booking flow) and admin sidebar carry the credit too
-  expect((await request(app).get('/book').expect(200)).text).toContain('Designed &amp; built by');
-  const { agent } = await signIn();
-  expect((await agent.get('/admin')).text).toContain('Designed &amp; built by');
+describe('builder section and footer credit (Cyberninja Innovations)', () => {
+  const URL =
+    'https://cyberninjainnovations.com/?utm_source=victory-barbershop&amp;utm_medium=referral&amp;utm_campaign=built-by';
+  const WA =
+    'https://wa.me/2349036257444?text=Hi%20Cyberninja%2C%20I%20saw%20the%20Victory%20Barbershop%20website';
+  const year = new Date().getFullYear();
+  const saveShop = (agent, csrf, extra) =>
+    agent
+      .post('/admin/settings/shop')
+      .type('form')
+      .send({
+        _csrf: csrf,
+        name: 'Victory Barbershop',
+        tagline: 'Sharp lines.',
+        address: '1 Marina\nLagos',
+        phone: '+2348031234567',
+        whatsapp: '2348031234567',
+        email: 'hi@victory.ng',
+        hoursText: 'Mon–Sat 10–8',
+        ...extra,
+      })
+      .expect(303);
+
+  test('home page shows the section above the footer, with the agreed copy and links', async () => {
+    const home = (await request(app).get('/').expect(200)).text;
+    const section = home.split('id="built-by"')[1].split('</section>')[0];
+    expect(home.indexOf('id="built-by"')).toBeLessThan(home.indexOf('<footer'));
+    expect(section).toContain('Website &amp; booking system by');
+    expect(section).toContain('Cyberninja <em class="accent">Innovations</em>');
+    expect(section).toContain(
+      'We build fast websites, booking systems and full-stack web apps for Nigerian businesses — from concept to deployment.',
+    );
+    for (const chip of [
+      'Websites &amp; landing pages',
+      'Booking &amp; e-commerce systems',
+      'SaaS &amp; logistics platforms',
+      'Technical consulting',
+    ]) {
+      expect(section).toContain(`<li class="builder-chip">${chip}</li>`);
+    }
+    expect(section).toContain(
+      `<a href="${URL}" target="_blank" rel="noopener" class="btn-primary">Get a website like this`,
+    );
+    expect(section).toContain(
+      `<a href="${WA}" target="_blank" rel="noopener" class="btn-ghost-light">Chat on WhatsApp</a>`,
+    );
+    // home page only
+    expect((await request(app).get('/book').expect(200)).text).not.toContain('id="built-by"');
+  });
+
+  test('footer credit on every public page, year computed server-side', async () => {
+    for (const url of ['/', '/book', '/does-not-exist']) {
+      const html = (await request(app).get(url)).text;
+      expect(html).toContain(
+        `© ${year} Victory Barbershop · Website by <a href="${URL}" target="_blank" rel="noopener"`,
+      );
+    }
+    // not in the admin
+    const { agent } = await signIn();
+    expect((await agent.get('/admin')).text).not.toContain('Website by');
+  });
+
+  test('both can be switched off (and on) in Settings → Shop details', async () => {
+    const { agent, csrf } = await signIn();
+    const form = (await agent.get('/admin/settings')).text;
+    expect(form).toMatch(/name="showBuilderSection"[^>]*checked/);
+    expect(form).toMatch(/name="showBuilderCredit"[^>]*checked/);
+
+    await saveShop(agent, csrf, {}); // both unticked
+    let home = (await request(app).get('/')).text;
+    expect(home).not.toContain('id="built-by"');
+    expect(home).not.toContain('Website by');
+    expect(home).toContain(`© ${year} Victory Barbershop</p>`);
+
+    await saveShop(agent, csrf, { showBuilderSection: 'on' });
+    home = (await request(app).get('/')).text;
+    expect(home).toContain('id="built-by"');
+    expect(home).not.toContain('Website by');
+
+    await saveShop(agent, csrf, { showBuilderSection: 'on', showBuilderCredit: 'on' });
+    expect((await request(app).get('/')).text).toContain('Website by');
+  });
+
+  test('the footer follows the shop name from Settings', async () => {
+    const { agent, csrf } = await signIn();
+    await saveShop(agent, csrf, {
+      name: 'Uche Cuts',
+      showBuilderSection: 'on',
+      showBuilderCredit: 'on',
+    });
+    expect((await request(app).get('/')).text).toContain(`© ${year} Uche Cuts · Website by`);
+  });
 });

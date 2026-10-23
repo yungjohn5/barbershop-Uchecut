@@ -238,7 +238,7 @@ bookings impossible even if the application has a bug.
 
 ## Credits
 
-Designed and built by [Cyberninja Innovations](https://cyberninjainnovations.com/). The home page has a short section about the studio, and every footer carries the credit. Edit both in `src/config/credits.js`.
+Designed and built by [Cyberninja Innovations](https://cyberninjainnovations.com/). The home page has a "Website & booking system by" section just above the footer, and every public footer reads "© {year} {shop name} · Website by Cyberninja Innovations". The text and links are in `src/config/credits.js`. The owner can switch either off in **Settings → Shop details**.
 
 ## Front end
 

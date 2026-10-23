@@ -102,6 +102,8 @@ const SCHEMAS = {
     tiktok: optionalUrl,
     x: optionalUrl,
     youtube: optionalUrl,
+    showBuilderSection: z.preprocess((v) => v === 'on' || v === 'true' || v === true, z.boolean()),
+    showBuilderCredit: z.preprocess((v) => v === 'on' || v === 'true' || v === true, z.boolean()),
   }),
   home: z.object({
     heroLines: lines(3, 3, 40, 'hero'),

@@ -53,7 +53,7 @@ function createApp({ sessionPool } = {}) {
     }),
   );
   Object.assign(app.locals, require('./lib/viewHelpers'));
-  app.locals.credits = require('./config/credits'); // studio ad + footer credit
+  app.locals.credits = require('./config/credits'); // builder section + footer credit
   app.use(express.urlencoded({ extended: false, limit: '50kb' }));
   app.use(express.json({ limit: '50kb' }));
 

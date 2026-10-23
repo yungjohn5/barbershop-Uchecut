@@ -281,7 +281,7 @@ Wizard state is kept in the session between steps, so a refresh never loses the 
 
 **Home visits on or off.** `content.homeVisitsOpen()` is true only when an active barber does home visits, has working hours and offers at least one active home-visit service, and at least one zone is active. When it's false, the "Book a home visit" buttons are hidden, the home-visit section offers WhatsApp instead, step 1 of the wizard shows home visits as paused, and `POST /book/type` refuses `HOME`. `/api/zones` and `/api/services` send `Cache-Control: no-cache`, so changes show at once.
 
-**Studio ad and credit.** An unnumbered, clearly labelled "Ad" section before the footer promotes Cyberninja Innovations, the studio that built the site. Every footer (main, booking flow, admin sidebar) says "Designed & built by Cyberninja Innovations". The copy, services, contacts and links (with UTM tags) all live in `src/config/credits.js`.
+**Builder section and credit (client approved).** The home page has a "Website & booking system by Cyberninja Innovations" section just above the footer (`partials/builder-promo.ejs`). It uses the site's own tokens (dark panel, serif heading, amber accent) and has 4 service chips and 2 CTAs ("Get a website like this →" to the studio site with `utm_campaign=built-by`, and "Chat on WhatsApp"). Both links open in a new tab with `rel="noopener"`. Every public footer reads "© {year} {shop name} · Website by Cyberninja Innovations": the year is computed server-side, the name follows Settings, and the studio name links to the same UTM URL. The admin has no credit. The copy and links live in `src/config/credits.js`, and both parts can be switched off in Settings → Shop details.
 
 ## Page map from the design
 
@@ -295,7 +295,8 @@ The home page follows the reference's six sections in order, adapted with a home
 | 4 | Barbers / philosophy | Team cards linking to profiles | `partials/barber-card.ejs` | `Barber` |
 | — | (new) | Home service: how it works in 3 steps + zone fee list | `partials/home-service.ejs` | `Zone` |
 | 5 | Products carousel | Product showcase, no cart | `partials/product-rail.ejs` | `Product` |
-| 6 | "Take the Chair" footer | Big image-clipped CTA, hours, address, socials, WhatsApp | `partials/footer.ejs` | `Setting` |
+| — | (new) | "Website & booking system by Cyberninja Innovations": 4 service chips, "Get a website like this →" and "Chat on WhatsApp" CTAs; shown when `shop.showBuilderSection` | `partials/builder-promo.ejs` | `config/credits.js`, `Setting` |
+| 6 | "Take the Chair" footer | Big image-clipped CTA, hours, address, socials, WhatsApp; "© {year} {shop name} · Website by Cyberninja Innovations" when `shop.showBuilderCredit` | `partials/footer.ejs` | `Setting`, `config/credits.js` |
 
 **Implementation notes (home page)**
 
@@ -369,7 +370,7 @@ A no-show adds 1 to `Customer.noShowCount`; undoing it takes 1 off. Every change
 
 **Reports** (`services/reports.js`). "Booked" revenue is every booking that still stands (pending, confirmed, completed); "taken" is completed visits only. Both use `Booking.totalKobo`; service breakdowns use the `BookingService` price snapshots. Each period is compared with the equal-length period before it. The no-show rate is out of visits that were due (completed + no-show). The average ticket is rounded to whole naira. Charts are inline SVG rendered on the server, so they need no script and no style attributes.
 
-**Settings** (`services/settingsAdmin.js`). Three sections are saved as `Setting` rows. Booking rules are typed in hours (quarter-hour steps) and stored in minutes; the slot step is one of 5/10/15/20/30/60. Shop details and home copy are stored as one object each. Social links must be `https://` URLs, and the hero needs exactly three lines. Saving clears the in-process settings cache; with several PM2 workers, other workers pick up the change within 30 s. "Restore defaults" deletes the section's rows.
+**Settings** (`services/settingsAdmin.js`). Three sections are saved as `Setting` rows. Booking rules are typed in hours (quarter-hour steps) and stored in minutes; the slot step is one of 5/10/15/20/30/60. Shop details and home copy are stored as one object each. Shop details also hold the two website-credit toggles, `showBuilderSection` ("Show builder section on home page") and `showBuilderCredit` ("Show builder credit in footer"), both on by default; rows saved before they existed fall back to the defaults. Each section's "Restore defaults" button belongs to its own form (`form="reset-…"`), so pressing Enter in a settings form always saves. Social links must be `https://` URLs, and the hero needs exactly three lines. Saving clears the in-process settings cache; with several PM2 workers, other workers pick up the change within 30 s. "Restore defaults" deletes the section's rows.
 
 **Users** (`services/adminUsers.js`):
 - Owners create accounts with a temporary password (same policy: 12+ characters, letters and a number).

@@ -82,6 +82,12 @@
       <label class="a-field <%= ec(s, k) %>"><span><%= label %></span><input name="<%= k %>" type="url" value="<%= s.values[k] || '' %>" placeholder="https://" /><%- fe(s, k) %></label>
     <% }) %>
   </div>
+  <p class="mt-8 text-xs font-medium uppercase tracking-[0.16em] text-ink/65">Website credit</p>
+  <% const on = (x) => x === true || x === 'on' || x === 'true'; %>
+  <div class="mt-4 grid gap-5 sm:grid-cols-2">
+    <%- include('partials/switch', { name: 'showBuilderSection', checked: on(s.values.showBuilderSection), label: 'Show builder section on home page', hint: 'The “Website & booking system by Cyberninja Innovations” section above the footer.' }) %>
+    <%- include('partials/switch', { name: 'showBuilderCredit', checked: on(s.values.showBuilderCredit), label: 'Show builder credit in footer', hint: '“Website by Cyberninja Innovations” after the copyright line.' }) %>
+  </div>
   <div class="mt-8 flex justify-end"><button type="submit" class="btn-primary" data-a-submit>Save shop details <span class="arrow" aria-hidden="true">→</span></button></div>
 </form>
 
