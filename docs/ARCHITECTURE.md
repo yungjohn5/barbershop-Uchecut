@@ -39,9 +39,9 @@ Node 22 LTS (`.nvmrc`, `engines >=22`; Node 20 is end-of-life) + Express 4, EJS 
 | Admin auth | `express-session`, `connect-pg-simple`, `bcrypt` | Sessions stored in Postgres |
 | Security | `csrf-sync`, `express-rate-limit` | CSRF on forms, rate limit on booking |
 | Dates | `date-fns`, `date-fns-tz` | All times in Africa/Lagos |
-| Email/SMS | `nodemailer` (SMTP), Termii API behind `sms.send()` | Confirmations and reminders |
-| Jobs | `node-cron` | Reminder sends, expire unconfirmed home requests |
-| Uploads | `multer` + `sharp` | Admin photos resized to WebP at each rendered width, stored under `public/uploads/` |
+| Email/SMS | `nodemailer` (SMTP), Termii API behind `sms.send()` | Sent from an outbox table by the worker; `NOTIFY_MODE=log` in dev/test never calls a provider |
+| Jobs | `node-cron` in a separate worker process | Outbox sends, reminders, auto-cancel, cleanup; each job also holds a Postgres advisory lock |
+| Images | `multer` (memory) + Cloudinary | Uploads checked by magic bytes (JPEG/PNG/WebP, 8 MB), stored on Cloudinary; the DB keeps `publicId`/version/size and views build `f_auto,q_auto` URLs |
 | Process | `pm2` | Production process manager |
 | Dev tooling | `nodemon`, `concurrently`, `eslint`, `prettier`, `jest` | `npm run dev` runs the server and the Tailwind watcher together |
 
@@ -408,24 +408,30 @@ SMS goes through Termii (good Nigerian delivery rates) behind a small `sms.send(
 - Manage links use 32-byte random tokens; references are short and non-sequential.
 - Customer addresses visible only to admins; production database backups daily.
 
-**Deployment (DigitalOcean)**
+**Deployment (Phase 6: Contabo VPS)**
 
-1. Ubuntu 24.04 droplet (2 GB RAM is enough for v1) or App Platform if you prefer managed.
-2. Managed PostgreSQL, or Postgres on the droplet with daily `pg_dump` to Spaces.
-3. Nginx reverse proxy + Let's Encrypt (certbot); PM2 runs `src/server.js` in cluster mode.
-4. Uploaded images live in `public/uploads/` on the droplet, so include that folder in backups and keep it across deploys (symlink it to a persistent path). Moving them to DigitalOcean Spaces + CDN later only needs `services/images.js` to change.
-5. GitHub Actions: lint + Jest on push; on `main`, SSH deploy → `npm ci` → `prisma migrate deploy` → `pm2 reload`.
-6. Env vars: `DATABASE_URL`, `SESSION_SECRET`, `SMTP_*`, `TERMII_API_KEY`, `APP_URL`, `TZ=Africa/Lagos`.
+1. Contabo VPS, Ubuntu 24.04 LTS (4 GB RAM is comfortable for v1: web, worker and Postgres on one box). Non-root deploy user, SSH keys only, `ufw` (22/80/443), `fail2ban`, unattended security upgrades.
+2. **Self-hosted PostgreSQL 17** on the VPS, listening on localhost only. Nightly `pg_dump` (compressed, encrypted) shipped **off-site** (e.g. Backblaze B2 or S3-compatible storage via `rclone`), keeping 14 daily + 8 weekly copies; restore tested before launch.
+3. Nginx reverse proxy + Let's Encrypt (certbot) for the domain; HTTP → HTTPS; long-cache headers for `/css`, `/js`, `/vendor`; `trust proxy` is set in the app.
+4. PM2 (`ecosystem.config.js`): `web` in cluster mode (one per core) and `worker` as a **single** instance, so jobs never run twice (each job also takes an advisory lock as a safety net). `pm2 startup` + `pm2 save` for reboots; log rotation via `pm2-logrotate`.
+5. **Images live on Cloudinary**, not on the VPS, so the server holds no user files: backups are the database only.
+6. Deploys: GitHub Actions runs lint + Jest on push; on `main`, SSH → `git pull` → `npm ci --omit=dev` → `npm run build:css` → `prisma migrate deploy` → `pm2 reload ecosystem.config.js`.
+7. Env vars: see "Environment" below.
 
 ## Build phases and open questions
 
-Build runs in five phases, each ending in something the client can click; the availability engine comes before any UI polish because everything depends on it.
+Build runs in six phases, each ending in something the client can click; the availability engine comes before any UI polish because everything depends on it.
 
 1. **Foundation:** repo, Express app, Prisma schema + migrations, seed data (categories, services, 2 barbers, 4 zones), layout + Tailwind setup.
 2. **Booking engine:** `availability.js` with Jest tests (shift edges, buffers, overlaps, time off, "any barber"), transactional create, the `/api/slots` endpoint.
 3. **Public site + booking flow:** the six home sections, service/barber/contact pages, 4-step booking wizard, confirmation and manage link.
 4. **Admin dashboard:** ✅ login, today view, bookings, calendar, staff bookings, CRUD screens, customers, reports, settings, users, home-request confirmation.
-5. **Notifications + launch:** email/SMS templates, reminder cron, auto-cancel job, security pass, DigitalOcean deploy, real content and photos.
+5. **Production-ready (no deploy):** outbox notifications (email/SMS templates, retries, admin resend), a separate jobs worker (sends, reminders, auto-cancel, cleanup), hardening (env checks, CSP, logging without PII, health check, seeds split), images on Cloudinary, SEO and sharing, performance and accessibility (Lighthouse), and a launch content checklist (`docs/LAUNCH-CONTENT.md`).
+6. **Deploy:** Contabo VPS, domain + DNS, TLS, Nginx, PM2 (web + worker), self-hosted Postgres with off-site backups, real content and photos, go-live checks.
+
+## Environment
+
+Validated with zod at boot (`src/config/env.js`); the app refuses to start on invalid values, and in production also on a weak or example `SESSION_SECRET` or a seed `ADMIN_PASSWORD`. The full list is kept up to date in the README.
 
 **Open questions for the client**
 

@@ -6,7 +6,7 @@ and pay on the day. One Node.js app serves the site, the booking engine and (soo
 the owner's dashboard.
 
 > **Status:** Phases 1–4 complete: foundation, booking engine, public site, booking wizard,
-> confirmation and manage link, and the full admin dashboard. Notifications and launch are next.
+> confirmation and manage link, and the full admin dashboard. Phase 5 (production readiness) is in progress; Phase 6 deploys to a Contabo VPS.
 > See [Roadmap](#roadmap).
 > "Victory" and all copy, prices, zones and photos are **placeholders** until the client signs off.
 
@@ -351,7 +351,8 @@ Stop the other process, or set `PORT` in `.env`.
 | 2 | Booking engine, transactional create, JSON API, tests | ✅ Done |
 | 3 | Public site and booking wizard, confirmation, manage link | ✅ Done |
 | 4 | Admin dashboard: Today, bookings, staff booking, calendar, catalogue, team, customers, reports, settings, users | ✅ Done |
-| 5 | Email/SMS notifications, reminders, auto-cancel job, deployment | ⬜ |
+| 5 | Production-ready: outbox notifications, jobs worker, hardening, Cloudinary images, SEO, performance, launch content | 🟡 In progress |
+| 6 | Deploy: Contabo VPS, domain, TLS, PM2 web + worker, self-hosted Postgres with off-site backups | ⬜ |
 
 **Needed from the client:**
 - shop name and logo
