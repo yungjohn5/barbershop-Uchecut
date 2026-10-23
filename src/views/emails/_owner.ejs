@@ -1,0 +1,10 @@
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:18px 0;border:1px solid #eee6da;border-radius:14px;">
+  <tr><td style="padding:16px 18px;font-size:15px;line-height:1.7;">
+    <strong><%= p.customerName %></strong> · <a href="tel:<%= p.customerPhone %>" style="color:#9a6c31;"><%= fmtPhone(p.customerPhone) %></a><% if (p.customerEmail) { %> · <%= p.customerEmail %><% } %><br />
+    <%= p.when %>–<%= p.endTime %> · <%= p.type === 'HOME' ? `Home visit${p.zone ? ` · ${p.zone}` : ''}` : 'Shop' %> · <%= p.barber %><br />
+    <% if (p.type === 'HOME') { %><%= p.address %><% if (p.landmark) { %> (<%= p.landmark %>)<% } %><br /><% } %>
+    <%= p.services.join(', ') %> · <%= naira(p.totalKobo) %><br />
+    Reference <strong><%= p.reference %></strong>
+  </td></tr>
+</table>
+<p style="margin:0;"><a href="<%= p.adminUrl %>" style="display:inline-block;background:#141414;color:#f4f1ec;text-decoration:none;font-weight:bold;padding:12px 22px;border-radius:999px;">Open in admin</a></p>

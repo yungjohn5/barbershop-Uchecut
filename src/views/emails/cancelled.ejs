@@ -1,0 +1,3 @@
+<p style="margin:0 0 12px;">Hi <%= p.customerFirst %>,</p>
+<p style="margin:0;"><% if (p.by === 'customer') { %>As requested, your booking for <%= p.when %> is cancelled.<% } else { %>We're sorry: your booking for <%= p.when %> has been cancelled by the shop.<% if (p.reason) { %> Reason: <%= p.reason %>.<% } %><% } %> You can book again any time.</p>
+<%- include('_details', { cta: 'Book again', ctaUrl: p.bookUrl }) %>

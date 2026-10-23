@@ -1,0 +1,2 @@
+<p style="margin:0;">A booking was cancelled <%= p.by === 'customer' ? 'by the customer' : p.by === 'system' ? 'automatically (home visit not confirmed in time)' : 'by staff' %>.<% if (p.reason) { %> Reason: <%= p.reason %>.<% } %></p>
+<%- include('_owner') %>

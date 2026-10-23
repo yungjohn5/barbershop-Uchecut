@@ -10,6 +10,7 @@ const { HttpError, SlotTakenError, ValidationError } = require('../lib/errors');
 const { toShopDate, wallClockToUtc, addDays } = require('../lib/time');
 const { ACTIVE_STATUSES } = require('../config/constants');
 const settingsService = require('./settings');
+const notifications = require('./notifications');
 const { computeDay, pickLeastBusy, staffSettings } = require('./availability');
 
 const MAX_SERIALIZATION_RETRIES = 3;
@@ -155,7 +156,7 @@ async function attemptCreate(db, input, { now, settings, phone, hooks, staff = f
       });
 
       const isHome = input.type === 'HOME';
-      return tx.booking.create({
+      const created = await tx.booking.create({
         data: {
           reference: generateReference(),
           manageToken: generateManageToken(),
@@ -195,6 +196,9 @@ async function attemptCreate(db, input, { now, settings, phone, hooks, staff = f
         },
         include: { services: true, barber: true, customer: true, zone: true },
       });
+      // Outbox rows in the same transaction: no booking without its messages, and vice versa.
+      await notifications.enqueueForEvent(tx, created, 'CREATED');
+      return created;
     },
     {
       isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
@@ -335,15 +339,19 @@ async function cancelBooking(token, { now = new Date(), reason, db = prisma } = 
   const cancelReason = reason
     ? String(reason).trim().slice(0, 300) || null
     : 'Cancelled by customer';
-  return db.booking.update({
-    where: { manageToken: token },
-    data: {
-      status: 'CANCELLED',
-      cancelledAt: now,
-      cancelReason,
-      events: { create: { type: 'CANCELLED', actor: 'CUSTOMER', note: cancelReason } },
-    },
-    include: bookingInclude,
+  return db.$transaction(async (tx) => {
+    const updated = await tx.booking.update({
+      where: { manageToken: token },
+      data: {
+        status: 'CANCELLED',
+        cancelledAt: now,
+        cancelReason,
+        events: { create: { type: 'CANCELLED', actor: 'CUSTOMER', note: cancelReason } },
+      },
+      include: bookingInclude,
+    });
+    await notifications.enqueueForEvent(tx, updated, 'CANCELLED', { by: 'customer', reason });
+    return updated;
   });
 }
 
@@ -398,7 +406,7 @@ async function rescheduleBooking(
             ? booking.barber
             : await tx.barber.findUnique({ where: { id: nextBarber }, select: { name: true } });
         const needsReconfirm = isHome && !staff && booking.status === 'CONFIRMED';
-        return tx.booking.update({
+        const moved = await tx.booking.update({
           where: { id: booking.id },
           data: {
             startsAt: start,
@@ -426,6 +434,12 @@ async function rescheduleBooking(
           },
           include: bookingInclude,
         });
+        await notifications.enqueueForEvent(tx, moved, 'RESCHEDULED', {
+          by: staff ? 'staff' : 'customer',
+          fromStartsAt: booking.startsAt,
+          needsConfirm: moved.status === 'PENDING',
+        });
+        return moved;
       },
       {
         isolationLevel: Prisma.TransactionIsolationLevel.Serializable,

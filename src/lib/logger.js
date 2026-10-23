@@ -4,6 +4,8 @@ const threshold = LEVELS[process.env.LOG_LEVEL] ?? (process.env.NODE_ENV === 'te
 
 function log(level, msg, meta) {
   if (LEVELS[level] < threshold) return;
+  // pino-style (fields, message) is accepted too, so call sites won't change when pino lands.
+  if (msg && typeof msg === 'object' && typeof meta === 'string') [msg, meta] = [meta, msg];
   const line = `[${new Date().toISOString()}] ${level.toUpperCase()} ${msg}`;
   const out = level === 'error' || level === 'warn' ? console.error : console.log;
   meta === undefined ? out(line) : out(line, meta);

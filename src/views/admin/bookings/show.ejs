@@ -90,6 +90,33 @@
     <% }) %>
 
     <div class="a-card">
+      <h2 class="a-h3">Messages</h2>
+      <%
+        const nLabel = { 'shop-confirmed': 'Booking confirmed', 'home-received': 'Request received', 'home-confirmed': 'Home visit confirmed', 'reminder-24h': '24 h reminder', 'reminder-2h': '2 h reminder', rescheduled: 'Moved', cancelled: 'Cancelled', 'auto-cancelled': 'Auto-cancelled', 'owner-new-booking': 'Owner: new booking', 'owner-home-request': 'Owner: home request', 'owner-cancelled': 'Owner: cancellation' };
+        const nState = (n) => n.status === 'SENT' ? (n.providerRef === 'log' ? ['Logged (not sent)', 'a-type'] : ['Sent', 'a-badge-confirmed']) : n.status === 'PENDING' ? [n.attempts ? `Retrying (${n.attempts} failed)` : 'Queued', 'a-badge-pending'] : n.status === 'FAILED' ? ['Failed', 'a-badge-cancelled'] : ['Skipped', 'a-type'];
+      %>
+      <% if (!booking.notifications.length) { %><p class="mt-3 text-sm text-ink/65">No messages for this booking.</p><% } %>
+      <ul class="mt-3 divide-y divide-ink/10">
+        <% booking.notifications.forEach((n) => { const [label, cls] = nState(n); %>
+          <li class="a-msg">
+            <span class="a-msg-channel" aria-label="<%= n.channel === 'SMS' ? 'SMS' : 'Email' %>"><%= n.channel === 'SMS' ? 'SMS' : '@' %></span>
+            <span class="min-w-0 flex-1">
+              <span class="block truncate font-medium"><%= nLabel[n.template] || n.template %></span>
+              <span class="block truncate text-xs text-ink/60"><%= n.sentAt ? `${formatShort(n.sentAt)} · ${formatTime(n.sentAt)}` : n.status === 'PENDING' ? `From ${formatShort(n.sendAfter)} · ${formatTime(n.sendAfter)}` : '' %><%= n.lastError ? ` · ${n.lastError}` : '' %></span>
+            </span>
+            <span class="a-badge <%= cls %> shrink-0"><%= label %></span>
+            <% if (n.status === 'FAILED') { %>
+              <form method="post" action="/admin/notifications/<%= n.id %>/resend" class="shrink-0">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                <button type="submit" class="link-u text-sm">Resend</button>
+              </form>
+            <% } %>
+          </li>
+        <% }) %>
+      </ul>
+    </div>
+
+    <div class="a-card">
       <h2 class="a-h3">History</h2>
       <%
         const who = (e) => (e.actor === 'CUSTOMER' ? 'customer' : e.actor === 'SYSTEM' ? 'system' : e.byName || 'staff');
@@ -103,6 +130,7 @@
             case 'COMPLETED': return `Marked completed by ${who(e)}`;
             case 'NO_SHOW': return `Marked no-show by ${who(e)}`;
             case 'RESTORED': return `Restored to confirmed by ${who(e)}`;
+            case 'NOTIFY_FAILED': return 'Message failed to send';
             default: return e.type;
           }
         };

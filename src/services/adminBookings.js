@@ -1,6 +1,7 @@
 // Admin views of bookings: list/filter, detail, status changes, today, week calendar.
 const prisma = require('../lib/prisma');
 const { HttpError } = require('../lib/errors');
+const notifications = require('./notifications');
 const { ACTIVE_STATUSES } = require('../config/constants');
 const { wallClockToUtc, addDays, toShopDate, weekdayOf, isValidDateStr } = require('../lib/time');
 
@@ -102,6 +103,19 @@ async function applyAction(id, action, { now = new Date(), reason, adminName, db
         data: { noShowCount: Math.max(0, c.noShowCount + noShowDelta) },
       });
     }
+    const MESSAGE_EVENT = {
+      confirm: 'CONFIRMED',
+      cancel: 'CANCELLED',
+      complete: 'COMPLETED',
+      noShow: 'NO_SHOW',
+    };
+    if (MESSAGE_EVENT[action]) {
+      await notifications.enqueueForEvent(tx, updated, MESSAGE_EVENT[action], {
+        by: 'staff',
+        reason:
+          action === 'cancel' ? (reason && String(reason).trim().slice(0, 300)) || null : null,
+      });
+    }
     return { booking: updated, message: ACTION_DONE[action] };
   });
 }
@@ -117,7 +131,11 @@ async function getBooking(id, { db = prisma } = {}) {
   if (!Number.isInteger(id) || id <= 0) return null;
   return db.booking.findUnique({
     where: { id },
-    include: { ...include, events: { orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] } },
+    include: {
+      ...include,
+      events: { orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] },
+      notifications: { orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] },
+    },
   });
 }
 

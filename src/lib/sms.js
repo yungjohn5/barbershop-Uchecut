@@ -1,12 +1,11 @@
-// Provider-agnostic SMS wrapper. Termii today; swap the implementation, not callers.
+// SMS provider (Termii). Only the notification worker calls this, and only when
+// NOTIFY_MODE=live; it throws on failure so the outbox can retry. Swap the implementation,
+// not the callers.
 const env = require('../config/env');
-const logger = require('./logger');
 
+/** Returns the provider message id. */
 async function send({ to, message }) {
-  if (!env.TERMII_API_KEY || !env.TERMII_SENDER_ID) {
-    logger.info(`[sms:dry-run] to=${to} msg=${JSON.stringify(message)}`);
-    return { ok: true, dryRun: true };
-  }
+  if (!env.TERMII_API_KEY || !env.TERMII_SENDER_ID) throw new Error('Termii is not configured');
   const res = await fetch(`${env.TERMII_BASE_URL}/api/sms/send`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -21,11 +20,10 @@ async function send({ to, message }) {
     signal: AbortSignal.timeout(10_000),
   });
   const body = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    logger.error(`[sms] Termii ${res.status}`, body);
-    return { ok: false, status: res.status, body };
+  if (!res.ok || (body.code && body.code !== 'ok')) {
+    throw new Error(`Termii ${res.status}: ${body.message || 'send failed'}`);
   }
-  return { ok: true, id: body.message_id };
+  return String(body.message_id || 'termii');
 }
 
 module.exports = { send };

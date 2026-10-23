@@ -15,6 +15,13 @@ const schema = z.object({
   TERMII_API_KEY: z.string().optional().default(''),
   TERMII_SENDER_ID: z.string().optional().default(''),
   TERMII_BASE_URL: z.string().url().default('https://api.ng.termii.com'),
+  // log: messages are written to the console and the Notification table only, never sent.
+  // Defaults to "live" in production and "log" everywhere else.
+  NOTIFY_MODE: z.enum(['log', 'live']).optional(),
+  // Outside production, live mode only messages these phones/emails (comma separated).
+  NOTIFY_ALLOWLIST: z.string().optional().default(''),
+  // Owner alerts (new booking, home request, cancellation); falls back to the shop email.
+  OWNER_EMAIL: z.string().email().optional().or(z.literal('')).default(''),
 });
 
 const parsed = schema.safeParse(process.env);
@@ -25,6 +32,20 @@ if (!parsed.success) {
 
 const env = parsed.data;
 env.isProd = env.NODE_ENV === 'production';
+env.NOTIFY_MODE = env.NOTIFY_MODE || (env.NODE_ENV === 'production' ? 'live' : 'log');
+env.notifyAllowlist = env.NOTIFY_ALLOWLIST.split(',')
+  .map((x) => x.trim().toLowerCase())
+  .filter(Boolean);
+if (env.NOTIFY_MODE === 'live') {
+  const missing = ['SMTP_HOST', 'MAIL_FROM', 'TERMII_API_KEY', 'TERMII_SENDER_ID'].filter(
+    (k) => !env[k],
+  );
+  if (missing.length) {
+    throw new Error(
+      `NOTIFY_MODE=live needs: ${missing.join(', ')}. Set them, or use NOTIFY_MODE=log.`,
+    );
+  }
+}
 env.isTest = env.NODE_ENV === 'test';
 env.isDev = env.NODE_ENV === 'development';
 

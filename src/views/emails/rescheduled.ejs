@@ -1,0 +1,3 @@
+<p style="margin:0 0 12px;">Hi <%= p.customerFirst %>,</p>
+<p style="margin:0;">Your booking has been moved<% if (p.fromWhen) { %> from <%= p.fromWhen %><% } %> to <strong><%= p.when %></strong>.<% if (p.needsConfirm) { %> As it's a home visit, we'll confirm the new time with you shortly.<% } %></p>
+<%- include('_details') %>

@@ -11,6 +11,7 @@ const { isValidDateStr, toShopDate, addDays } = require('../../lib/time');
 const { normaliseNgPhone } = require('../../lib/phone');
 const { authenticate } = require('../../services/adminAuth');
 const adminBookings = require('../../services/adminBookings');
+const notifications = require('../../services/notifications');
 const customers = require('../../services/customers');
 const { getSlots, computeDay, staffSettings } = require('../../services/availability');
 const { createBooking, rescheduleBooking } = require('../../services/booking');
@@ -375,6 +376,22 @@ router.post(
       );
       res.redirect(303, `/admin/bookings/${booking.id}/reschedule`);
     }
+  }),
+);
+
+// Resend a FAILED message (outbox): it goes back in the queue with fresh attempts.
+router.post(
+  '/notifications/:id/resend',
+  asyncRoute(async (req, res, next) => {
+    const n = await prisma.notification.findUnique({ where: { id: idParam(req) } });
+    if (!n) return next(new NotFoundError('Message not found'));
+    const ok = await notifications.resend(n.id);
+    setFlash(
+      req,
+      ok ? 'success' : 'error',
+      ok ? 'Message queued to send again.' : 'Only failed messages can be resent.',
+    );
+    res.redirect(303, n.bookingId ? `/admin/bookings/${n.bookingId}` : '/admin');
   }),
 );
 

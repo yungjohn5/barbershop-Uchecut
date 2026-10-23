@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light only" />
+    <title><%= subject %></title>
+  </head>
+  <%# Email clients need table layout and inline styles; the site's CSP doesn't apply here. %>
+  <body style="margin:0;padding:0;background:#f4f1ec;font-family:Helvetica,Arial,sans-serif;color:#141414;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f1ec;">
+      <tr>
+        <td align="center" style="padding:32px 12px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:18px;overflow:hidden;">
+            <tr>
+              <td style="background:#141414;padding:26px 32px;">
+                <span style="font-family:Georgia,'Times New Roman',serif;font-size:24px;color:#f4f1ec;"><%= p.shopName %></span>
+                <% if (owner) { %><span style="float:right;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#d9a863;padding-top:8px;">Shop alert</span><% } %>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:32px 32px 8px;font-size:16px;line-height:1.6;">
+                <%- body %>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:24px 32px 32px;border-top:1px solid #eee6da;font-size:13px;line-height:1.6;color:#6b5846;">
+                <% if (!owner) { %>
+                  <%= p.shopName %><% if (p.shopAddress && p.shopAddress.length) { %> · <%= p.shopAddress.join(', ') %><% } %><br />
+                  Questions? Call <a href="tel:<%= p.shopPhone %>" style="color:#9a6c31;"><%= fmtPhone(p.shopPhone) %></a><% if (p.shopWhatsapp) { %> or <a href="https://wa.me/<%= p.shopWhatsapp %>" style="color:#9a6c31;">WhatsApp us</a><% } %>.
+                <% } else { %>
+                  Sent by the booking system. Manage it in the <a href="<%= p.adminUrl %>" style="color:#9a6c31;">admin</a>.
+                <% } %>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

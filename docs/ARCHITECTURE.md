@@ -397,6 +397,12 @@ Without a deposit, reminders are the main defence against no-shows, so every boo
 | Cancelled / rescheduled | Email + SMS | Email to owner |
 | Auto-cancel of unconfirmed home request | Email + SMS with rebook link | Email to owner |
 
+**Outbox.** Every booking change writes `Notification` rows (channel, template, recipient, payload snapshot) in the **same transaction** as the change (`services/notifications.js`: create, confirm, reschedule, cancel by customer or staff, auto-cancel), so a message exists only if the change committed. `dedupeKey` is unique (`VB-K7M2P:shop-confirmed:SMS`, plus the booking-event id or start time for messages that can repeat), so nothing is ever sent twice. Moving, cancelling or completing a booking marks its unsent reminders SKIPPED. The worker sends due rows; a failure retries after 1, 5 and 30 minutes, and the 4th failure marks the row FAILED and adds a "Message failed to send" entry to the booking history. The admin booking page lists every message with its status and a **Resend** button on FAILED ones. Owner alerts go to `OWNER_EMAIL`, falling back to the shop email in Settings.
+
+**Templates.** Emails are EJS in `views/emails/` (table layout, inline styles, plus a generated plain-text part); SMS texts live in `services/notifyTemplates.js` and fit one 160-character segment with a real domain and token (tested). Every customer message has the reference and the manage link; times are Africa/Lagos.
+
+**Modes.** `NOTIFY_MODE=log` (default outside production) renders and records messages and writes them to the log (recipients and manage tokens masked) without calling a provider. `live` (default in production) sends via SMTP (`lib/mailer.js`) and Termii (`lib/sms.js`); outside production it only messages recipients listed in `NOTIFY_ALLOWLIST`, so dev never texts real customers. Starting in live mode without SMTP/Termii settings fails at boot.
+
 SMS goes through Termii (good Nigerian delivery rates) behind a small `sms.send()` wrapper, so the provider can be swapped. A `wa.me` WhatsApp link sits on the confirmation page for quick contact; WhatsApp Business API messaging can come later.
 
 **Security**

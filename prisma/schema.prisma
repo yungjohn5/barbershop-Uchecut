@@ -38,6 +38,19 @@ enum BookingEventType {
   COMPLETED
   NO_SHOW
   RESTORED
+  NOTIFY_FAILED
+}
+
+enum NotificationChannel {
+  EMAIL
+  SMS
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+  SKIPPED
 }
 
 enum BookingActor {
@@ -190,6 +203,7 @@ model Booking {
   zone          Zone?            @relation(fields: [zoneId], references: [id])
   services      BookingService[]
   events        BookingEvent[]
+  notifications Notification[]
   confirmedAt   DateTime?        @db.Timestamptz(3)
   cancelledAt   DateTime?        @db.Timestamptz(3)
   cancelReason  String?
@@ -287,4 +301,28 @@ model BookingEvent {
   createdAt DateTime         @default(now()) @db.Timestamptz(3)
 
   @@index([bookingId, createdAt])
+}
+
+// Outbox: rows are written in the same transaction as the booking change and sent by the
+// worker (src/jobs). dedupeKey makes every message idempotent ("VB-K7M2P:reminder-24h:SMS:…").
+model Notification {
+  id          Int                 @id @default(autoincrement())
+  bookingId   Int?
+  booking     Booking?            @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  channel     NotificationChannel
+  template    String
+  to          String
+  payload     Json
+  status      NotificationStatus  @default(PENDING)
+  attempts    Int                 @default(0)
+  lastError   String?
+  providerRef String? // provider message id, or "log" when NOTIFY_MODE=log
+  sendAfter   DateTime            @default(now()) @db.Timestamptz(3)
+  sentAt      DateTime?           @db.Timestamptz(3)
+  dedupeKey   String              @unique
+  createdAt   DateTime            @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime            @updatedAt @db.Timestamptz(3)
+
+  @@index([status, sendAfter])
+  @@index([bookingId])
 }

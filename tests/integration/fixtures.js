@@ -1,6 +1,8 @@
 const prisma = require('../../src/lib/prisma');
 
 const TABLES = [
+  'Notification',
+  'BookingEvent',
   'BookingService',
   'Booking',
   'Customer',

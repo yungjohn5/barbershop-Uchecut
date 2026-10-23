@@ -4061,3 +4061,25 @@ button.a-live:hover {
     animation: none;
   }
 }
+
+/* Booking page: message (outbox) list */
+.a-msg {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.75rem;
+  padding: 0.65rem 0;
+  font-size: 0.9rem;
+}
+.a-msg-channel {
+  display: grid;
+  height: 1.9rem;
+  min-width: 2.4rem;
+  place-items: center;
+  border-radius: 0.6rem;
+  background: rgb(var(--paper-deep));
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: rgb(var(--ink) / 0.7);
+}
