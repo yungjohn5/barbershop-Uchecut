@@ -6,6 +6,7 @@ const path = require('path');
 const crypto = require('crypto');
 const sharp = require('sharp');
 const { ValidationError } = require('../lib/errors');
+const { detectImageType } = require('../lib/fileType');
 
 // We only ever decode buffers; libvips' file cache would hold Windows file handles open
 // and block deleting replaced images.
@@ -37,6 +38,12 @@ const slugPart = (s) =>
 async function saveUpload(buffer, { kind, name, root = PUBLIC_DIR }) {
   const widths = WIDTHS[kind];
   if (!widths) throw new Error(`Unknown image kind: ${kind}`);
+  // Real type from the file's bytes, before any decoder sees it.
+  if (!detectImageType(buffer)) {
+    throw new ValidationError('That file isn’t an image we can read. Use a JPG, PNG or WebP.', [
+      { path: 'image', message: 'Not an image' },
+    ]);
+  }
   let meta;
   try {
     meta = await sharp(buffer).metadata();

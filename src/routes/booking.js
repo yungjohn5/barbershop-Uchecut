@@ -3,7 +3,7 @@
 const express = require('express');
 const { z } = require('zod');
 const env = require('../config/env');
-const { bookingLimiter, apiLimiter } = require('../middleware/rateLimits');
+const { bookingLimiter, apiLimiter, manageLimiter } = require('../middleware/rateLimits');
 const { SlotTakenError, ValidationError, NotFoundError } = require('../lib/errors');
 const prisma = require('../lib/prisma');
 const { isValidDateStr, addDays, toShopDate } = require('../lib/time');
@@ -21,6 +21,7 @@ const {
 const settingsService = require('../services/settings');
 
 const router = express.Router();
+router.use('/manage', manageLimiter);
 const asyncRoute = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
 // ---------------------------------------------------------------- helpers

@@ -23,4 +23,4 @@ function shutdown(signal) {
 
 process.on('SIGTERM', () => shutdown('SIGTERM'));
 process.on('SIGINT', () => shutdown('SIGINT'));
-process.on('unhandledRejection', (err) => logger.error('Unhandled rejection', err));
+process.on('unhandledRejection', (err) => logger.error({ err }, 'unhandled rejection'));

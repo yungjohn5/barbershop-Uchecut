@@ -11,11 +11,11 @@ const ROLES = ['OWNER', 'STAFF'];
 const nameField = z.preprocess(
   (v) => (typeof v === 'string' ? v.trim() : v),
   z
-    .string({ invalid_type_error: 'Enter a name.' })
+    .string({ error: 'Enter a name.' })
     .min(2, 'Enter a name.')
     .max(60, 'Keep it under 60 characters.'),
 );
-const roleField = z.enum(ROLES, { errorMap: () => ({ message: 'Choose a role.' }) });
+const roleField = z.enum(ROLES, { error: 'Choose a role.' });
 
 function checkPassword(password, path = 'password') {
   const problem = passwordProblem(password);

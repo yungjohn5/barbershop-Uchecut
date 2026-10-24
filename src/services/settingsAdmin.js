@@ -39,7 +39,7 @@ const hours = (min, max, label) =>
   z.preprocess(
     (v) => (v === '' || v === undefined ? Number.NaN : Number(v)),
     z
-      .number({ invalid_type_error: `Enter ${label} in hours.` })
+      .number({ error: `Enter ${label} in hours.` })
       .min(min, `${label[0].toUpperCase()}${label.slice(1)} must be ${min}–${max} hours.`)
       .max(max, `${label[0].toUpperCase()}${label.slice(1)} must be ${min}–${max} hours.`)
       .refine((n) => Number.isInteger(n * 4), 'Use quarter hours, e.g. 1.5 or 0.25.')
@@ -54,7 +54,7 @@ const SCHEMAS = {
     homeAutoCancelHours: z.preprocess(
       (v) => Number(v),
       z
-        .number({ invalid_type_error: 'Enter hours.' })
+        .number({ error: 'Enter hours.' })
         .int('Use whole hours.')
         .min(1, 'Use 1–72 hours.')
         .max(72, 'Use 1–72 hours.'),
@@ -62,7 +62,7 @@ const SCHEMAS = {
     bookingWindowDays: z.preprocess(
       (v) => Number(v),
       z
-        .number({ invalid_type_error: 'Enter days.' })
+        .number({ error: 'Enter days.' })
         .int('Use whole days.')
         .min(1, 'Use 1–180 days.')
         .max(180, 'Use 1–180 days.'),
@@ -71,7 +71,7 @@ const SCHEMAS = {
       (v) => Number(v),
       z.union(
         [5, 10, 15, 20, 30, 60].map((n) => z.literal(n)),
-        { errorMap: () => ({ message: 'Choose a slot step.' }) },
+        { error: 'Choose a slot step.' },
       ),
     ),
     allowBufferOutsideShift: z.preprocess((v) => v === 'on' || v === 'true', z.boolean()),

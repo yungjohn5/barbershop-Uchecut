@@ -2,7 +2,7 @@ const path = require('path');
 const express = require('express');
 const helmet = require('helmet');
 const compression = require('compression');
-const morgan = require('morgan');
+const pinoHttp = require('pino-http');
 const session = require('express-session');
 const PgSession = require('connect-pg-simple')(session);
 const { Pool } = require('pg');
@@ -12,13 +12,15 @@ const env = require('./config/env');
 const { csrfProtection, exposeCsrfToken } = require('./middleware/csrf');
 const { notFound, errorHandler } = require('./middleware/errorHandler');
 const settingsService = require('./services/settings');
+const prisma = require('./lib/prisma');
+const logger = require('./lib/logger');
 const { homeVisitsOpen } = require('./services/content');
 
 function createApp({ sessionPool } = {}) {
   const app = express();
   const pool = sessionPool || new Pool({ connectionString: env.DATABASE_URL, max: 5 });
 
-  app.set('trust proxy', 1); // behind Nginx in production
+  app.set('trust proxy', 1); // behind Nginx in production: real client IP for rate limits, secure cookies
   app.set('views', path.join(__dirname, 'views'));
   app.set('view engine', 'ejs');
   app.set('layout', 'layouts/main');
@@ -32,17 +34,37 @@ function createApp({ sessionPool } = {}) {
           'script-src': ["'self'"],
           'style-src': ["'self'", 'https://fonts.googleapis.com'],
           'font-src': ["'self'", 'https://fonts.gstatic.com'],
-          'img-src': ["'self'", 'data:', 'blob:', 'https:'], // blob: previews admin uploads
+          'img-src': ["'self'", 'data:', 'blob:'], // blob: previews admin uploads
+          'object-src': ["'none'"],
+          'base-uri': ["'self'"],
           'connect-src': ["'self'"],
           'form-action': ["'self'"],
           'frame-ancestors': ["'none'"],
           'upgrade-insecure-requests': env.isProd ? [] : null,
         },
       },
+      // HSTS only in production (HTTPS via Nginx); never pin localhost to HTTPS.
+      strictTransportSecurity: env.isProd ? { maxAge: 31536000, includeSubDomains: true } : false,
     }),
   );
   app.use(compression());
-  if (!env.isTest) app.use(morgan(env.isProd ? 'combined' : 'dev'));
+  // Request logs without PII: cleaned URLs, no headers/cookies, no static-file noise.
+  app.use(
+    pinoHttp({
+      logger,
+      autoLogging: {
+        ignore: (req) => /^\/(css|js|vendor|images|uploads|favicon|healthz)/.test(req.url),
+      },
+      serializers: {
+        req: (req) => ({ method: req.method, url: logger.safeUrl(req.url) }),
+        res: (res) => ({ statusCode: res.statusCode }),
+      },
+      customSuccessMessage: (req, res, ms) =>
+        `${req.method} ${logger.safeUrl(req.url)} ${res.statusCode} ${Math.round(ms)}ms`,
+      customErrorMessage: (req, res) =>
+        `${req.method} ${logger.safeUrl(req.url)} ${res.statusCode}`,
+    }),
+  );
 
   app.use(express.static(path.join(__dirname, '..', 'public'), { maxAge: env.isProd ? '7d' : 0 }));
   // GSAP served from node_modules so the CSP can stay script-src 'self'.
@@ -57,7 +79,19 @@ function createApp({ sessionPool } = {}) {
   app.use(express.urlencoded({ extended: false, limit: '50kb' }));
   app.use(express.json({ limit: '50kb' }));
 
-  app.get('/healthz', (_req, res) => res.json({ ok: true }));
+  // Health check for Nginx/PM2/uptime monitors: 200 if the database answers, else 503.
+  app.get('/healthz', async (_req, res) => {
+    res.set('Cache-Control', 'no-store');
+    try {
+      await Promise.race([
+        prisma.$queryRaw`SELECT 1`,
+        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 2000)),
+      ]);
+      res.json({ ok: true, db: 'up' });
+    } catch {
+      res.status(503).json({ ok: false, db: 'down' });
+    }
+  });
   app.get('/favicon.ico', (_req, res) => res.redirect(301, '/favicon.svg'));
 
   // JSON API: read-only GETs, no session or CSRF needed.

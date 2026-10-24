@@ -419,12 +419,18 @@ SMS goes through Termii (good Nigerian delivery rates) behind a small `sms.send(
 
 **Security**
 
-- `helmet` headers, HTTPS only, `secure` + `httpOnly` + `sameSite=lax` session cookies.
-- CSRF tokens on every form; `express-rate-limit` on booking submissions and manage-link actions (10 per 15 min), the JSON API (60 per min) and `/admin/login` (20 per 15 min), per IP. When a limit is hit, pages get the branded 429 page (minutes until reset, plus a WhatsApp button for bookings), the JSON API gets `{ error: { code: 'RATE_LIMITED', message } }`, and the login form is shown again with the message. Limits use the in-memory store, so each PM2 worker counts separately.
+- `helmet` headers. CSP: scripts from `'self'` only (no inline scripts anywhere; GSAP served from `/vendor`), styles and fonts from self + Google Fonts, images from self/`data:`/`blob:` (Cloudinary is added with the image move), `object-src 'none'`, `frame-ancestors 'none'`. HSTS (1 year, subdomains) in production only. `trust proxy` is set for Nginx, so client IPs (rate limits) and `secure` cookies work; session cookies are `httpOnly` + `sameSite=lax` and `secure` in production.
+- CSRF tokens on every form; `express-rate-limit` on booking submissions and manage-link actions (10 per 15 min), every `/manage/*` request including page views (100 per 15 min, slows token guessing), the JSON API (60 per min) and `/admin/login` (20 per 15 min), per IP. When a limit is hit, pages get the branded 429 page (minutes until reset, plus a WhatsApp button for bookings), the JSON API gets `{ error: { code: 'RATE_LIMITED', message } }`, and the login form is shown again with the message. Limits use the in-memory store, so each PM2 worker counts separately.
 - zod validation on every input; Nigerian phone numbers normalised to `+234…`.
 - Admin passwords hashed with bcrypt (cost 12); login lockout after 5 failed attempts.
 - Manage links use 32-byte random tokens; references are short and non-sequential.
-- Customer addresses visible only to admins; production database backups daily.
+- Customer addresses visible only to admins; production database backups daily (off-site, see Deployment).
+- **Startup checks** (`config/env.js`, zod): invalid env stops the app; in production it also refuses a weak or example `SESSION_SECRET`, an example/short `ADMIN_PASSWORD`, and a non-https `APP_URL`. `NOTIFY_MODE=live` without SMTP/Termii settings refuses to start.
+- **Logging**: pino (JSON) with pino-http. Phone, email, address and cookie fields are redacted at any depth; logged URLs mask manage tokens (`/manage/abcdef…`) and `phone`/`q`/`email` query values; static files and `/healthz` aren't logged.
+- **Health**: `GET /healthz` runs `SELECT 1` (2 s timeout) and returns 200 `{ ok: true, db: "up" }` or 503.
+- **Uploads**: type checked from the file's magic bytes (JPEG/PNG/WebP only; SVG, GIF and anything else refused) before any decoder sees it, 8 MB cap, one file per request.
+- **Seeds**: `npm run db:seed` is production-safe (categories, default settings, owner from env; never overwrites edits). `npm run db:seed:demo` (`scripts/seed-demo.js`) adds placeholder services, barbers, zones and products and refuses to run when `NODE_ENV=production`.
+- **Dependencies**: `npm audit` highs fixed (body-parser, multer, zod 3 → 4). Remaining: `deepmerge-ts` inside Prisma's config loader (needs Prisma 7, a major upgrade; only merges our own config files, so no untrusted input) and moderates in the Tailwind build tool (dev only).
 
 **Deployment (Phase 6: Contabo VPS)**
 

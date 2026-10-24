@@ -22,7 +22,42 @@ const schema = z.object({
   NOTIFY_ALLOWLIST: z.string().optional().default(''),
   // Owner alerts (new booking, home request, cancellation); falls back to the shop email.
   OWNER_EMAIL: z.string().email().optional().or(z.literal('')).default(''),
+  ADMIN_PASSWORD: z.string().optional().default(''),
+  LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).optional(),
 });
+
+// Values from .env.example or obviously guessable ones: refused in production.
+const EXAMPLE_SECRETS = ['change-me-to-a-long-random-string'];
+const EXAMPLE_ADMIN_PASSWORDS = ['change-me-please', 'barbershop2026', 'password123456'];
+
+/** Pure: a SESSION_SECRET too weak for production. */
+function weakSecret(s) {
+  const v = String(s || '');
+  if (v.length < 32 || EXAMPLE_SECRETS.includes(v)) return true;
+  if (/change.?me|example|secret|password|default|qwerty|letmein/i.test(v)) return true;
+  return new Set(v).size < 12; // e.g. "aaaa…" or "abcabc…"
+}
+
+/** Pure: production-only problems that should stop the app from starting. */
+function productionProblems(e) {
+  const problems = [];
+  if (weakSecret(e.SESSION_SECRET)) {
+    problems.push(
+      'SESSION_SECRET is weak or the example value. Generate one with: node -e "console.log(require(`crypto`).randomBytes(48).toString(`hex`))"',
+    );
+  }
+  if (
+    e.ADMIN_PASSWORD &&
+    (EXAMPLE_ADMIN_PASSWORDS.includes(e.ADMIN_PASSWORD) || e.ADMIN_PASSWORD.length < 12)
+  ) {
+    problems.push(
+      'ADMIN_PASSWORD is the seed/example value or too short. Change it (or remove it after seeding).',
+    );
+  }
+  if (!e.APP_URL.startsWith('https://'))
+    problems.push('APP_URL must start with https:// in production.');
+  return problems;
+}
 
 const parsed = schema.safeParse(process.env);
 if (!parsed.success) {
@@ -36,6 +71,13 @@ env.NOTIFY_MODE = env.NOTIFY_MODE || (env.NODE_ENV === 'production' ? 'live' : '
 env.notifyAllowlist = env.NOTIFY_ALLOWLIST.split(',')
   .map((x) => x.trim().toLowerCase())
   .filter(Boolean);
+if (env.isProd) {
+  const problems = productionProblems(env);
+  if (problems.length) {
+    const list = problems.map((p) => `  - ${p}`).join('\n');
+    throw new Error(`Refusing to start in production:\n${list}`);
+  }
+}
 if (env.NOTIFY_MODE === 'live') {
   const missing = ['SMTP_HOST', 'MAIL_FROM', 'TERMII_API_KEY', 'TERMII_SENDER_ID'].filter(
     (k) => !env[k],
@@ -50,3 +92,5 @@ env.isTest = env.NODE_ENV === 'test';
 env.isDev = env.NODE_ENV === 'development';
 
 module.exports = env;
+module.exports.weakSecret = weakSecret;
+module.exports.productionProblems = productionProblems;

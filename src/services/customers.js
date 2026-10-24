@@ -112,7 +112,7 @@ const customerSchema = z.object({
   name: z.preprocess(
     (v) => (typeof v === 'string' ? v.trim() : v),
     z
-      .string({ invalid_type_error: 'Enter a name.' })
+      .string({ error: 'Enter a name.' })
       .min(2, 'Enter a name.')
       .max(80, 'Keep it under 80 characters.'),
   ),

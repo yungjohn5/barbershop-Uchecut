@@ -1,19 +1,56 @@
-// Minimal levelled logger; swap for pino later without touching call sites.
-const LEVELS = { debug: 10, info: 20, warn: 30, error: 40 };
-const threshold = LEVELS[process.env.LOG_LEVEL] ?? (process.env.NODE_ENV === 'test' ? 40 : 20);
+// Structured logging with pino. No PII: phone numbers, emails and addresses are redacted
+// wherever they appear in logged objects, and URLs are cleaned before logging (manage-link
+// tokens and phone/search query values masked). Call as logger.info({ ...fields }, 'message').
+const pino = require('pino');
 
-function log(level, msg, meta) {
-  if (LEVELS[level] < threshold) return;
-  // pino-style (fields, message) is accepted too, so call sites won't change when pino lands.
-  if (msg && typeof msg === 'object' && typeof meta === 'string') [msg, meta] = [meta, msg];
-  const line = `[${new Date().toISOString()}] ${level.toUpperCase()} ${msg}`;
-  const out = level === 'error' || level === 'warn' ? console.error : console.log;
-  meta === undefined ? out(line) : out(line, meta);
+const level = process.env.LOG_LEVEL || (process.env.NODE_ENV === 'test' ? 'silent' : 'info');
+
+const PII = [
+  'phone',
+  'email',
+  'address',
+  'landmark',
+  'to',
+  'customerPhone',
+  'customerEmail',
+  'password',
+];
+
+const options = {
+  level,
+  base: { pid: process.pid },
+  timestamp: pino.stdTimeFunctions.isoTime,
+  redact: {
+    paths: [
+      'req.headers.cookie',
+      'req.headers.authorization',
+      'res.headers["set-cookie"]',
+      ...PII,
+      ...PII.map((k) => `*.${k}`),
+    ],
+    censor: '[redacted]',
+  },
+};
+
+const logger = pino(options);
+
+const SENSITIVE_QUERY = /^(phone|q|email|token|password)$/i;
+
+/** Pure: a URL safe to log: manage tokens shortened, sensitive query values hidden. */
+function safeUrl(url) {
+  const [path, query] = String(url || '').split('?');
+  const cleanPath = path.replace(/\/manage\/([A-Za-z0-9_-]{6})[A-Za-z0-9_-]+/, '/manage/$1…');
+  if (!query) return cleanPath;
+  const params = query
+    .split('&')
+    .map((pair) => {
+      const [k] = pair.split('=');
+      return SENSITIVE_QUERY.test(decodeURIComponent(k || '')) ? `${k}=…` : pair;
+    })
+    .join('&');
+  return `${cleanPath}?${params}`;
 }
 
-module.exports = {
-  debug: (m, meta) => log('debug', m, meta),
-  info: (m, meta) => log('info', m, meta),
-  warn: (m, meta) => log('warn', m, meta),
-  error: (m, meta) => log('error', m, meta),
-};
+module.exports = logger;
+module.exports.safeUrl = safeUrl;
+module.exports.options = options;

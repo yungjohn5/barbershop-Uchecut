@@ -27,7 +27,11 @@ function errorHandler(err, req, res, _next) {
   const expose = status < 500 && err.expose !== false;
   const message = expose ? err.message : 'Something went wrong on our side.';
 
-  if (status >= 500) logger.error(`${req.method} ${req.originalUrl}`, err);
+  if (status >= 500)
+    logger.error(
+      { err, method: req.method, url: logger.safeUrl(req.originalUrl) },
+      'request failed',
+    );
 
   res.status(status);
   if (wantsJson(req)) {
@@ -44,7 +48,7 @@ function errorHandler(err, req, res, _next) {
     { title: status === 404 ? 'Page not found' : 'Error', status, message },
     (renderErr, html) => {
       if (renderErr) {
-        logger.error('Failed to render error page', renderErr);
+        logger.error({ err: renderErr }, 'failed to render error page');
         return res.type('text').send(message);
       }
       res.send(html);

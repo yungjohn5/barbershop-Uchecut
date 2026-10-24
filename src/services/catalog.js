@@ -63,7 +63,7 @@ const optionalText = (max) =>
 const name = z.preprocess(
   (v) => (typeof v === 'string' ? v.trim() : v),
   z
-    .string({ required_error: 'Enter a name.' })
+    .string({ error: 'Enter a name.' })
     .min(2, 'Enter a name.')
     .max(60, 'Keep it under 60 characters.'),
 );
@@ -73,13 +73,13 @@ const kobo = (label, { optional = false } = {}) =>
       (v) => nairaToKobo(v),
       optional
         ? z
-            .number({ invalid_type_error: `Enter the ${label.toLowerCase()} in naira, e.g. 7500.` })
+            .number({ error: `Enter the ${label.toLowerCase()} in naira, e.g. 7500.` })
             .int()
             .min(0, `${label} can’t be negative.`)
             .max(100_000_000)
             .nullable()
         : z
-            .number({ invalid_type_error: `Enter the ${label.toLowerCase()} in naira, e.g. 7500.` })
+            .number({ error: `Enter the ${label.toLowerCase()} in naira, e.g. 7500.` })
             .int()
             .min(0, `${label} can’t be negative.`)
             .max(100_000_000, `${label} looks too high.`),
@@ -91,7 +91,7 @@ const kobo = (label, { optional = false } = {}) =>
 const intIn = (min, max, msg) =>
   z.preprocess(
     (v) => (v === '' || v === undefined ? Number.NaN : Number(v)),
-    z.number({ invalid_type_error: msg }).int(msg).min(min, msg).max(max, msg),
+    z.number({ error: msg }).int(msg).min(min, msg).max(max, msg),
   );
 const idList = z.preprocess(
   (v) =>

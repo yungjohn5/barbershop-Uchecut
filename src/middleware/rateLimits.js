@@ -37,6 +37,19 @@ const bookingLimiter = rateLimit({
   ),
 });
 
+// Every /manage/* request, GETs included: slows anyone guessing manage-link tokens while
+// leaving plenty of room for a customer checking and changing their booking.
+const manageLimiter = rateLimit({
+  ...common,
+  windowMs: 15 * 60_000,
+  limit: 100,
+  skip,
+  handler: toError(
+    (min) =>
+      `Too many requests from this connection. Please try again in ${min} minute${min === 1 ? '' : 's'}.`,
+  ),
+});
+
 // Admin login (account lockout after 5 failures is enforced separately). The sign-in page
 // is shown again with the message, rather than a bare error page.
 const loginLimiter = rateLimit({
@@ -57,4 +70,4 @@ const loginLimiter = rateLimit({
   },
 });
 
-module.exports = { apiLimiter, bookingLimiter, loginLimiter, minutesLeft };
+module.exports = { apiLimiter, bookingLimiter, manageLimiter, loginLimiter, minutesLeft };

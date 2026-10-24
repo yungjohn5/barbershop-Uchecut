@@ -112,7 +112,8 @@ npm install
 cp .env.example .env          # then edit DATABASE_URL, TEST_DATABASE_URL, SESSION_SECRET, ADMIN_*
 
 npm run db:migrate            # create tables + exclusion constraint
-npm run db:seed               # categories, services, barbers, zones, products, owner admin
+npm run db:seed               # categories, default settings, owner admin (production-safe)
+npm run db:seed:demo          # placeholder services, barbers, zones, products (dev only)
 npm run build:css             # first CSS build
 
 npm run dev                   # http://localhost:3000 (web + CSS watcher + jobs worker)
