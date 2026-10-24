@@ -76,6 +76,8 @@ function productionProblems(e) {
   }
   if (!e.APP_URL.startsWith('https://'))
     problems.push('APP_URL must start with https:// in production.');
+  if ((e.NOTIFY_MODE || 'live') === 'live' && /@example\.(com|org|net)\b/i.test(e.MAIL_FROM || ''))
+    problems.push('MAIL_FROM is the example sender; set the real "Shop name <bookings@domain>".');
   return problems;
 }
 

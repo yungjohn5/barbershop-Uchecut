@@ -52,7 +52,7 @@ the owner's dashboard.
 - Responsive from 360 px phones to 2560 px monitors. Content stays visible without JavaScript, and `prefers-reduced-motion` turns animation off.
 
 **Admin dashboard** (`/admin`)
-- **Today:** a greeting, four stat cards (bookings, requests awaiting confirmation, expected and taken revenue, this week), each barber's schedule with one-tap Complete / No-show, and the home-visit request queue with Confirm / Cancel.
+- **Today:** a greeting, four stat cards (bookings, requests awaiting confirmation, expected and taken revenue, this week), each barber's schedule with one-tap Complete / No-show, and the home-visit request queue with Confirm / Cancel. Owners also see a "Before you launch" checklist until no placeholder content is left (see [docs/LAUNCH-CONTENT.md](docs/LAUNCH-CONTENT.md)).
 - **Bookings:** Upcoming / Today / Pending / Past / All, search by name, phone or reference, filters for barber, type, status and dates. A table on desktop that becomes cards on phones.
 - **Booking detail:** all the facts, status actions, cancel with a reason, and staff-only notes. Also the customer's upcoming and past bookings with their no-show count, Call / WhatsApp buttons, the customer's manage link to copy, and a full **history** of who booked, confirmed, moved or cancelled it, and when.
 - **New booking:** for walk-ins and phone bookings. Free times load live, returning customers are filled in from their phone number, and the total includes the travel fee. No lead time, and home visits are confirmed straight away.

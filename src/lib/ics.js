@@ -47,7 +47,7 @@ function buildIcs({
   const lines = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//Victory Barbershop//Booking//EN',
+    'PRODID:-//Cyberninja Innovations//Barbershop Booking//EN', // product id, not shop branding
     'CALSCALE:GREGORIAN',
     `METHOD:${cancelled ? 'CANCEL' : 'PUBLISH'}`,
     'BEGIN:VEVENT',

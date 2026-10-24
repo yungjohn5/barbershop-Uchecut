@@ -347,3 +347,39 @@ describe('your account', () => {
     await signIn('staff@test.ng', 'newpassword2026');
   });
 });
+
+describe('launch checklist', () => {
+  test('owners see what is still placeholder; staff never do', async () => {
+    const { agent } = await signIn();
+    const html = (await agent.get('/admin').expect(200)).text;
+    expect(html).toContain('Before you launch');
+    expect(html).toContain('Add the shop address'); // default settings are placeholders
+    expect(html).toContain('href="/admin/settings#shop"');
+
+    const asStaff = await signIn('staff@test.ng');
+    const staffHtml = (await asStaff.agent.get('/admin').expect(200)).text;
+    expect(staffHtml).not.toContain('Before you launch');
+  });
+
+  test('saving real shop details clears those items', async () => {
+    const { agent, csrf } = await signIn();
+    await agent
+      .post('/admin/settings/shop')
+      .type('form')
+      .send({
+        _csrf: csrf,
+        name: 'Victory Barbershop',
+        tagline: 'Sharp lines.',
+        address: '12 Admiralty Way\nLekki Phase 1, Lagos',
+        phone: '+2348031234567',
+        whatsapp: '2348031234567',
+        email: 'hello@victorybarbershop.ng',
+        hoursText: 'Mon–Sat · 9:00 – 19:00',
+        mapPin: '6.4281, 3.4219',
+      })
+      .expect(303);
+    const html = (await agent.get('/admin').expect(200)).text;
+    expect(html).not.toContain('Add the shop address');
+    expect(html).not.toContain('Add the map pin');
+  });
+});

@@ -17,6 +17,7 @@ const { getSlots, computeDay, staffSettings } = require('../../services/availabi
 const { createBooking, rescheduleBooking } = require('../../services/booking');
 const flow = require('../../services/bookingFlow');
 const settingsService = require('../../services/settings');
+const { launchChecklist } = require('../../services/launch');
 
 const router = express.Router();
 const { asyncRoute, setFlash, view, back, idParam } = require('./helpers');
@@ -85,11 +86,16 @@ router.use(
 router.get(
   '/',
   asyncRoute(async (req, res) => {
-    const data = await adminBookings.todayOverview();
+    const isOwner = res.locals.admin && res.locals.admin.role === 'OWNER';
+    const [data, launch] = await Promise.all([
+      adminBookings.todayOverview(),
+      isOwner ? launchChecklist() : [],
+    ]);
     view(req, res, 'dashboard', {
       title: 'Today',
       nav: 'today',
       ...data,
+      launch,
       actionsFor: (b) => adminBookings.allowedActions(b, data.now),
     });
   }),

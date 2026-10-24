@@ -10,6 +10,29 @@
   </div>
 </header>
 
+<% if (locals.launch && launch.length) { const required = launch.filter((g) => g.level === 'required'); %>
+<details class="a-card a-launch mb-6" <%= required.length ? 'open' : '' %>>
+  <summary class="flex cursor-pointer flex-wrap items-center justify-between gap-3">
+    <span>
+      <span class="a-h3 block">Before you launch</span>
+      <span class="mt-1 block text-sm text-ink/65"><%= required.length ? `${required.length} must-do, ` : '' %><%= launch.length - required.length %> nice-to-have. This card goes away when everything is done.</span>
+    </span>
+    <span class="a-launch-toggle text-sm font-medium text-amber-dark" aria-hidden="true"></span>
+  </summary>
+  <ul class="a-launch-list mt-4">
+    <% launch.forEach((g) => { %>
+      <li>
+        <a href="<%= g.href %>">
+          <span class="a-type <%= g.level === 'required' ? 'a-type-warn' : 'bg-surface' %>"><%= g.level === 'required' ? 'Must do' : 'Nice to have' %></span>
+          <span><%= g.label %></span>
+          <span class="arrow ml-auto" aria-hidden="true">→</span>
+        </a>
+      </li>
+    <% }) %>
+  </ul>
+</details>
+<% } %>
+
 <section class="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4" aria-label="Today at a glance">
   <div class="a-stat">
     <p class="a-stat-label">Today’s bookings</p>

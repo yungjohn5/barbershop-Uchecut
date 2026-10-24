@@ -37,6 +37,15 @@ describe('production startup checks', () => {
     expect(has({ CLOUDINARY_URL: '' }, /CLOUDINARY_URL is required/)).toBe(true);
     expect(has({ CLOUDINARY_FOLDER: 'victory/dev' }, /CLOUDINARY_FOLDER/)).toBe(true);
   });
+
+  test('the example MAIL_FROM is refused when messages go out for real', () => {
+    const example = 'Victory Barbershop <bookings@example.com>';
+    const has = (overrides) =>
+      productionProblems({ ...ok, ...overrides }).some((p) => /MAIL_FROM/.test(p));
+    expect(has({ MAIL_FROM: example, NOTIFY_MODE: 'live' })).toBe(true);
+    expect(has({ MAIL_FROM: example, NOTIFY_MODE: 'log' })).toBe(false);
+    expect(has({ MAIL_FROM: 'Victory <bookings@victorybarbershop.ng>' })).toBe(false);
+  });
 });
 
 describe('logs without PII', () => {

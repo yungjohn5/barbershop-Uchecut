@@ -4191,3 +4191,32 @@ button.a-live:hover {
   letter-spacing: 0.06em;
   color: rgb(var(--ink) / 0.7);
 }
+
+/* Dashboard: "Before you launch" checklist (owners, until every gap is filled) */
+.a-launch > summary {
+  list-style: none;
+}
+.a-launch > summary::-webkit-details-marker {
+  display: none;
+}
+.a-launch-toggle::after {
+  content: 'Show list';
+}
+.a-launch[open] .a-launch-toggle::after {
+  content: 'Hide list';
+}
+.a-launch-list > li + li {
+  border-top: 1px solid rgb(var(--ink) / 0.08);
+}
+.a-launch-list a {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 2.75rem; /* comfortable tap target */
+  padding: 0.55rem 0;
+  font-size: 0.95rem;
+}
+.a-launch-list a:hover span:nth-child(2) {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}

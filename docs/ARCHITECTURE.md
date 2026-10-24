@@ -351,6 +351,8 @@ The home page follows the reference's six sections in order, adapted with a home
 
 The owner runs the whole shop from `/admin`: today's schedule first, then everything that feeds the public site.
 
+**Before you launch.** Owners see a checklist card on Today until no placeholder content is left (`services/launch.js`, pure `contentGaps()`). **Must do** items are a default address, phone, WhatsApp or `@example` email, no active services or barbers, and barbers without working hours. **Nice to have** items are stock or missing photos (anything still served from `/images/site`), starter home-page wording, the default hours text, missing bios, no map pin, no socials and no zones. Each item links to the admin screen that fixes it. Templates never hardcode shop content, and a unit test scans every view for the shop name, example contacts and placeholder text. The owner-facing version is `docs/LAUNCH-CONTENT.md`.
+
 | Screen | What it does | Role |
 | --- | --- | --- |
 | Today | Today's bookings per barber, pending home requests count, quick confirm/complete/no-show | OWNER, STAFF |
