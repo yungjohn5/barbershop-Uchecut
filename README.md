@@ -305,7 +305,7 @@ Errors use one shape: `{ "error": { "code": "VALIDATION_ERROR", "message": "…"
 npm test
 ```
 
-- **Unit tests:** shift edges, buffers, overlaps, time off, lead time, booking window, "any barber", pricing, phone normalisation, error classification, settings, view helpers and opening-hours status.
+- **Unit tests:** shift edges, buffers, overlaps, time off, lead time, booking window, "any barber", pricing, phone normalisation, error classification, settings, view helpers and opening-hours status. Also message templates (SMS ≤ 160 characters), reminder windows, production env checks, log redaction, image URLs/sizes (Cloudinary mocked), asset fingerprints, SEO output, the launch checklist, and a scan that keeps shop content out of templates.
 - **Integration tests:** run against `TEST_DATABASE_URL`. Global setup creates the database if needed and applies migrations. The suite refuses any database whose name doesn't end in `_test`, so dev data is never touched. Covered:
   - real booking flows
   - a forced race (every attempt passes the availability check before inserting, and exactly one wins)
@@ -314,6 +314,10 @@ npm test
   - admin sign-in and lockout, route guards, status actions, staff bookings, reschedule, the week calendar
   - owner-only access, catalogue CRUD rules, weekly hours and time off, and multipart uploads behind CSRF
   - customers, reports, settings taking effect on the public site, user management and session sign-out
+  - the outbox: enqueue in the booking transaction, dedupe, retry backoff (1, 5, 30 min, then FAILED), resend, and `NOTIFY_MODE=log` never calling a provider
+  - jobs: reminders, auto-cancel, cleanup, the advisory lock, and `worker:once` in its own process
+  - Cloudinary uploads (mocked): validation, stored publicId/version/size, old-image deletion, and the `images:upload` script
+  - health check, CSP and cache headers, robots/sitemap/manifest, and noindex on private pages
 
 ---
 
