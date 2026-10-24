@@ -20,6 +20,9 @@ const DEFAULT_SETTINGS = {
     whatsapp: '2348000000000',
     email: 'hello@example.com',
     hoursText: ['Mon–Fri · 10:00 – 20:00', 'Sat · 10:00 – 18:00', 'Sun · Closed'],
+    // Map pin for search results (JSON-LD geo); null until the owner pastes one in Settings.
+    lat: null,
+    lng: null,
     socials: { instagram: '', tiktok: '', x: '', youtube: '' },
     // Cyberninja Innovations promo section (home page) and footer credit; owner can switch off.
     showBuilderSection: true,

@@ -67,7 +67,8 @@ the owner's dashboard.
   - Anything with booking history is hidden, never deleted.
 - **Customers:** search by name, phone (however it's typed) or email, and sort by last visit, visits, spend or no-shows. Each customer has a profile with a visit timeline, total spend, their usual service, staff notes, and a "Book them in" shortcut.
 - **Reports (owner):** presets or a custom range, booked vs taken revenue with change against the previous period, a revenue-by-day chart, and breakdowns by barber, service, weekday and zone. Also shows the cancellation and no-show rates and the home and staff share.
-- **Settings (owner):** booking rules (lead times, window, cutoff, slot step), shop details and socials, and every line of home-page copy. All are validated, take effect at once, and have a "restore defaults" option.
+- **Settings (owner):** booking rules (lead times, window, cutoff, slot step), shop details, socials and an optional map pin, every line of home-page copy, and the site photos. All are validated, take effect at once, and have a "restore defaults" option.
+- **Search and sharing:** canonical URLs from `APP_URL`, Open Graph/Twitter cards with a 1200×630 share image (the hero, cropped by Cloudinary), `BarberShop` JSON-LD built from Settings, `robots.txt`, `sitemap.xml`, a favicon set and a web manifest. Admin, manage and confirmation pages are `noindex`.
 - **Users (owner):** add staff or owners, edit, reset passwords (with a strong-password suggester) and deactivate. Deactivated users are signed out at once, and there is always at least one owner. Everyone can change their own password under **Account**.
 
 ---

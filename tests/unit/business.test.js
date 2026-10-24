@@ -245,6 +245,28 @@ describe('settings forms', () => {
     ).toThrow();
   });
 
+  test('shop: map pin pasted from Google Maps becomes lat/lng; blank clears it', () => {
+    const shop = {
+      name: 'Victory',
+      tagline: 'Sharp.',
+      address: 'Lekki',
+      phone: '+2348031234567',
+      whatsapp: '2348031234567',
+      email: 'a@b.ng',
+      hoursText: 'Mon',
+    };
+    expect(rowsFor('shop', { ...shop, mapPin: ' 6.4281 , 3.4219 ' })[0].value).toMatchObject({
+      lat: 6.4281,
+      lng: 3.4219,
+    });
+    expect(rowsFor('shop', { ...shop, mapPin: '' })[0].value).toMatchObject({
+      lat: null,
+      lng: null,
+    });
+    expect(() => rowsFor('shop', { ...shop, mapPin: 'Lekki Phase 1' })).toThrow();
+    expect(() => rowsFor('shop', { ...shop, mapPin: '95, 3.4' })).toThrow();
+  });
+
   test('home: the hero needs exactly three lines', () => {
     const copy = {
       heroText: 'a',

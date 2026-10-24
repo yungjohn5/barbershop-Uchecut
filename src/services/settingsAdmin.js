@@ -35,6 +35,25 @@ const lines = (min, max, each, label) =>
       .min(min, `Add at least ${min} ${label} line${min > 1 ? 's' : ''}.`)
       .max(max, `Use at most ${max} ${label} lines.`),
   );
+/** "6.4281, 3.4219" (as copied from Google Maps) → { lat, lng }; blank → no pin. */
+const mapPin = z.preprocess(
+  (v) => String(v || '').trim(),
+  z
+    .string()
+    .refine(
+      (s) => s === '' || /^-?\d{1,2}(\.\d+)?\s*,\s*-?\d{1,3}(\.\d+)?$/.test(s),
+      'Paste the pin as “latitude, longitude”, e.g. 6.4281, 3.4219.',
+    )
+    .transform((s) => {
+      if (!s) return { lat: null, lng: null };
+      const [lat, lng] = s.split(',').map((n) => Number(n.trim()));
+      return { lat, lng };
+    })
+    .refine(
+      ({ lat, lng }) => lat === null || (Math.abs(lat) <= 90 && Math.abs(lng) <= 180),
+      'That pin is off the map. Check the numbers.',
+    ),
+);
 const hours = (min, max, label) =>
   z.preprocess(
     (v) => (v === '' || v === undefined ? Number.NaN : Number(v)),
@@ -98,6 +117,7 @@ const SCHEMAS = {
       z.string().email('Enter a valid email.').max(120),
     ),
     hoursText: lines(1, 7, 60, 'opening-hours'),
+    mapPin,
     instagram: optionalUrl,
     tiktok: optionalUrl,
     x: optionalUrl,
@@ -131,8 +151,10 @@ function rowsFor(section, body) {
   const data = parse(schema, body);
   if (section === 'booking') return Object.entries(data).map(([key, value]) => ({ key, value }));
   if (section === 'shop') {
-    const { instagram, tiktok, x, youtube, ...rest } = data;
-    return [{ key: 'shop', value: { ...rest, socials: { instagram, tiktok, x, youtube } } }];
+    const { instagram, tiktok, x, youtube, mapPin: pin, ...rest } = data;
+    return [
+      { key: 'shop', value: { ...rest, ...pin, socials: { instagram, tiktok, x, youtube } } },
+    ];
   }
   return [{ key: 'home', value: data }];
 }
@@ -185,6 +207,10 @@ function formValues(all) {
       ...all.shop,
       address: all.shop.address.join('\n'),
       hoursText: all.shop.hoursText.join('\n'),
+      mapPin:
+        Number.isFinite(all.shop.lat) && Number.isFinite(all.shop.lng)
+          ? `${all.shop.lat}, ${all.shop.lng}`
+          : '',
       ...(all.shop.socials || {}),
     },
     home: { ...all.home, heroLines: all.home.heroLines.join('\n') },

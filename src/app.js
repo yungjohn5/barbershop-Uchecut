@@ -15,6 +15,7 @@ const settingsService = require('./services/settings');
 const prisma = require('./lib/prisma');
 const logger = require('./lib/logger');
 const { homeVisitsOpen } = require('./services/content');
+const seo = require('./services/seo');
 
 function createApp({ sessionPool } = {}) {
   const app = express();
@@ -82,6 +83,7 @@ function createApp({ sessionPool } = {}) {
     imageOf: images.imageOf,
     imageUrl: images.imageUrl,
     srcset: images.srcset,
+    seoJson: seo.jsonLdScript,
   });
   app.use(express.urlencoded({ extended: false, limit: '50kb' }));
   app.use(express.json({ limit: '50kb' }));
@@ -99,7 +101,8 @@ function createApp({ sessionPool } = {}) {
       res.status(503).json({ ok: false, db: 'down' });
     }
   });
-  app.get('/favicon.ico', (_req, res) => res.redirect(301, '/favicon.svg'));
+  app.get('/favicon.ico', (_req, res) => res.redirect(301, '/icons/icon-32.png'));
+  app.use(require('./routes/seo')); // robots.txt, sitemap.xml, site.webmanifest
 
   // JSON API: read-only GETs, no session or CSRF needed.
   app.use('/api', require('./routes/api'));
@@ -139,6 +142,7 @@ function createApp({ sessionPool } = {}) {
       next(err);
     }
   });
+  app.use(seo.middleware(() => settingsService.get('siteImages')));
 
   app.use('/admin', require('./routes/admin'));
   app.use('/', require('./routes/public'));

@@ -4,10 +4,34 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title><%= title ? `${title} · ${shop.name}` : `${shop.name} · Barbershop in Lagos` %></title>
-    <meta name="description" content="<%= shop.tagline %>" />
+    <% const seo = locals.seo || {}; const fullTitle = title ? `${title} · ${shop.name}` : `${shop.name} · Barbershop in Lagos`; const desc = locals.description || shop.tagline; -%>
+    <title><%= fullTitle %></title>
+    <meta name="description" content="<%= desc %>" />
+    <% if (seo.noindex || locals.noindex) { %><meta name="robots" content="noindex, nofollow" />
+    <% } else if (seo.canonical) { %><link rel="canonical" href="<%= seo.canonical %>" />
+    <% } -%>
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="<%= shop.name %>" />
+    <meta property="og:locale" content="en_NG" />
+    <meta property="og:title" content="<%= fullTitle %>" />
+    <meta property="og:description" content="<%= desc %>" />
+    <% if (seo.canonical) { %><meta property="og:url" content="<%= seo.canonical %>" /><% } %>
+    <% if (seo.image) { %>
+    <meta property="og:image" content="<%= seo.image.url %>" />
+    <meta property="og:image:width" content="<%= seo.image.width %>" />
+    <meta property="og:image:height" content="<%= seo.image.height %>" />
+    <meta property="og:image:alt" content="<%= shop.name %>, barbershop in Lagos" />
+    <meta name="twitter:image" content="<%= seo.image.url %>" />
+    <% } %>
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="<%= fullTitle %>" />
+    <meta name="twitter:description" content="<%= desc %>" />
     <meta name="theme-color" content="#F4F1EC" data-theme-color />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/icons/icon-32.png" sizes="32x32" type="image/png" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <% if (seo.jsonLd) { %><script type="application/ld+json"><%- seoJson(seo.jsonLd) %></script><% } %>
     <meta name="csrf-token" content="<%= csrfToken %>" />
     <script src="/js/boot.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />

@@ -75,6 +75,8 @@
       <small class="field-hint !mt-0 !pl-0">One line per row, up to 4.</small><%- fe(s, 'address') %></label>
     <label class="a-field <%= ec(s, 'hoursText') %>"><span>Opening hours text</span><textarea name="hoursText" rows="3"><%= s.values.hoursText %></textarea>
       <small class="field-hint !mt-0 !pl-0">Shown in the footer. Bookable times come from each barber’s hours.</small><%- fe(s, 'hoursText') %></label>
+    <label class="a-field sm:col-span-2 <%= ec(s, 'mapPin') %>"><span>Map pin <span class="font-normal normal-case tracking-normal text-ink/50">(optional)</span></span><input name="mapPin" inputmode="decimal" value="<%= s.values.mapPin || '' %>" placeholder="6.4281, 3.4219" />
+      <small class="field-hint !mt-0 !pl-0">In Google Maps, right-click the shop and click the numbers to copy them. Helps Google show the shop on the map.</small><%- fe(s, 'mapPin') %></label>
   </div>
   <p class="mt-8 text-xs font-medium uppercase tracking-[0.16em] text-ink/65">Social links <span class="normal-case tracking-normal text-ink/50">(leave blank to hide)</span></p>
   <div class="mt-3 grid gap-5 sm:grid-cols-2">

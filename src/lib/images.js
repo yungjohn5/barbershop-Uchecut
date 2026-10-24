@@ -46,9 +46,12 @@ function imageOf(record, field = 'image') {
   return legacy ? { legacy } : null;
 }
 
-/** Cloudinary transformation string, e.g. "f_auto,q_auto,c_fill,g_auto,w_800,h_600". */
-function transform({ w, h, crop = 'fill', gravity = 'auto' } = {}) {
-  const parts = ['f_auto', 'q_auto'];
+/**
+ * Cloudinary transformation string, e.g. "f_auto,q_auto,c_fill,g_auto,w_800,h_600".
+ * `format` pins the output (e.g. 'jpg' for social crawlers); default f_auto.
+ */
+function transform({ w, h, crop = 'fill', gravity = 'auto', format = 'auto' } = {}) {
+  const parts = [`f_${format}`, 'q_auto'];
   if (w || h) {
     parts.push(`c_${crop}`);
     if (crop === 'fill' && h) parts.push(`g_${gravity}`);

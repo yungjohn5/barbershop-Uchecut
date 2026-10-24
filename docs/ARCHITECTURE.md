@@ -281,6 +281,19 @@ Wizard state is kept in the session between steps, so a refresh never loses the 
 | GET | `/api/services?type=HOME` | Services allowed for that booking type |
 | GET | `/api/slots?date=2026-10-20&barber=any&services=3,5&type=HOME&zone=2` | `{ date, slots: [{ time: "10:15", barberIds: [1, 4] }] }` |
 
+**SEO and sharing** (`services/seo.js`, `routes/seo.js`; crawler files are mounted before sessions, so they never set cookies)
+
+| Method | Path | Returns |
+| --- | --- | --- |
+| GET | `/robots.txt` | Disallows `/admin`, `/manage`, `/book/confirmed`, `/api/`; points at the sitemap |
+| GET | `/sitemap.xml` | Public pages (`/`, `/book`) with absolute URLs |
+| GET | `/site.webmanifest` | Name from Settings, 192/512 and maskable icons (`public/icons/`) |
+
+- Every public page gets `<link rel="canonical">` built from `APP_URL` (query strings dropped), a description (the tagline), Open Graph and `summary_large_image` Twitter tags, the favicon set and the manifest.
+- Share image: the hero site photo cropped by Cloudinary to 1200×630 JPEG (`f_jpg,c_fill,g_auto`). While the hero is still the placeholder, it's the bundled `public/images/og-default.jpg` (same size).
+- The home page carries a `BarberShop` JSON-LD block. It's built only from Settings and live data: name, tagline, phone, email, address, `geo` from the optional Settings map pin, opening hours from barbers' shifts, price range from active services, socials as `sameAs`, and a `ReserveAction` to `/book`. It's a non-executing data block, `<`-escaped, so the CSP stays `script-src 'self'`.
+- Private pages (`/admin`, `/manage`, `/book/confirmed`) and error pages send `X-Robots-Tag: noindex, nofollow` and/or a robots meta, and have no canonical.
+
 **Admin** (behind `requireAdmin`, all under `/admin`)
 
 - `/admin/login`, `/admin/logout`

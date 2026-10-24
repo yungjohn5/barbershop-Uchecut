@@ -46,7 +46,7 @@ function errorHandler(err, req, res, _next) {
   res.locals.siteImg ??= (slot) => require('../lib/images').siteImage(slot, {});
   res.render(
     'pages/error',
-    { title: status === 404 ? 'Page not found' : 'Error', status, message },
+    { title: status === 404 ? 'Page not found' : 'Error', status, message, noindex: true },
     (renderErr, html) => {
       if (renderErr) {
         logger.error({ err: renderErr }, 'failed to render error page');

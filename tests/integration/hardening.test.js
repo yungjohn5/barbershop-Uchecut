@@ -35,8 +35,8 @@ test('CSP: scripts from self only, images from self (no wildcard), fonts from Go
   expect(csp).toContain('font-src');
   expect(csp).toContain("object-src 'none'");
   expect(csp).toContain("frame-ancestors 'none'");
-  // no inline scripts anywhere on the page
-  expect(res.text).not.toMatch(/<script(?![^>]*\bsrc=)[^>]*>/);
+  // no inline scripts anywhere on the page (JSON-LD is a data block, never executed)
+  expect(res.text).not.toMatch(/<script(?![^>]*\b(?:src=|type="application\/ld\+json"))[^>]*>/);
 });
 
 test('HSTS only in production; session cookie is httpOnly', async () => {

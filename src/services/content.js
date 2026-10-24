@@ -128,6 +128,7 @@ async function getHomeContent({ db = prisma, now = new Date() } = {}) {
     facts: homeFacts({ services, zones, barbers }),
     status: shopStatus({ now, hours }),
     hours: hoursSummary(hours),
+    weeklyHours: hours, // raw union of shifts, for the BarberShop JSON-LD
   };
 }
 
