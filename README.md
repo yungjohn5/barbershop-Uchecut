@@ -115,10 +115,10 @@ npm run db:migrate            # create tables + exclusion constraint
 npm run db:seed               # categories, services, barbers, zones, products, owner admin
 npm run build:css             # first CSS build
 
-npm run dev                   # http://localhost:3000
+npm run dev                   # http://localhost:3000 (web + CSS watcher + jobs worker)
 ```
 
-`npm run dev` runs the server (nodemon) and the Tailwind watcher together. Edits under
+`npm run dev` runs the server, the Tailwind watcher and the background worker (`src/jobs/worker.js`: message sending, reminders, auto-cancel, cleanup) together. Messages are only logged in development (`NOTIFY_MODE=log`); `npm run worker:once` runs every job once. Edits under
 `src/` restart the server, and template and CSS changes show on refresh.
 
 The admin dashboard is at <http://localhost:3000/admin>. Sign in with the `ADMIN_EMAIL` and

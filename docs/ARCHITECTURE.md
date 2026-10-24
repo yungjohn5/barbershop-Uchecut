@@ -55,6 +55,7 @@ uchecut/
 │   ├── app.js              # express app, middleware, view engine
 │   ├── server.js           # listen + graceful shutdown
 │   ├── config/             # env loader, constants (timezone, slot size)
+│   ├── jobs/               # separate worker process: outbox sends, reminders, auto-cancel, cleanup
 │   ├── lib/                # prisma client, mailer, sms, logger
 │   ├── middleware/         # requireAdmin, validate(zod), errorHandler
 │   ├── services/
@@ -398,6 +399,17 @@ Without a deposit, reminders are the main defence against no-shows, so every boo
 | Auto-cancel of unconfirmed home request | Email + SMS with rebook link | Email to owner |
 
 **Outbox.** Every booking change writes `Notification` rows (channel, template, recipient, payload snapshot) in the **same transaction** as the change (`services/notifications.js`: create, confirm, reschedule, cancel by customer or staff, auto-cancel), so a message exists only if the change committed. `dedupeKey` is unique (`VB-K7M2P:shop-confirmed:SMS`, plus the booking-event id or start time for messages that can repeat), so nothing is ever sent twice. Moving, cancelling or completing a booking marks its unsent reminders SKIPPED. The worker sends due rows; a failure retries after 1, 5 and 30 minutes, and the 4th failure marks the row FAILED and adds a "Message failed to send" entry to the booking history. The admin booking page lists every message with its status and a **Resend** button on FAILED ones. Owner alerts go to `OWNER_EMAIL`, falling back to the shop email in Settings.
+
+**Worker and jobs** (`src/jobs/`). A separate process (`npm run worker`; PM2 runs exactly one), never inside the web app, so cluster mode can't run a job twice. Each run also takes a transaction-scoped Postgres advisory lock (`pg_try_advisory_xact_lock(7342, jobId)`) and skips if another worker holds it. Schedules are in Africa/Lagos time:
+
+| Job | When | What |
+| --- | --- | --- |
+| `send-due` | every minute | Send due outbox rows (retries and FAILED as above) |
+| `reminders` | every 5 min | Queue the 24 h reminder (SMS + email) when the start is within 24 h but more than 2 h away, and the 2 h reminder (SMS) within 2 h, for CONFIRMED bookings. Skipped when the booking was made, confirmed or moved inside that window. Keys include the start time, so a move gets fresh reminders. |
+| `auto-cancel` | every 5 min | Cancel PENDING home requests within `homeAutoCancelHours` of the start (history: "Cancelled by system"), tell the customer (with a rebook link) and the owner |
+| `cleanup` | 03:00 | Delete expired sessions, and SENT/SKIPPED messages older than 90 days (FAILED are kept) |
+
+`npm run worker:once` runs every job once and exits (handy for testing); `npm run dev` starts the web app, the CSS watcher and the worker together.
 
 **Templates.** Emails are EJS in `views/emails/` (table layout, inline styles, plus a generated plain-text part); SMS texts live in `services/notifyTemplates.js` and fit one 160-character segment with a real domain and token (tested). Every customer message has the reference and the manage link; times are Africa/Lagos.
 

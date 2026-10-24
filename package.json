@@ -8,8 +8,10 @@
     "node": ">=22"
   },
   "scripts": {
-    "dev": "concurrently -k -n server,css -c cyan,magenta \"nodemon src/server.js\" \"npm:watch:css\"",
+    "dev": "concurrently -k -n server,css,worker -c cyan,magenta,yellow \"nodemon src/server.js\" \"npm:watch:css\" \"nodemon src/jobs/worker.js\"",
     "start": "node src/server.js",
+    "worker": "node src/jobs/worker.js",
+    "worker:once": "node src/jobs/worker.js --once",
     "build:css": "tailwindcss -i src/styles/input.css -o public/css/app.css --minify",
     "watch:css": "tailwindcss -i src/styles/input.css -o public/css/app.css --watch",
     "test": "jest --runInBand",
