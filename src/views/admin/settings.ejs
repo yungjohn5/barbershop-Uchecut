@@ -15,7 +15,7 @@
 </header>
 
 <nav class="a-tabs no-scrollbar" aria-label="Sections">
-  <a href="#booking">Booking rules</a><a href="#shop">Shop details</a><a href="#home">Home page copy</a>
+  <a href="#booking">Booking rules</a><a href="#shop">Shop details</a><a href="#home">Home page copy</a><a href="#photos">Site photos</a>
 </nav>
 
 <form id="booking" method="post" action="/admin/settings/booking" class="a-card scroll-mt-24" data-a-form>
@@ -131,6 +131,32 @@
     <button type="submit" class="btn-primary" data-a-submit>Save home page copy <span class="arrow" aria-hidden="true">→</span></button>
   </div>
 </form>
+
+<section id="photos" class="a-card mt-6 scroll-mt-24" aria-labelledby="photos-h">
+  <h2 id="photos-h" class="a-h3">Site photos</h2>
+  <p class="mt-1 max-w-2xl text-sm text-ink/65">The photos on the home page, stored on Cloudinary and resized for every screen automatically. Until you upload one, the placeholder photo shows.</p>
+  <div class="mt-6 grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
+    <% Object.entries(slots).forEach(([slot, def]) => { const uploaded = siteImages[slot] && siteImages[slot].publicId; %>
+      <div class="a-subcard">
+        <div class="flex items-center justify-between gap-3">
+          <p class="font-medium"><%= def.label %></p>
+          <span class="a-type <%= uploaded ? 'a-type-home' : '' %>"><%= uploaded ? 'Uploaded' : 'Placeholder' %></span>
+        </div>
+        <form method="post" action="/admin/settings/photos/<%= slot %>" enctype="multipart/form-data" class="mt-4" data-a-form>
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+          <%- include('partials/image-input', { current: siteImg(slot), width: 600, label: 'Choose a new photo', hint: def.hint || 'JPG, PNG or WebP up to 8 MB. 1600 px or wider looks sharpest.', error: photoErrors[slot], shape: 'wide' }) %>
+          <button type="submit" class="btn-primary mt-4 !min-h-[2.5rem] !px-5 !py-2 text-sm" data-a-submit>Upload</button>
+        </form>
+        <% if (uploaded) { %>
+          <form method="post" action="/admin/settings/photos/<%= slot %>/reset" class="mt-3">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+            <button type="submit" class="a-danger-link" data-confirm="Go back to the placeholder photo? The uploaded one will be deleted.">Restore placeholder</button>
+          </form>
+        <% } %>
+      </div>
+    <% }) %>
+  </div>
+</section>
 
 <% ['booking', 'shop', 'home'].forEach((section) => { %>
   <form id="reset-<%= section %>" method="post" action="/admin/settings/<%= section %>" hidden>

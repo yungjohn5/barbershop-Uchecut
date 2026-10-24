@@ -43,6 +43,7 @@ function errorHandler(err, req, res, _next) {
   res.locals.shop ??= DEFAULT_SETTINGS.shop;
   res.locals.csrfToken ??= '';
   res.locals.page ??= null;
+  res.locals.siteImg ??= (slot) => require('../lib/images').siteImage(slot, {});
   res.render(
     'pages/error',
     { title: status === 404 ? 'Page not found' : 'Error', status, message },

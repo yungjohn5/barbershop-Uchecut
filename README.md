@@ -86,7 +86,7 @@ the owner's dashboard.
 | Dates | `date-fns`, `date-fns-tz` |
 | Sessions & security | `express-session` + `connect-pg-simple`, `csrf-sync`, `express-rate-limit`, `bcrypt` |
 | Messaging | `nodemailer` (SMTP), Termii SMS behind `sms.send()` (dry-run until configured) |
-| Jobs / uploads | `node-cron`, `multer` + `sharp` |
+| Jobs / images | `node-cron` (separate worker), `multer` (memory) + Cloudinary |
 | Testing / tooling | Jest, Supertest, ESLint 9, Prettier |
 | Production | PM2 behind Nginx |
 
@@ -147,8 +147,14 @@ required value is missing.
 | `TEST_DATABASE_URL` | for tests | Separate database whose name **must end in `_test`** |
 | `PORT`, `APP_URL`, `NODE_ENV`, `TZ` | | Server basics (`TZ=Africa/Lagos`) |
 | `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NAME` | for seed | First OWNER account (password ≥ 12 characters) |
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM` | | Email; logged instead of sent while `SMTP_HOST` is empty |
-| `TERMII_API_KEY`, `TERMII_SENDER_ID`, `TERMII_BASE_URL` | | SMS; dry-run while unset |
+| `NOTIFY_MODE` | | `log` (default outside production: written to the log and the Notification table, never sent) or `live` |
+| `NOTIFY_ALLOWLIST` | | Outside production, live mode only messages these phones/emails |
+| `OWNER_EMAIL` | | Owner alerts; defaults to the shop email in Settings |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM` | live mode | Email |
+| `TERMII_API_KEY`, `TERMII_SENDER_ID`, `TERMII_BASE_URL` | live mode | SMS |
+| `CLOUDINARY_URL` | production | `cloudinary://key:secret@cloud`; server-side only. Empty in dev = bundled photos, uploads disabled |
+| `CLOUDINARY_FOLDER` | | Upload folder (default `victory/dev`, `victory/prod` in production) |
+| `LOG_LEVEL` | | pino level (default `info`) |
 
 Shop-level settings (lead times, booking window, cancellation cutoff, opening-hours text,
 address, socials, home-page copy) live in the `Setting` table. Defaults are in
@@ -169,7 +175,10 @@ address, socials, home-page copy) live in the `Setting` table. Defaults are in
 | `npm run lint` / `npm run format` | ESLint / Prettier |
 | `npm run db:migrate` | Create and apply migrations (development) |
 | `npm run db:deploy` | Apply migrations (production / CI) |
-| `npm run db:seed` | Seed data (safe to re-run) |
+| `npm run db:seed` | Base seed: categories, default settings, owner admin (production-safe, re-runnable) |
+| `npm run db:seed:demo` | Placeholder services, barbers, zones, products; only into an empty catalogue, never in production |
+| `npm run images:upload` | One-off: move bundled/legacy local photos to Cloudinary (`-- --dry-run` to preview) |
+| `npm run worker` / `npm run worker:once` | Jobs worker (sends, reminders, auto-cancel, cleanup) / run each job once |
 | `npm run db:reset` | Drop, re-migrate and re-seed the dev database ⚠️ |
 
 ---
@@ -182,7 +191,7 @@ uchecut/
 ├── prisma/
 │   ├── schema.prisma         # 15 models; all DateTimes are timestamptz(3)
 │   ├── migrations/           # includes the raw-SQL booking exclusion constraint
-│   └── seed.js               # idempotent placeholder data
+│   └── seed.js               # production-safe base seed (demo data: scripts/seed-demo.js)
 ├── public/
 │   ├── css/app.css           # built (git-ignored)
 │   ├── js/                   # boot.js, site.js (shared), home.js, booking.js (wizard), admin.js
@@ -245,7 +254,7 @@ Designed and built by [Cyberninja Innovations](https://cyberninjainnovations.com
 
 - **Design:** Gloock headings, DM Serif Display italic accents, Inter body text (16 px minimum on mobile). Palette: paper `#F4F1EC`, ink `#141414`, amber `#B8833E`.
 - **Accent words:** copy can mark one word with `*asterisks*`, which renders as an italic amber accent via `rich()`.
-- **Images:** stored as `${base}-${width}.webp`. `Service.imageUrl`, `Barber.photoUrl` and `Product.imageUrl` hold the base path. Current photos are Pexels placeholders, listed in [public/images/site/CREDITS.md](public/images/site/CREDITS.md).
+- **Images:** on Cloudinary. Records store `publicId`, version, width and height; views build `f_auto,q_auto` URLs and srcsets with `imageUrl()` / `srcset()` from [src/lib/images.js](src/lib/images.js). Until `npm run images:upload` runs, `legacyImagePath` / `legacyPhotoPath` point at bundled `${base}-${width}.webp` files. Home-page photos are Settings → Site photos slots, falling back to the bundled Pexels placeholders ([CREDITS.md](public/images/site/CREDITS.md)).
 - **Motion:**
   - [boot.js](public/js/boot.js) sets pre-paint flags, with a 2.5 s failsafe.
   - [site.js](public/js/site.js) handles the menu, sticky nav, smooth scrolling, reveals, cursor and buttons.
@@ -257,8 +266,8 @@ Designed and built by [Cyberninja Innovations](https://cyberninjainnovations.com
   - `boot.js` sets `data-theme` before first paint, from the saved `vb-theme` value or the OS setting.
 - **Buttons:** `.btn-primary`, `.btn-light`, `.btn-ghost` and `.btn-ghost-light` get the rolling-label hover markup at runtime. Use them for any new button. Text links use `.link-u` or `.link-line`.
 - **Client sign-off:** the hero's rotating **"Book Appointment"** ring button (`partials/ring-btn.ejs`, `.ring-btn`) is approved as is. Do not change its look, size, position or hover.
-- **CSP:** scripts load only from `'self'`, so GSAP is served from `node_modules` at `/vendor/gsap`. Inline `<script>` tags and `style` attributes are blocked; use classes. `blob:` images are allowed for the admin upload preview.
-- **Uploads:** admin photos are written to `public/uploads/` (git-ignored). Back this folder up and keep it across deploys.
+- **CSP:** scripts load only from `'self'`, so GSAP is served from `node_modules` at `/vendor/gsap`. Inline `<script>` tags and `style` attributes are blocked; use classes. `blob:` images are allowed for the admin upload preview, and `res.cloudinary.com` for photos. Background images use a `data-bg` attribute that `site.js` turns into a CSS variable.
+- **Uploads:** checked by magic bytes (JPEG/PNG/WebP, 8 MB) and streamed to Cloudinary; nothing is written to disk. Replaced or deleted images are destroyed on Cloudinary in the background. The server holds no user files, so backups are the database only.
 
 ---
 

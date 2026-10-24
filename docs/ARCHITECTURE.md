@@ -103,7 +103,9 @@ Sixteen Prisma models cover the catalogue, staff schedules, zones, bookings and 
 | `Admin` | Dashboard users: email, password hash, role (OWNER/STAFF), lockout fields | — |
 | `Session` | `connect-pg-simple` store (table `session`), modelled in Prisma so migrations own it; the store runs with `createTableIfMissing: false` | — |
 
-Gallery images, products and shop settings (hours, address, socials) are three small extra tables (`GalleryItem`, `Product`, `Setting`) edited from the dashboard.
+Gallery images, products and shop settings (hours, address, socials) are three small extra tables (`GalleryItem`, `Product`, `Setting`) edited from the dashboard. `GalleryItem` and `Product` carry the same `image*` + `legacyImagePath` columns as `Service`.
+
+**Legacy image columns.** `legacyImagePath` / `legacyPhotoPath` (renamed from the old `imageUrl` / `photoUrl`) keep pointing at bundled local files until `npm run images:upload` moves them to Cloudinary and clears them. A Phase 6 migration drops them once production has been uploaded.
 
 Every `DateTime` column is `@db.Timestamptz(3)` and holds UTC; this also lets the exclusion constraint use `tstzrange` (an immutable expression).
 
@@ -119,7 +121,11 @@ model Service {
   priceKobo     Int              // 750000 = ₦7,500
   durationMin   Int
   homeAvailable Boolean          @default(true)
-  imageUrl      String?
+  imagePublicId String?          // Cloudinary asset: publicId + version + size
+  imageVersion  Int?
+  imageWidth    Int?
+  imageHeight   Int?
+  legacyImagePath String?        // bundled /images/site base path until images:upload runs
   sortOrder     Int              @default(0)
   active        Boolean          @default(true)
   categoryId    Int
@@ -133,7 +139,11 @@ model Barber {
   name            String
   slug            String         @unique
   bio             String?
-  photoUrl        String?
+  photoPublicId   String?        // same shape as Service.image*
+  photoVersion    Int?
+  photoWidth      Int?
+  photoHeight     Int?
+  legacyPhotoPath String?
   doesHomeService Boolean        @default(false)
   active          Boolean        @default(true)
   services        Service[]
@@ -302,7 +312,8 @@ The home page follows the reference's six sections in order, adapted with a home
 **Implementation notes (home page)**
 
 - Section partials live in `views/partials/home/`; data comes from `services/content.js` (`getHomeContent`), copy from the `home` setting (code defaults in `config/constants.js` until the owner edits it).
-- Responsive images follow `${base}-${width}.webp` (e.g. `/images/site/svc-skin-fade-900.webp`); `Service.imageUrl`, `Barber.photoUrl` and `Product.imageUrl` store the base path. Admin uploads write the same widths with `sharp` (`services/images.js`: services and barbers 500/900, products 400/800, gallery 600/1200) to `public/uploads/<kind>/<slug>-<random>-<width>.webp`, and the database stores the base path.
+- Images live on Cloudinary. `lib/images.js` turns a record into a descriptor (`imageOf(record, 'image'|'photo')` → `{ publicId, version, width, height }`, or `{ legacy: base }` while only a legacy path exists) and builds delivery URLs: `imageUrl(img, { w, h, crop, gravity })` and `srcset(img, widths, { ratio })`, always with `f_auto,q_auto`. Legacy descriptors map to the bundled `${base}-${width}.webp` files.
+- Home-page photos (hero, intro, craft, home visit, footer chair) are named slots in the `siteImages` setting, edited in Settings → Site photos. `siteImg(slot)` returns the uploaded asset or the bundled placeholder in `public/images/site`.
 - Current photos are Pexels placeholders, listed in `public/images/site/CREDITS.md`.
 - Motion: `public/js/boot.js` (pre-paint flags + 2.5 s failsafe), `site.js` (menu, sticky nav, reveals, parallax, rings, fit-text), `home.js` (hero timeline, marquee, Flip service filter, step progress, pinned product rail on desktop).
 - Premium layer: first-visit intro loader (once per session, `sessionStorage`), desktop-only ScrollSmoother (created/destroyed with the `(min-width:1024px) and (pointer:fine)` breakpoint; fixed UI lives outside `#smooth-wrapper`), cursor companion that labels `[data-cursor]` targets and hides over round buttons, `*accent*` words in copy rendered by `rich()`, live open/closed status from barbers' `WorkingHours` (`shopStatus`), and a home-visit price estimator.
@@ -381,7 +392,7 @@ A no-show adds 1 to `Customer.noShowCount`; undoing it takes 1 off. Every change
 - Changing your own password signs out your other devices and keeps the current one.
 - PRG form state never stores password fields in the session.
 
-**Uploads.** Image forms are `multipart/form-data`. `middleware/upload.js` parses them (memory storage, one file, 8 MB cap) before CSRF protection runs, so the hidden `_csrf` field is checked as usual. The file only reaches a handler after CSRF and the OWNER check pass. `sharp` decodes the buffer, rejects anything that isn't a JPG/PNG/WebP/AVIF/HEIF image or is under 400 px wide, applies EXIF rotation and writes WebP. Replaced or deleted images are removed from disk, and `removeUpload` only touches files inside `/uploads/<kind>/`. The sharp file cache is off because it holds Windows file handles open. The CSP allows `blob:` images so the picker can preview a photo before upload.
+**Uploads.** Image forms are `multipart/form-data`. `middleware/upload.js` parses them (memory storage, one file, 8 MB cap) before CSRF protection runs, so the hidden `_csrf` field is checked as usual. The file only reaches a handler after CSRF and the OWNER check pass. `services/images.js` checks the magic bytes (JPEG/PNG/WebP), then streams the buffer with `upload_stream` into `{CLOUDINARY_FOLDER}/{gallery|barbers|services|products|site}`; a result under 400 px wide is destroyed again and refused. The DB stores only `publicId`, version, width and height. When an image is replaced or its record deleted, the old asset is destroyed after the write commits (`destroyLater`: try/catch, logged, never blocks the request). Without `CLOUDINARY_URL` uploads fail with a friendly "not set up" message. The API secret stays on the server; the CSP allows `blob:` images so the picker can preview a photo before upload.
 
 ## Notifications, security and deployment
 
@@ -419,7 +430,7 @@ SMS goes through Termii (good Nigerian delivery rates) behind a small `sms.send(
 
 **Security**
 
-- `helmet` headers. CSP: scripts from `'self'` only (no inline scripts anywhere; GSAP served from `/vendor`), styles and fonts from self + Google Fonts, images from self/`data:`/`blob:` (Cloudinary is added with the image move), `object-src 'none'`, `frame-ancestors 'none'`. HSTS (1 year, subdomains) in production only. `trust proxy` is set for Nginx, so client IPs (rate limits) and `secure` cookies work; session cookies are `httpOnly` + `sameSite=lax` and `secure` in production.
+- `helmet` headers. CSP: scripts from `'self'` only (no inline scripts anywhere; GSAP served from `/vendor`), styles and fonts from self + Google Fonts, images from self/`data:`/`blob:`/`https://res.cloudinary.com`, no inline styles (background photos go through `data-bg` → a CSS variable set by `site.js`), `object-src 'none'`, `frame-ancestors 'none'`. HSTS (1 year, subdomains) in production only. `trust proxy` is set for Nginx, so client IPs (rate limits) and `secure` cookies work; session cookies are `httpOnly` + `sameSite=lax` and `secure` in production.
 - CSRF tokens on every form; `express-rate-limit` on booking submissions and manage-link actions (10 per 15 min), every `/manage/*` request including page views (100 per 15 min, slows token guessing), the JSON API (60 per min) and `/admin/login` (20 per 15 min), per IP. When a limit is hit, pages get the branded 429 page (minutes until reset, plus a WhatsApp button for bookings), the JSON API gets `{ error: { code: 'RATE_LIMITED', message } }`, and the login form is shown again with the message. Limits use the in-memory store, so each PM2 worker counts separately.
 - zod validation on every input; Nigerian phone numbers normalised to `+234…`.
 - Admin passwords hashed with bcrypt (cost 12); login lockout after 5 failed attempts.

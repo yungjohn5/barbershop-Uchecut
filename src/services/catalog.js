@@ -182,10 +182,29 @@ const nextSortOrder = async (delegate, where = {}) => {
 };
 
 // Swap in a new image (if uploaded) and remove the old files afterwards.
-async function withImage(file, { kind, name, current }) {
-  if (!file) return { url: current, cleanup: async () => {} };
-  const url = await images.saveUpload(file.buffer, { kind, name });
-  return { url, cleanup: () => images.removeUpload(current, { kind }) };
+// Upload a new image (if one was chosen). After the DB save: done() deletes the OLD image from
+// Cloudinary; if the save fails, failed() deletes the NEW one so nothing is orphaned.
+async function withImage(file, { kind, name, current, field = 'image' }) {
+  if (!file) return { fields: {}, done: () => {}, failed: () => {} };
+  const uploaded = await images.uploadImage(file.buffer, { kind, name });
+  return {
+    fields: images.fieldsFor(field, uploaded),
+    done: () => images.destroyLater(current && current[`${field}PublicId`]),
+    failed: () => images.destroyLater(uploaded.publicId),
+  };
+}
+
+/** Run the DB write; tidy up Cloudinary either way. */
+async function saveWithImage(image, write) {
+  let saved;
+  try {
+    saved = await write();
+  } catch (err) {
+    image.failed();
+    throw err;
+  }
+  image.done();
+  return saved;
 }
 
 // ---------------------------------------------------------------------------
@@ -245,7 +264,7 @@ async function saveService(id, body, { file, db = prisma } = {}) {
   const image = await withImage(file, {
     kind: 'services',
     name: data.name,
-    current: current && current.imageUrl,
+    current,
   });
   const fields = {
     name: data.name,
@@ -256,28 +275,28 @@ async function saveService(id, body, { file, db = prisma } = {}) {
     categoryId: data.categoryId,
     homeAvailable: data.homeAvailable,
     active: data.active,
-    imageUrl: image.url,
+    ...image.fields,
   };
-  const saved = await db.$transaction(async (tx) => {
-    const row = id
-      ? await tx.service.update({ where: { id }, data: fields })
-      : await tx.service.create({
-          data: {
-            ...fields,
-            sortOrder: await nextSortOrder(tx.service, { categoryId: data.categoryId }),
-          },
+  return saveWithImage(image, () =>
+    db.$transaction(async (tx) => {
+      const row = id
+        ? await tx.service.update({ where: { id }, data: fields })
+        : await tx.service.create({
+            data: {
+              ...fields,
+              sortOrder: await nextSortOrder(tx.service, { categoryId: data.categoryId }),
+            },
+          });
+      await tx.barberService.deleteMany({ where: { serviceId: row.id } });
+      if (data.barberIds.length) {
+        await tx.barberService.createMany({
+          data: data.barberIds.map((barberId) => ({ barberId, serviceId: row.id })),
+          skipDuplicates: true,
         });
-    await tx.barberService.deleteMany({ where: { serviceId: row.id } });
-    if (data.barberIds.length) {
-      await tx.barberService.createMany({
-        data: data.barberIds.map((barberId) => ({ barberId, serviceId: row.id })),
-        skipDuplicates: true,
-      });
-    }
-    return row;
-  });
-  await image.cleanup();
-  return saved;
+      }
+      return row;
+    }),
+  );
 }
 
 /** Services with bookings are kept for history: hide them instead. */
@@ -290,7 +309,7 @@ async function deleteService(id, { db = prisma } = {}) {
   if (s._count.bookings)
     throw new HttpError(409, 'This service has bookings, so it can’t be deleted. Hide it instead.');
   await db.service.delete({ where: { id } });
-  await images.removeUpload(s.imageUrl, { kind: 'services' });
+  images.destroyLater(s.imagePublicId);
 }
 
 const setActive = (id, active, { db = prisma } = {}) =>
@@ -346,29 +365,25 @@ async function saveProduct(id, body, { file, db = prisma } = {}) {
   const data = parse(schemas.product, body);
   const current = id ? await db.product.findUnique({ where: { id } }) : null;
   if (id && !current) throw new NotFoundError('Product not found');
-  const image = await withImage(file, {
-    kind: 'products',
-    name: data.name,
-    current: current && current.imageUrl,
-  });
+  const image = await withImage(file, { kind: 'products', name: data.name, current });
   const fields = {
     name: data.name,
     slug: await uniqueSlug(db.product, data.name, id),
     description: data.description,
     priceKobo: data.price,
     visible: data.visible,
-    imageUrl: image.url,
+    ...image.fields,
   };
-  const saved = id
-    ? await db.product.update({ where: { id }, data: fields })
-    : await db.product.create({ data: { ...fields, sortOrder: await nextSortOrder(db.product) } });
-  await image.cleanup();
-  return saved;
+  return saveWithImage(image, async () =>
+    id
+      ? db.product.update({ where: { id }, data: fields })
+      : db.product.create({ data: { ...fields, sortOrder: await nextSortOrder(db.product) } }),
+  );
 }
 
 async function deleteProduct(id, { db = prisma } = {}) {
   const p = await db.product.delete({ where: { id } });
-  await images.removeUpload(p.imageUrl, { kind: 'products' });
+  images.destroyLater(p.imagePublicId);
 }
 
 // ---------------------------------------------------------------------------
@@ -387,13 +402,16 @@ async function addGalleryItem(body, { file, db = prisma } = {}) {
     throw new ValidationError('Choose a photo to upload.', [
       { path: 'image', message: 'Choose a photo.' },
     ]);
-  const url = await images.saveUpload(file.buffer, {
+  const image = await withImage(file, {
     kind: 'gallery',
     name: data.caption || 'cut',
+    current: null,
   });
-  return db.galleryItem.create({
-    data: { ...data, imageUrl: url, sortOrder: await nextSortOrder(db.galleryItem) },
-  });
+  return saveWithImage(image, async () =>
+    db.galleryItem.create({
+      data: { ...data, ...image.fields, sortOrder: await nextSortOrder(db.galleryItem) },
+    }),
+  );
 }
 
 async function updateGalleryItem(id, body, { db = prisma } = {}) {
@@ -403,10 +421,12 @@ async function updateGalleryItem(id, body, { db = prisma } = {}) {
 
 async function deleteGalleryItem(id, { db = prisma } = {}) {
   const g = await db.galleryItem.delete({ where: { id } });
-  await images.removeUpload(g.imageUrl, { kind: 'gallery' });
+  images.destroyLater(g.imagePublicId);
 }
 
 module.exports = {
+  withImage,
+  saveWithImage,
   nairaToKobo,
   koboToInput,
   slugify,

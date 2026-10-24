@@ -12,7 +12,6 @@ const {
   minutesToHHMM,
 } = require('../lib/time');
 const catalog = require('./catalog');
-const images = require('./images');
 
 const WEEKDAYS = [
   [1, 'Monday'],
@@ -157,8 +156,12 @@ async function saveProfile(id, body, { file, db = prisma } = {}) {
   const data = catalog.parse(profileSchema, body);
   const current = id ? await db.barber.findUnique({ where: { id } }) : null;
   if (id && !current) throw new NotFoundError('Barber not found');
-  let photoUrl = current ? current.photoUrl : null;
-  if (file) photoUrl = await images.saveUpload(file.buffer, { kind: 'barbers', name: data.name });
+  const image = await catalog.withImage(file, {
+    kind: 'barbers',
+    name: data.name,
+    current,
+    field: 'photo',
+  });
   const fields = {
     name: data.name,
     slug: await catalog.uniqueSlug(db.barber, data.name, id),
@@ -166,33 +169,32 @@ async function saveProfile(id, body, { file, db = prisma } = {}) {
     specialties: data.specialties,
     doesHomeService: data.doesHomeService,
     active: data.active,
-    photoUrl,
+    ...image.fields,
   };
-  const saved = await db.$transaction(async (tx) => {
-    let row;
-    if (id) {
-      row = await tx.barber.update({ where: { id }, data: fields });
-    } else {
-      const last = await tx.barber.findFirst({
-        orderBy: { sortOrder: 'desc' },
-        select: { sortOrder: true },
-      });
-      row = await tx.barber.create({
-        data: { ...fields, sortOrder: (last ? last.sortOrder : 0) + 10 },
-      });
-    }
-    await tx.barberService.deleteMany({ where: { barberId: row.id } });
-    if (data.serviceIds.length) {
-      await tx.barberService.createMany({
-        data: data.serviceIds.map((serviceId) => ({ barberId: row.id, serviceId })),
-        skipDuplicates: true,
-      });
-    }
-    return row;
-  });
-  if (file && current && current.photoUrl !== photoUrl)
-    await images.removeUpload(current.photoUrl, { kind: 'barbers' });
-  return saved;
+  return catalog.saveWithImage(image, () =>
+    db.$transaction(async (tx) => {
+      let row;
+      if (id) {
+        row = await tx.barber.update({ where: { id }, data: fields });
+      } else {
+        const last = await tx.barber.findFirst({
+          orderBy: { sortOrder: 'desc' },
+          select: { sortOrder: true },
+        });
+        row = await tx.barber.create({
+          data: { ...fields, sortOrder: (last ? last.sortOrder : 0) + 10 },
+        });
+      }
+      await tx.barberService.deleteMany({ where: { barberId: row.id } });
+      if (data.serviceIds.length) {
+        await tx.barberService.createMany({
+          data: data.serviceIds.map((serviceId) => ({ barberId: row.id, serviceId })),
+          skipDuplicates: true,
+        });
+      }
+      return row;
+    }),
+  );
 }
 
 /** Upcoming active bookings that no longer fit inside the given weekly hours. */

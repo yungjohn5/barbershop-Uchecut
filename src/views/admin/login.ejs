@@ -1,6 +1,6 @@
 <section class="grid min-h-[100svh] lg:grid-cols-[1.1fr_1fr]">
   <div class="keep-dark relative hidden overflow-hidden bg-ink text-paper grain lg:block">
-    <img src="<%= src('/images/site/hero', [800, 1400]) %>" alt="" class="absolute inset-0 h-full w-full object-cover opacity-55" />
+    <img src="<%= imageUrl(siteImg('hero'), { w: 1400 }) %>" alt="" class="absolute inset-0 h-full w-full object-cover opacity-55" />
     <div class="absolute inset-0 bg-gradient-to-t from-night via-night/40 to-night/20" aria-hidden="true"></div>
     <div class="relative flex h-full flex-col justify-between p-12">
       <a href="/" class="font-serif text-3xl"><%= shop.name.split(' ')[0] %></a>

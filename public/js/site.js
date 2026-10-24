@@ -190,6 +190,13 @@
     });
   }
 
+  // ----------------------------------------------------------- data-bg photos
+  // Background photos chosen in Settings (CSP blocks inline styles, so set them via CSSOM).
+  $('[data-bg]').forEach(function (el) {
+    var url = el.getAttribute('data-bg');
+    if (url) el.style.setProperty('--chair-bg', 'url("' + url.replace(/"/g, '%22') + '")');
+  });
+
   // ----------------------------------------------------------- motion helpers
   function initMotion() {
     if (!motion) return;

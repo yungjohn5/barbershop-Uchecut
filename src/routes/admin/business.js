@@ -84,7 +84,48 @@ router.get(
       const f = takeForm(req, `settings-${s}`);
       forms[s] = { values: f.values || current[s], errors: f.errors };
     }
-    view(req, res, 'settings', { title: 'Settings', nav: 'settings', forms });
+    const photoErrors = Object.fromEntries(
+      Object.keys(SITE_SLOTS).map((slot) => [slot, takeForm(req, `photo-${slot}`).errors.image]),
+    );
+    const siteImages = (await settingsService.getAll({ fresh: true })).siteImages || {};
+    view(req, res, 'settings', {
+      title: 'Settings',
+      nav: 'settings',
+      forms,
+      slots: SITE_SLOTS,
+      siteImages,
+      photoErrors,
+    });
+  }),
+);
+
+const { SITE_SLOTS } = require('../../lib/images');
+
+router.post(
+  '/settings/photos/:slot',
+  ownerOnly,
+  formPost(
+    (req) => `photo-${req.params.slot}`,
+    '/admin/settings#photos',
+    async (req, res) => {
+      const slot = req.params.slot;
+      if (!SITE_SLOTS[slot]) throw new NotFoundError('Unknown site photo');
+      await settingsAdmin.saveSiteImage(slot, req.file);
+      setFlash(req, 'success', `${SITE_SLOTS[slot].label} photo updated.`);
+      res.redirect(303, '/admin/settings#photos');
+    },
+  ),
+);
+
+router.post(
+  '/settings/photos/:slot/reset',
+  ownerOnly,
+  formPost('noop', '/admin/settings#photos', async (req, res) => {
+    const slot = req.params.slot;
+    if (!SITE_SLOTS[slot]) throw new NotFoundError('Unknown site photo');
+    await settingsAdmin.resetSiteImage(slot);
+    setFlash(req, 'success', `${SITE_SLOTS[slot].label} is back to the placeholder photo.`);
+    res.redirect(303, '/admin/settings#photos');
   }),
 );
 

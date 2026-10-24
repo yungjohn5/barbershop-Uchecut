@@ -23,6 +23,20 @@ const schema = z.object({
   // Owner alerts (new booking, home request, cancellation); falls back to the shop email.
   OWNER_EMAIL: z.string().email().optional().or(z.literal('')).default(''),
   ADMIN_PASSWORD: z.string().optional().default(''),
+  // Images. Server-only credentials (never sent to the browser). Required in production.
+  CLOUDINARY_URL: z
+    .string()
+    .regex(
+      /^cloudinary:\/\/[^:\s]+:[^@\s]+@[\w-]+$/,
+      'must look like cloudinary://<key>:<secret>@<cloud_name>',
+    )
+    .optional()
+    .or(z.literal(''))
+    .default(''),
+  CLOUDINARY_FOLDER: z
+    .string()
+    .regex(/^[a-z0-9_-]+(\/[a-z0-9_-]+)*$/i, 'use a folder path like victory/dev')
+    .optional(),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).optional(),
 });
 
@@ -54,6 +68,12 @@ function productionProblems(e) {
       'ADMIN_PASSWORD is the seed/example value or too short. Change it (or remove it after seeding).',
     );
   }
+  if (!e.CLOUDINARY_URL) problems.push('CLOUDINARY_URL is required in production (images).');
+  if (e.CLOUDINARY_FOLDER && !/prod/.test(e.CLOUDINARY_FOLDER)) {
+    problems.push(
+      `CLOUDINARY_FOLDER is "${e.CLOUDINARY_FOLDER}"; use the production folder (e.g. victory/prod).`,
+    );
+  }
   if (!e.APP_URL.startsWith('https://'))
     problems.push('APP_URL must start with https:// in production.');
   return problems;
@@ -68,6 +88,8 @@ if (!parsed.success) {
 const env = parsed.data;
 env.isProd = env.NODE_ENV === 'production';
 env.NOTIFY_MODE = env.NOTIFY_MODE || (env.NODE_ENV === 'production' ? 'live' : 'log');
+env.CLOUDINARY_FOLDER = env.CLOUDINARY_FOLDER || (env.isProd ? 'victory/prod' : 'victory/dev');
+env.cloudinaryCloud = env.CLOUDINARY_URL ? env.CLOUDINARY_URL.split('@').pop() : '';
 env.notifyAllowlist = env.NOTIFY_ALLOWLIST.split(',')
   .map((x) => x.trim().toLowerCase())
   .filter(Boolean);

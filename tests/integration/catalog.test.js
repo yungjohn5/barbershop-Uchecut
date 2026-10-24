@@ -1,9 +1,10 @@
 // Owner sections over HTTP: role guard, services and categories, zones, barbers (hours,
-// time off), products and gallery uploads through multipart + CSRF.
-const path = require('path');
-const fs = require('fs/promises');
+// time off), products, gallery and site photos uploaded to (mocked) Cloudinary.
+process.env.CLOUDINARY_URL = 'cloudinary://key:secret@test-cloud';
+process.env.CLOUDINARY_FOLDER = 'victory/test';
+jest.mock('cloudinary', () => require('../helpers/cloudinaryMock'));
+const cloud = require('../helpers/cloudinaryMock');
 const request = require('supertest');
-const sharp = require('sharp');
 const { Pool } = require('pg');
 const { prisma, resetDb, seedFixtures } = require('./fixtures');
 const { createApp } = require('../../src/app');
@@ -16,7 +17,6 @@ const PASSWORD = 'barbershop2026';
 let app;
 let pool;
 let fx;
-const uploaded = [];
 
 beforeAll(() => {
   pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 2 });
@@ -26,6 +26,7 @@ beforeEach(async () => {
   await resetDb();
   await prisma.$executeRawUnsafe('TRUNCATE "session", "Admin" RESTART IDENTITY');
   fx = await seedFixtures();
+  cloud.reset();
   const passwordHash = await hashPassword(PASSWORD);
   await prisma.admin.createMany({
     data: [
@@ -35,8 +36,6 @@ beforeEach(async () => {
   });
 });
 afterAll(async () => {
-  // Remove any files the upload tests wrote to public/uploads.
-  for (const [base, kind] of uploaded) await images.removeUpload(base, { kind });
   await pool.end();
   await prisma.$disconnect();
 });
@@ -53,10 +52,6 @@ async function signIn(email = 'owner@test.ng') {
   const home = await agent.get('/admin').expect(200);
   return { agent, csrf: csrfOf(home.text) };
 }
-const photo = (w = 1000, h = 800) =>
-  sharp({ create: { width: w, height: h, channels: 3, background: '#333' } })
-    .jpeg()
-    .toBuffer();
 
 describe('owner-only sections', () => {
   test('staff accounts get a friendly 403 and no Shop menu', async () => {
@@ -368,63 +363,135 @@ describe('barbers', () => {
   });
 });
 
-describe('uploads', () => {
+describe('uploads (Cloudinary)', () => {
+  const upload = (agent, csrf, url, fields, file = cloud.jpeg()) => {
+    let req = agent.post(url).field('_csrf', csrf);
+    for (const [k, v] of Object.entries(fields)) req = req.field(k, v);
+    return req.attach('image', file, 'photo.jpg');
+  };
+
   test('multipart forms still need the CSRF token', async () => {
     const { agent } = await signIn();
     await agent
       .post('/admin/products')
       .field('name', 'Clay')
-      .attach('image', await photo(), 'clay.jpg')
+      .attach('image', cloud.jpeg(), 'clay.jpg')
       .expect(403);
+    expect(cloud.v2.uploader.upload_stream).not.toHaveBeenCalled();
   });
 
-  test('a product photo is resized into the upload folder', async () => {
+  test('a product photo is uploaded to its folder; only publicId/version/size are stored', async () => {
     const { agent, csrf } = await signIn();
-    await agent
-      .post('/admin/products')
-      .field('_csrf', csrf)
-      .field('name', 'Matte Clay')
-      .field('price', '9500')
-      .field('visible', 'on')
-      .attach('image', await photo(), 'clay.jpg')
+    await upload(agent, csrf, '/admin/products', {
+      name: 'Matte Clay',
+      price: '9500',
+      visible: 'on',
+    })
       .expect(303)
       .expect('Location', '/admin/products');
     const p = await prisma.product.findFirst({ where: { name: 'Matte Clay' } });
-    uploaded.push([p.imageUrl, 'products']);
-    expect(p).toMatchObject({ priceKobo: 950000, visible: true });
-    expect(p.imageUrl).toMatch(/^\/uploads\/products\/matte-clay-/);
-    await expect(
-      fs.access(path.join(__dirname, '../../public', `${p.imageUrl}-800.webp`)),
-    ).resolves.toBeUndefined();
-    await request(app)
-      .get(`${p.imageUrl}-400.webp`)
-      .expect(200)
-      .expect('Content-Type', /image\/webp/);
+    expect(p).toMatchObject({
+      priceKobo: 950000,
+      imagePublicId: expect.stringMatching(/^victory\/test\/products\/matte-clay-/),
+      imageVersion: expect.any(Number),
+      imageWidth: 1000,
+      imageHeight: 800,
+      legacyImagePath: null,
+    });
+    expect(cloud.state.uploads[0].opts).toMatchObject({
+      folder: 'victory/test/products',
+      resource_type: 'image',
+    });
+    const html = (await request(app).get('/')).text;
+    expect(html).toContain(
+      `https://res.cloudinary.com/test-cloud/image/upload/f_auto,q_auto,c_fill,w_800/v${p.imageVersion}/${p.imagePublicId}`,
+    );
   });
 
-  test('a file that isn’t an image is rejected with a message', async () => {
+  test('replacing a photo deletes the old one; deleting the record deletes its photo', async () => {
     const { agent, csrf } = await signIn();
+    await upload(agent, csrf, '/admin/products', { name: 'Clay', visible: 'on' }).expect(303);
+    const first = await prisma.product.findFirst({ where: { name: 'Clay' } });
+    await upload(agent, csrf, `/admin/products/${first.id}`, {
+      name: 'Clay',
+      visible: 'on',
+    }).expect(303);
+    await images.settled();
+    const second = await prisma.product.findUnique({ where: { id: first.id } });
+    expect(second.imagePublicId).not.toBe(first.imagePublicId);
+    expect(cloud.state.destroyed).toEqual([first.imagePublicId]);
+
     await agent
-      .post('/admin/gallery')
-      .field('_csrf', csrf)
-      .attach('image', Buffer.from('#!/bin/sh\necho hi'), 'run.jpg')
+      .post(`/admin/products/${first.id}/delete`)
+      .type('form')
+      .send({ _csrf: csrf })
+      .expect(303);
+    await images.settled();
+    expect(cloud.state.destroyed).toEqual([first.imagePublicId, second.imagePublicId]);
+  });
+
+  test('a failed delete on Cloudinary is logged and does not block the save', async () => {
+    const { agent, csrf } = await signIn();
+    await upload(agent, csrf, '/admin/products', { name: 'Clay', visible: 'on' }).expect(303);
+    const p = await prisma.product.findFirst();
+    cloud.state.destroyFail = true;
+    await upload(agent, csrf, `/admin/products/${p.id}`, { name: 'Clay', visible: 'on' })
+      .expect(303)
+      .expect('Location', '/admin/products');
+    await images.settled();
+    expect(cloud.state.destroyed).toEqual([p.imagePublicId]);
+    const after = await prisma.product.findUnique({ where: { id: p.id } });
+    expect(after.imagePublicId).not.toBe(p.imagePublicId);
+  });
+
+  test('files that aren’t JPEG/PNG/WebP never reach Cloudinary', async () => {
+    const { agent, csrf } = await signIn();
+    await upload(agent, csrf, '/admin/gallery', {}, Buffer.from('#!/bin/sh\necho hi'))
       .expect(303)
       .expect('Location', '/admin/gallery');
+    await upload(
+      agent,
+      csrf,
+      '/admin/gallery',
+      {},
+      Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"><script/></svg>'),
+    ).expect(303);
+    expect(cloud.v2.uploader.upload_stream).not.toHaveBeenCalled();
     expect(await prisma.galleryItem.count()).toBe(0);
     expect((await agent.get('/admin/gallery')).text).toMatch(/isn’t an image/);
   });
 
-  test('gallery: upload, caption, delete removes the files', async () => {
+  test('too-small images are refused and removed from Cloudinary again', async () => {
     const { agent, csrf } = await signIn();
-    await agent
-      .post('/admin/gallery')
-      .field('_csrf', csrf)
-      .field('caption', 'Low taper')
-      .field('visible', 'on')
-      .attach('image', await photo(1400, 1000), 'cut.jpg')
-      .expect(303);
+    cloud.state.width = 300;
+    await upload(agent, csrf, '/admin/gallery', { caption: 'Tiny' }).expect(303);
+    await images.settled();
+    expect(await prisma.galleryItem.count()).toBe(0);
+    expect(cloud.state.destroyed).toEqual([cloud.state.uploads[0].result.public_id]);
+    expect((await agent.get('/admin/gallery')).text).toMatch(/too small/);
+  });
+
+  test('a Cloudinary outage shows a friendly error and saves nothing', async () => {
+    const { agent, csrf } = await signIn();
+    cloud.state.fail = true;
+    await upload(agent, csrf, '/admin/products', { name: 'Clay', visible: 'on' })
+      .expect(303)
+      .expect('Location', '/admin/products/new');
+    expect(await prisma.product.count()).toBe(0);
+    expect((await agent.get('/admin/products/new')).text).toMatch(/Couldn’t upload the photo/);
+  });
+
+  test('gallery: upload, caption, delete removes the photo from Cloudinary', async () => {
+    const { agent, csrf } = await signIn();
+    await upload(agent, csrf, '/admin/gallery', { caption: 'Low taper', visible: 'on' }).expect(
+      303,
+    );
     const g = await prisma.galleryItem.findFirst();
-    expect(g).toMatchObject({ caption: 'Low taper', visible: true });
+    expect(g).toMatchObject({
+      caption: 'Low taper',
+      visible: true,
+      imagePublicId: expect.stringContaining('victory/test/gallery/'),
+    });
     await agent
       .post(`/admin/gallery/${g.id}`)
       .type('form')
@@ -440,8 +507,42 @@ describe('uploads', () => {
       .type('form')
       .send({ _csrf: csrf })
       .expect(303);
-    await expect(
-      fs.access(path.join(__dirname, '../../public', `${g.imageUrl}-600.webp`)),
-    ).rejects.toThrow();
+    await images.settled();
+    expect(cloud.state.destroyed).toEqual([g.imagePublicId]);
+  });
+
+  test('barber portrait replace deletes the old portrait', async () => {
+    const { agent, csrf } = await signIn();
+    const url = `/admin/barbers/${fx.homeBarber.id}`;
+    await upload(agent, csrf, url, { name: 'Home Barber', active: 'on' }).expect(303);
+    const a = await prisma.barber.findUnique({ where: { id: fx.homeBarber.id } });
+    expect(a.photoPublicId).toContain('victory/test/barbers/home-barber-');
+    await upload(agent, csrf, url, { name: 'Home Barber', active: 'on' }).expect(303);
+    await images.settled();
+    expect(cloud.state.destroyed).toEqual([a.photoPublicId]);
+  });
+
+  test('site photos: upload a hero, the home page uses it; restore brings back the placeholder', async () => {
+    const { agent, csrf } = await signIn();
+    expect((await request(app).get('/')).text).toContain('/images/site/hero-1400.webp');
+    await upload(agent, csrf, '/admin/settings/photos/hero', {})
+      .expect(303)
+      .expect('Location', '/admin/settings#photos');
+    const row = await prisma.setting.findUnique({ where: { key: 'siteImages' } });
+    expect(row.value.hero.publicId).toContain('victory/test/site/hero-');
+    const home = (await request(app).get('/')).text;
+    expect(home).toContain(`/v${row.value.hero.version}/${row.value.hero.publicId}`);
+    expect(home).not.toContain('/images/site/hero-1400.webp');
+
+    const settingsPage = (await agent.get('/admin/settings')).text;
+    const token = /name="csrf-token" content="([^"]+)"/.exec(settingsPage)[1];
+    await agent
+      .post('/admin/settings/photos/hero/reset')
+      .type('form')
+      .send({ _csrf: token })
+      .expect(303);
+    await images.settled();
+    expect(cloud.state.destroyed).toEqual([row.value.hero.publicId]);
+    expect((await request(app).get('/')).text).toContain('/images/site/hero-1400.webp');
   });
 });

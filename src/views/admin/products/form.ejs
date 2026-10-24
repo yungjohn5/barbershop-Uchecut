@@ -30,7 +30,7 @@
     <div class="mt-6"><%- include('../partials/switch', { name: 'visible', checked: v.visible, label: 'Show on the home page' }) %></div>
   </section>
   <aside class="space-y-6">
-    <section class="a-card"><%- include('../partials/image-input', { current: product && product.imageUrl, width: 400, label: 'Product photo', hint: 'Square works best. JPG, PNG or WebP up to 8 MB.', error: e.image }) %></section>
+    <section class="a-card"><%- include('../partials/image-input', { current: imageOf(product), width: 600, label: 'Product photo', hint: 'Square works best. JPG, PNG or WebP up to 8 MB.', error: e.image }) %></section>
     <div>
       <button type="submit" class="btn-primary w-full justify-center" data-a-submit><%= product ? 'Save changes' : 'Add product' %> <span class="arrow" aria-hidden="true">→</span></button>
       <a href="/admin/products" class="mt-3 block text-center text-sm text-ink/65 hover:text-ink">Cancel</a>

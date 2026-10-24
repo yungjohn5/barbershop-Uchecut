@@ -1,10 +1,5 @@
-const fs = require('fs/promises');
-const os = require('os');
-const path = require('path');
-const sharp = require('sharp');
 const { nairaToKobo, koboToInput, slugify, parse, schemas } = require('../../src/services/catalog');
 const { hhmmToMin, parseHours, parseTimeOff } = require('../../src/services/barbers');
-const images = require('../../src/services/images');
 
 describe('money input', () => {
   test('naira strings become kobo', () => {
@@ -156,52 +151,5 @@ describe('time off', () => {
       parseTimeOff({ fromDate: '2026-11-02', fromTime: '15:00', toTime: '14:00' }),
     ).toThrow(/after the start/);
     expect(() => parseTimeOff({ fromDate: 'soon', allDay: 'on' })).toThrow();
-  });
-});
-
-describe('image uploads', () => {
-  let root;
-  beforeAll(async () => {
-    root = await fs.mkdtemp(path.join(os.tmpdir(), 'vb-img-'));
-  });
-  afterAll(async () => {
-    await fs.rm(root, { recursive: true, force: true });
-  });
-  const jpeg = (width, height) =>
-    sharp({ create: { width, height, channels: 3, background: '#b8833e' } })
-      .jpeg()
-      .toBuffer();
-
-  test('writes every width as WebP and returns the base path', async () => {
-    const base = await images.saveUpload(await jpeg(1200, 900), {
-      kind: 'products',
-      name: 'Matte Clay!',
-      root,
-    });
-    expect(base).toMatch(/^\/uploads\/products\/matte-clay-[0-9a-f]{8}$/);
-    for (const w of images.WIDTHS.products) {
-      const meta = await sharp(await fs.readFile(path.join(root, `${base}-${w}.webp`))).metadata();
-      expect(meta).toMatchObject({ format: 'webp', width: w });
-    }
-    await images.removeUpload(base, { kind: 'products', root });
-    await expect(fs.access(path.join(root, `${base}-400.webp`))).rejects.toThrow();
-  });
-
-  test('rejects non-images and tiny images', async () => {
-    await expect(
-      images.saveUpload(Buffer.from('not an image'), { kind: 'gallery', name: 'x', root }),
-    ).rejects.toThrow(/isn’t an image/);
-    await expect(
-      images.saveUpload(await jpeg(300, 300), { kind: 'gallery', name: 'x', root }),
-    ).rejects.toThrow(/too small/);
-  });
-
-  test('removeUpload never leaves its own folder', async () => {
-    await expect(
-      images.removeUpload('/images/site/hero', { kind: 'products', root }),
-    ).resolves.toBeUndefined();
-    await expect(
-      images.removeUpload('/uploads/products/../../x', { kind: 'products', root }),
-    ).resolves.toBeUndefined();
   });
 });

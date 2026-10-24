@@ -531,7 +531,8 @@
 
 /* Photo inside the footer's display type */
 .bg-chair {
-  background-image: url('/images/site/chair-1800.webp');
+  /* --chair-bg is set from Settings → Site photos (data-bg, site.js); bundled photo otherwise */
+  background-image: var(--chair-bg, url('/images/site/chair-1800.webp'));
 }
 
 /* Home-visit steps light up as they reach the reading line */

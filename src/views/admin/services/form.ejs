@@ -57,7 +57,7 @@
         <% barbers.forEach((b) => { %>
           <label class="a-check <%= b.active ? '' : 'is-muted' %>">
             <input type="checkbox" name="barberIds" value="<%= b.id %>" class="sr-only" <%= (v.barberIds || []).includes(b.id) ? 'checked' : '' %> />
-            <% if (b.photoUrl) { %><img src="<%= b.photoUrl %>-500.webp" alt="" class="h-8 w-8 rounded-full object-cover object-top" /><% } else { %><span class="grid h-8 w-8 place-items-center rounded-full bg-paper-deep font-serif"><%= b.name[0] %></span><% } %>
+            <% if (imageOf(b, 'photo')) { %><img src="<%= imageUrl(imageOf(b, 'photo'), { w: 64, h: 64 }) %>" alt="" class="h-8 w-8 rounded-full object-cover object-top" /><% } else { %><span class="grid h-8 w-8 place-items-center rounded-full bg-paper-deep font-serif"><%= b.name[0] %></span><% } %>
             <span><%= b.name %><% if (!b.active) { %> <span class="text-xs text-ink/55">(inactive)</span><% } %></span>
             <span class="choice-check ml-auto shrink-0" aria-hidden="true"></span>
           </label>
@@ -68,7 +68,7 @@
 
   <aside class="space-y-6">
     <section class="a-card">
-      <%- include('../partials/image-input', { current: service && service.imageUrl, width: 500, label: 'Card photo', error: e.image, shape: 'portrait' }) %>
+      <%- include('../partials/image-input', { current: imageOf(service), width: 600, label: 'Card photo', error: e.image, shape: 'portrait' }) %>
     </section>
     <section class="a-card space-y-5">
       <%- include('../partials/switch', { name: 'active', checked: v.active, label: 'Live on the site', hint: 'Hidden services can’t be booked.' }) %>

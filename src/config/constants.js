@@ -25,6 +25,9 @@ const DEFAULT_SETTINGS = {
     showBuilderSection: true,
     showBuilderCredit: true,
   },
+  // Site photo slots (Settings → Site photos): { [slot]: { publicId, version, width, height } }.
+  // Empty slots show the bundled placeholder (lib/images.js SITE_SLOTS).
+  siteImages: {},
   // Home page copy (editable from the dashboard in Phase 4). Placeholder text until the client signs off.
   home: {
     heroLines: ['Sharp Lines.', 'Quiet Confidence.', 'Timeless Craft.'],

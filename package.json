@@ -23,6 +23,7 @@
     "db:deploy": "prisma migrate deploy",
     "db:seed": "prisma db seed",
     "db:seed:demo": "node scripts/seed-demo.js",
+    "images:upload": "node scripts/upload-local-images.js",
     "db:reset": "prisma migrate reset"
   },
   "prisma": {
@@ -40,6 +41,7 @@
   "dependencies": {
     "@prisma/client": "^6.19.3",
     "bcrypt": "^6.0.0",
+    "cloudinary": "^2.11.0",
     "compression": "^1.8.2",
     "connect-pg-simple": "^10.0.0",
     "csrf-sync": "^4.2.1",
@@ -59,7 +61,6 @@
     "pg": "^8.23.1",
     "pino": "^10.4.0",
     "pino-http": "^11.0.0",
-    "sharp": "^0.35.5",
     "zod": "^4.6.7"
   },
   "devDependencies": {

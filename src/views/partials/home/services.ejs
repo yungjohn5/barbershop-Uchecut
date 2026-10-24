@@ -27,10 +27,10 @@
           data-reveal
         >
           <div class="relative overflow-hidden bg-paper-deep">
-            <% if (s.imageUrl) { %>
+            <% if (imageOf(s)) { %>
               <img
-                src="<%= src(s.imageUrl, [500, 900]) %>"
-                srcset="<%= srcset(s.imageUrl, [500, 900]) %>"
+                src="<%= imageUrl(imageOf(s), { w: 900 }) %>"
+                srcset="<%= srcset(imageOf(s), [500, 900, 1200]) %>"
                 sizes="(min-width: 768px) 30vw, 46vw"
                 alt="<%= s.name %>"
                 class="aspect-[4/5] w-full object-cover saturate-[0.8] transition-[transform,filter] duration-[1.2s] ease-expo group-hover:scale-[1.06] group-hover:saturate-100"

@@ -191,4 +191,60 @@ function formValues(all) {
   };
 }
 
-module.exports = { SCHEMAS, rowsFor, saveSection, resetSection, formValues };
+// ---- Site photos (Settings → Site photos): one Cloudinary image per slot.
+const images = require('./images');
+const { SITE_SLOTS } = require('../lib/images');
+
+async function currentSiteImages(db) {
+  const row = await db.setting.findUnique({ where: { key: 'siteImages' } });
+  return (row && row.value && typeof row.value === 'object' && row.value) || {};
+}
+
+/** Upload a photo into a slot; the previous one is deleted from Cloudinary afterwards. */
+async function saveSiteImage(slot, file, { db = prisma } = {}) {
+  if (!SITE_SLOTS[slot]) throw new Error(`Unknown site photo: ${slot}`);
+  const uploaded = await images.uploadImage(file && file.buffer, { kind: 'site', name: slot });
+  const all = await currentSiteImages(db);
+  const old = all[slot];
+  const value = { ...all, [slot]: uploaded };
+  try {
+    await db.setting.upsert({
+      where: { key: 'siteImages' },
+      update: { value },
+      create: { key: 'siteImages', value },
+    });
+  } catch (err) {
+    images.destroyLater(uploaded.publicId);
+    throw err;
+  }
+  settings.invalidate();
+  if (old && old.publicId) images.destroyLater(old.publicId);
+  return uploaded;
+}
+
+/** Back to the bundled placeholder; the uploaded photo is deleted from Cloudinary. */
+async function resetSiteImage(slot, { db = prisma } = {}) {
+  if (!SITE_SLOTS[slot]) throw new Error(`Unknown site photo: ${slot}`);
+  const all = await currentSiteImages(db);
+  const old = all[slot];
+  if (!old) return false;
+  const { [slot]: _removed, ...rest } = all;
+  await db.setting.upsert({
+    where: { key: 'siteImages' },
+    update: { value: rest },
+    create: { key: 'siteImages', value: rest },
+  });
+  settings.invalidate();
+  if (old.publicId) images.destroyLater(old.publicId);
+  return true;
+}
+
+module.exports = {
+  SCHEMAS,
+  rowsFor,
+  saveSection,
+  resetSection,
+  formValues,
+  saveSiteImage,
+  resetSiteImage,
+};

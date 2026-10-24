@@ -34,7 +34,8 @@ function createApp({ sessionPool } = {}) {
           'script-src': ["'self'"],
           'style-src': ["'self'", 'https://fonts.googleapis.com'],
           'font-src': ["'self'", 'https://fonts.gstatic.com'],
-          'img-src': ["'self'", 'data:', 'blob:'], // blob: previews admin uploads
+          // Cloudinary serves every uploaded image; blob: previews admin uploads.
+          'img-src': ["'self'", 'data:', 'blob:', 'https://res.cloudinary.com'],
           'object-src': ["'none'"],
           'base-uri': ["'self'"],
           'connect-src': ["'self'"],
@@ -76,6 +77,12 @@ function createApp({ sessionPool } = {}) {
   );
   Object.assign(app.locals, require('./lib/viewHelpers'));
   app.locals.credits = require('./config/credits'); // builder section + footer credit
+  const images = require('./lib/images');
+  Object.assign(app.locals, {
+    imageOf: images.imageOf,
+    imageUrl: images.imageUrl,
+    srcset: images.srcset,
+  });
   app.use(express.urlencoded({ extended: false, limit: '50kb' }));
   app.use(express.json({ limit: '50kb' }));
 
@@ -121,6 +128,8 @@ function createApp({ sessionPool } = {}) {
   app.use(async (req, res, next) => {
     try {
       res.locals.shop = await settingsService.get('shop');
+      const siteImages = await settingsService.get('siteImages');
+      res.locals.siteImg = (slot) => require('./lib/images').siteImage(slot, siteImages);
       // Public pages hide home-visit buttons when nobody can take one (see services/content.js).
       res.locals.homeOpen = req.path.startsWith('/admin') ? true : await homeVisitsOpen();
       res.locals.currentPath = req.path;

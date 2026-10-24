@@ -2,8 +2,8 @@
   <div class="relative mx-auto max-w-[88rem] px-5 sm:px-8 lg:px-10">
     <figure class="relative overflow-hidden lg:absolute lg:inset-y-0 lg:right-10 lg:w-[44%]" data-clip>
       <img
-        src="<%= src('/images/site/craft-portrait', [700, 1300]) %>"
-        srcset="<%= srcset('/images/site/craft-portrait', [700, 1300]) %>"
+        src="<%= imageUrl(siteImg('craftPortrait'), { w: 1300 }) %>"
+        srcset="<%= srcset(siteImg('craftPortrait'), [700, 1300]) %>"
         sizes="(min-width: 1024px) 40vw, 92vw"
         alt="A client smiling after a fresh cut, lit warm against a dark backdrop"
         class="aspect-[4/5] h-full w-full object-cover sm:aspect-[16/11] lg:aspect-auto"
@@ -21,8 +21,8 @@
         <div class="grid grid-cols-2 gap-3 md:grid-cols-1">
           <figure class="overflow-hidden" data-speed="0.08">
             <img
-              src="<%= src('/images/site/craft-a', [500, 900]) %>"
-              srcset="<%= srcset('/images/site/craft-a', [500, 900]) %>"
+              src="<%= imageUrl(siteImg('craftA'), { w: 900 }) %>"
+              srcset="<%= srcset(siteImg('craftA'), [500, 900]) %>"
               sizes="(min-width: 768px) 22vw, 42vw"
               alt="Barber working a clipper over a client’s crown"
               class="aspect-[4/3] w-full object-cover"
@@ -31,8 +31,8 @@
           </figure>
           <figure class="overflow-hidden" data-speed="-0.06">
             <img
-              src="<%= src('/images/site/craft-b', [500, 900]) %>"
-              srcset="<%= srcset('/images/site/craft-b', [500, 900]) %>"
+              src="<%= imageUrl(siteImg('craftB'), { w: 900 }) %>"
+              srcset="<%= srcset(siteImg('craftB'), [500, 900]) %>"
               sizes="(min-width: 768px) 22vw, 42vw"
               alt="The shop floor mid-afternoon, clients in the chair and waiting"
               class="aspect-[4/3] w-full object-cover"

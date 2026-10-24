@@ -10,6 +10,8 @@ describe('production startup checks', () => {
     SESSION_SECRET: strong,
     ADMIN_PASSWORD: '',
     APP_URL: 'https://victorybarbershop.ng',
+    CLOUDINARY_URL: 'cloudinary://key:secret@victory',
+    CLOUDINARY_FOLDER: 'victory/prod',
   };
 
   test('a strong setup passes', () => {
@@ -27,13 +29,13 @@ describe('production startup checks', () => {
     expect(productionProblems({ ...ok, SESSION_SECRET: value })[0]).toMatch(/SESSION_SECRET/);
   });
 
-  test('seed ADMIN_PASSWORD and plain-http APP_URL are refused', () => {
-    expect(productionProblems({ ...ok, ADMIN_PASSWORD: 'change-me-please' })[0]).toMatch(
-      /ADMIN_PASSWORD/,
-    );
-    expect(productionProblems({ ...ok, APP_URL: 'http://victorybarbershop.ng' })[0]).toMatch(
-      /https/,
-    );
+  test('seed ADMIN_PASSWORD, plain-http APP_URL and missing/dev Cloudinary are refused', () => {
+    const has = (overrides, re) =>
+      productionProblems({ ...ok, ...overrides }).some((p) => re.test(p));
+    expect(has({ ADMIN_PASSWORD: 'change-me-please' }, /ADMIN_PASSWORD/)).toBe(true);
+    expect(has({ APP_URL: 'http://victorybarbershop.ng' }, /https/)).toBe(true);
+    expect(has({ CLOUDINARY_URL: '' }, /CLOUDINARY_URL is required/)).toBe(true);
+    expect(has({ CLOUDINARY_FOLDER: 'victory/dev' }, /CLOUDINARY_FOLDER/)).toBe(true);
   });
 });
 

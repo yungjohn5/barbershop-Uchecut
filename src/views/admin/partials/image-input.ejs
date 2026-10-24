@@ -1,12 +1,12 @@
 <%#
-  Photo picker with live preview. Params: current (base URL or null), width (smallest
+  Photo picker with live preview. Params: current (image descriptor or null), width (preview
   rendered width, for the preview), label, hint, error, shape ('square' | 'portrait' | 'wide')
 %>
 <% const shape = locals.shape || 'square'; %>
 <div class="a-image-input a-image-<%= shape %> <%= locals.error ? 'has-error' : '' %>" data-image-input>
   <div class="a-image-preview" data-image-preview>
     <% if (locals.current) { %>
-      <img src="<%= current %>-<%= width %>.webp" alt="" />
+      <img src="<%= imageUrl(current, { w: width }) %>" alt="" />
     <% } else { %>
       <span class="a-image-empty" aria-hidden="true"><%- include('icon', { name: 'gallery' }) %></span>
     <% } %>

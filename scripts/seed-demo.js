@@ -103,7 +103,7 @@ const barbers = [
     name: 'Tunde A.',
     doesHomeService: true,
     sortOrder: 1,
-    photoUrl: '/images/site/barber-tunde',
+    legacyPhotoPath: '/images/site/barber-tunde',
     bio: 'Precise fades and razor-sharp line-ups. Calm, quick, and the barber who brings the chair to you on home visits.',
     specialties: ['Skin fades', 'Line-ups', 'Home visits'],
   },
@@ -112,7 +112,7 @@ const barbers = [
     name: 'Emeka O.',
     doesHomeService: false,
     sortOrder: 2,
-    photoUrl: '/images/site/barber-emeka',
+    legacyPhotoPath: '/images/site/barber-emeka',
     bio: 'Two decades behind the chair. Patient scissor work, classic hot-towel shaves, and the steadiest hand for kids’ first cuts.',
     specialties: ['Scissor cuts', 'Hot towel shaves', 'Kids'],
   },
@@ -171,6 +171,21 @@ const zones = [
 ];
 
 async function main() {
+  // Demo data only goes into an EMPTY catalogue. Matching existing rows by slug is unsafe:
+  // the admin regenerates slugs when names change, and demo values would overwrite real edits.
+  const [serviceCount, barberCount] = await Promise.all([
+    prisma.service.count(),
+    prisma.barber.count(),
+  ]);
+  if (serviceCount || barberCount) {
+    console.error(
+      `seed-demo: the database already has ${serviceCount} service(s) and ${barberCount} barber(s); not touching it. ` +
+        'Use an empty database (e.g. after `npm run db:reset`).',
+    );
+    process.exitCode = 1;
+    return;
+  }
+
   const catIds = {};
   for (const c of categories) {
     const row = await prisma.serviceCategory.upsert({
@@ -189,7 +204,7 @@ async function main() {
       priceKobo: naira(s.price),
       durationMin: s.duration,
       homeAvailable: s.home,
-      imageUrl: `/images/site/svc-${s.slug}`,
+      legacyImagePath: `/images/site/svc-${s.slug}`,
       sortOrder: i + 1,
       categoryId: catIds[s.category],
     };
@@ -241,7 +256,7 @@ async function main() {
       name: p.name,
       description: p.description,
       priceKobo: naira(p.price),
-      imageUrl: `/images/site/${p.image}`,
+      legacyImagePath: `/images/site/${p.image}`,
       sortOrder: i + 1,
     };
     await prisma.product.upsert({
@@ -255,6 +270,17 @@ async function main() {
     `Demo data: ${categories.length} categories, ${services.length} services, ` +
       `${barbers.length} barbers, ${zones.length} zones, ${products.length} products.`,
   );
+
+  // Demo photos point at the bundled files; move them to Cloudinary when it's configured.
+  if (process.env.CLOUDINARY_URL) {
+    const { uploadLocalImages } = require('./upload-local-images');
+    const r = await uploadLocalImages({ db: prisma });
+    console.log(`Demo photos on Cloudinary: ${r.uploaded} uploaded.`);
+  } else {
+    console.log(
+      'CLOUDINARY_URL not set: demo photos use the bundled files until `npm run images:upload`.',
+    );
+  }
 }
 
 main()

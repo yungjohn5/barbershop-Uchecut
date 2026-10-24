@@ -17,8 +17,8 @@
 
     <figure class="relative overflow-hidden md:col-start-2 md:row-span-3 md:row-start-1 md:self-start xl:col-span-4 xl:col-start-5 xl:row-span-2 xl:self-stretch" data-clip>
       <img
-        src="<%= src('/images/site/intro-portrait', [600, 1100]) %>"
-        srcset="<%= srcset('/images/site/intro-portrait', [600, 1100]) %>"
+        src="<%= imageUrl(siteImg('introPortrait'), { w: 1100 }) %>"
+        srcset="<%= srcset(siteImg('introPortrait'), [600, 1100]) %>"
         sizes="(min-width: 1280px) 30vw, (min-width: 768px) 46vw, 92vw"
         alt="Profile portrait of a young man with a full, shaped afro"
         class="aspect-[3/4] h-full w-full object-cover"
@@ -32,8 +32,8 @@
     <div class="grid grid-cols-2 gap-4 md:col-start-1 md:row-start-3 md:self-end xl:contents">
       <figure class="overflow-hidden xl:col-span-3 xl:col-start-1 xl:row-start-1 xl:mt-4" data-speed="0.12">
         <img
-          src="<%= src('/images/site/intro-tools', [500, 900]) %>"
-          srcset="<%= srcset('/images/site/intro-tools', [500, 900]) %>"
+          src="<%= imageUrl(siteImg('introTools'), { w: 900 }) %>"
+          srcset="<%= srcset(siteImg('introTools'), [500, 900]) %>"
           sizes="(min-width: 1280px) 22vw, (min-width: 768px) 22vw, 45vw"
           alt="Clippers, trimmers, scissors and a brush laid out on the station"
           class="aspect-[4/5] w-full object-cover"
@@ -42,8 +42,8 @@
       </figure>
       <figure class="overflow-hidden xl:col-span-2 xl:col-start-11 xl:row-start-2 xl:self-end" data-speed="-0.1">
         <img
-          src="<%= src('/images/site/intro-still', [400, 800]) %>"
-          srcset="<%= srcset('/images/site/intro-still', [400, 800]) %>"
+          src="<%= imageUrl(siteImg('introStill'), { w: 800 }) %>"
+          srcset="<%= srcset(siteImg('introStill'), [400, 800]) %>"
           sizes="(min-width: 1280px) 15vw, (min-width: 768px) 22vw, 45vw"
           alt="Neck brush and tonic bottles at the barber’s station"
           class="aspect-[4/5] w-full object-cover"

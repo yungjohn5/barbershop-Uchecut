@@ -14,10 +14,10 @@
       <% barbers.forEach((b, i) => { %>
         <article class="group <%= i % 2 === 1 ? 'md:mt-28' : '' %>" data-reveal>
           <a href="/book?barber=<%= b.id %>" class="relative block overflow-hidden bg-ink/5" data-cursor="Book" aria-label="Book with <%= b.name %>">
-            <% if (b.photoUrl) { %>
+            <% if (imageOf(b, 'photo')) { %>
               <img
-                src="<%= src(b.photoUrl, [500, 900]) %>"
-                srcset="<%= srcset(b.photoUrl, [500, 900]) %>"
+                src="<%= imageUrl(imageOf(b, 'photo'), { w: 900 }) %>"
+                srcset="<%= srcset(imageOf(b, 'photo'), [500, 900, 1200]) %>"
                 sizes="(min-width: 768px) 44vw, 92vw"
                 alt="Portrait of <%= b.name %>"
                 class="aspect-[4/5] w-full object-cover object-top"

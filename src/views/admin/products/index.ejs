@@ -15,7 +15,7 @@
   <% products.forEach((p, i) => { %>
     <article class="a-tile <%= p.visible ? '' : 'is-muted' %>">
       <a href="/admin/products/<%= p.id %>" class="a-tile-photo">
-        <% if (p.imageUrl) { %><img src="<%= p.imageUrl %>-400.webp" alt="" loading="lazy" /><% } else { %><span class="a-image-empty" aria-hidden="true"><%- include('../partials/icon', { name: 'products' }) %></span><% } %>
+        <% if (imageOf(p)) { %><img src="<%= imageUrl(imageOf(p), { w: 500, h: 500 }) %>" alt="" loading="lazy" /><% } else { %><span class="a-image-empty" aria-hidden="true"><%- include('../partials/icon', { name: 'products' }) %></span><% } %>
         <% if (!p.visible) { %><span class="a-type bg-surface absolute left-3 top-3">Hidden</span><% } %>
       </a>
       <div class="flex items-start gap-2 p-4">

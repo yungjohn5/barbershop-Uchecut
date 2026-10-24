@@ -42,7 +42,7 @@
       </div>
     </section>
     <aside class="a-card">
-      <%- include('../partials/image-input', { current: barber && barber.photoUrl, width: 500, label: 'Portrait', hint: 'A vertical photo works best. JPG, PNG or WebP up to 8 MB.', error: e.image, shape: 'portrait' }) %>
+      <%- include('../partials/image-input', { current: imageOf(barber, 'photo'), width: 600, label: 'Portrait', hint: 'A vertical photo works best. JPG, PNG or WebP up to 8 MB.', error: e.image, shape: 'portrait' }) %>
     </aside>
   </div>
 

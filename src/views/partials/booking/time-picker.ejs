@@ -23,8 +23,8 @@
       </a>
       <% barbers.forEach((b) => { %>
         <a href="<%= baseUrl %>?<%= qs({ barber: b.id, date }) %>" class="barber-chip snap-start <%= barberId === b.id ? 'is-active' : '' %>" data-barber-link="<%= b.id %>" <%- barberId === b.id ? 'aria-current="true"' : '' %>>
-          <% if (b.photoUrl) { %>
-            <img src="<%= b.photoUrl %>-500.webp" alt="" class="barber-avatar object-cover object-top" loading="lazy" />
+          <% if (imageOf(b, 'photo')) { %>
+            <img src="<%= imageUrl(imageOf(b, 'photo'), { w: 160, h: 160 }) %>" alt="" class="barber-avatar object-cover object-top" loading="lazy" />
           <% } else { %><span class="barber-avatar" aria-hidden="true"><%= b.name[0] %></span><% } %>
           <span><span class="block font-medium"><%= b.name %></span><span class="block text-xs text-ink/65"><%= (b.specialties || []).slice(0, 1).join('') || 'Barber' %></span></span>
         </a>

@@ -1,5 +1,5 @@
 const { homeFacts } = require('../../src/services/content');
-const { naira, duration, srcset, src, pad2 } = require('../../src/lib/viewHelpers');
+const { naira, duration, pad2 } = require('../../src/lib/viewHelpers');
 const { resolveSettings } = require('../../src/services/settings');
 const { DEFAULT_SETTINGS } = require('../../src/config/constants');
 
@@ -47,11 +47,7 @@ describe('view helpers', () => {
     expect(duration(90)).toBe('1 h 30 min');
   });
 
-  test('responsive image sources follow the base-width.webp convention', () => {
-    expect(srcset('/images/site/hero', [800, 1400])).toBe(
-      '/images/site/hero-800.webp 800w, /images/site/hero-1400.webp 1400w',
-    );
-    expect(src('/images/site/hero', [800, 1400])).toBe('/images/site/hero-1400.webp');
+  test('pad2 pads to two digits', () => {
     expect(pad2(3)).toBe('03');
   });
 });

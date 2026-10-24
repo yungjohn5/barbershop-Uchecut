@@ -75,22 +75,26 @@ model ServiceCategory {
 }
 
 model Service {
-  id            Int              @id @default(autoincrement())
-  name          String
-  slug          String           @unique
-  description   String?
-  priceKobo     Int // 750000 = ₦7,500
-  durationMin   Int
-  homeAvailable Boolean          @default(true)
-  imageUrl      String?
-  sortOrder     Int              @default(0)
-  active        Boolean          @default(true)
-  categoryId    Int
-  category      ServiceCategory  @relation(fields: [categoryId], references: [id])
-  barbers       BarberService[]
-  bookings      BookingService[]
-  createdAt     DateTime         @default(now()) @db.Timestamptz(3)
-  updatedAt     DateTime         @updatedAt @db.Timestamptz(3)
+  id              Int              @id @default(autoincrement())
+  name            String
+  slug            String           @unique
+  description     String?
+  priceKobo       Int // 750000 = ₦7,500
+  durationMin     Int
+  homeAvailable   Boolean          @default(true)
+  legacyImagePath String? // old local path, until scripts/upload-local-images.js moves it
+  imagePublicId   String? // Cloudinary
+  imageVersion    Int?
+  imageWidth      Int?
+  imageHeight     Int?
+  sortOrder       Int              @default(0)
+  active          Boolean          @default(true)
+  categoryId      Int
+  category        ServiceCategory  @relation(fields: [categoryId], references: [id])
+  barbers         BarberService[]
+  bookings        BookingService[]
+  createdAt       DateTime         @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime         @updatedAt @db.Timestamptz(3)
 
   @@index([categoryId])
 }
@@ -102,7 +106,11 @@ model Barber {
   name            String
   slug            String          @unique
   bio             String?
-  photoUrl        String?
+  legacyPhotoPath String? // old local path, until scripts/upload-local-images.js moves it
+  photoPublicId   String? // Cloudinary
+  photoVersion    Int?
+  photoWidth      Int?
+  photoHeight     Int?
   specialties     String[]        @default([])
   doesHomeService Boolean         @default(false)
   active          Boolean         @default(true)
@@ -248,27 +256,35 @@ model Admin {
 }
 
 model GalleryItem {
-  id        Int      @id @default(autoincrement())
-  imageUrl  String
-  caption   String?
-  sortOrder Int      @default(0)
-  visible   Boolean  @default(true)
-  barberId  Int?
-  barber    Barber?  @relation(fields: [barberId], references: [id], onDelete: SetNull)
-  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  id              Int      @id @default(autoincrement())
+  legacyImagePath String? // old local path, until scripts/upload-local-images.js moves it
+  imagePublicId   String? // Cloudinary
+  imageVersion    Int?
+  imageWidth      Int?
+  imageHeight     Int?
+  caption         String?
+  sortOrder       Int      @default(0)
+  visible         Boolean  @default(true)
+  barberId        Int?
+  barber          Barber?  @relation(fields: [barberId], references: [id], onDelete: SetNull)
+  createdAt       DateTime @default(now()) @db.Timestamptz(3)
 }
 
 model Product {
-  id          Int      @id @default(autoincrement())
-  name        String
-  slug        String   @unique
-  description String?
-  priceKobo   Int? // display only
-  imageUrl    String?
-  sortOrder   Int      @default(0)
-  visible     Boolean  @default(true)
-  createdAt   DateTime @default(now()) @db.Timestamptz(3)
-  updatedAt   DateTime @updatedAt @db.Timestamptz(3)
+  id              Int      @id @default(autoincrement())
+  name            String
+  slug            String   @unique
+  description     String?
+  priceKobo       Int? // display only
+  legacyImagePath String? // old local path, until scripts/upload-local-images.js moves it
+  imagePublicId   String? // Cloudinary
+  imageVersion    Int?
+  imageWidth      Int?
+  imageHeight     Int?
+  sortOrder       Int      @default(0)
+  visible         Boolean  @default(true)
+  createdAt       DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime @updatedAt @db.Timestamptz(3)
 }
 
 // Key/value shop settings (lead times, hours text, socials, hero copy…).

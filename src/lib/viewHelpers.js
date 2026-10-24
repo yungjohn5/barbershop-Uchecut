@@ -16,15 +16,6 @@ function duration(min) {
   return m ? `${h} h ${m} min` : `${h} h`;
 }
 
-// Responsive images are stored as `${base}-${width}.webp` (see docs/ARCHITECTURE.md).
-function srcset(base, widths) {
-  return widths.map((w) => `${base}-${w}.webp ${w}w`).join(', ');
-}
-
-function src(base, widths) {
-  return `${base}-${widths[widths.length - 1]}.webp`;
-}
-
 const pad2 = (n) => String(n).padStart(2, '0');
 
 const escapeHtml = (s) =>
@@ -62,8 +53,6 @@ const formatDate = (instant) => formatInTimeZone(new Date(instant), TIMEZONE, 'd
 module.exports = {
   naira,
   duration,
-  srcset,
-  src,
   pad2,
   rich,
   plain,

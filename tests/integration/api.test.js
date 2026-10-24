@@ -74,7 +74,7 @@ describe('JSON API', () => {
         name: 'Matte Clay',
         slug: 'matte-clay',
         priceKobo: 950000,
-        imageUrl: '/images/site/prod-clay',
+        legacyImagePath: '/images/site/prod-clay',
       },
     });
     const res = await request(app).get('/').expect(200);
