@@ -4,6 +4,8 @@
 //                                              used only until scripts/upload-local-images.js moves it
 // Records keep `${field}PublicId|Version|Width|Height` and `legacy${Field}Path` columns;
 // imageOf(record, 'image') builds the descriptor. Never needs the API secret.
+const fs = require('fs');
+const path = require('path');
 const env = require('../config/env');
 
 const DEFAULT_WIDTHS = [400, 800, 1200];
@@ -88,6 +90,53 @@ function srcset(img, widths = DEFAULT_WIDTHS, { ratio, crop } = {}) {
     .join(', ');
 }
 
+// Intrinsic size of a bundled WebP, read from its header once (VP8, VP8L or VP8X).
+const PUBLIC_DIR = path.join(__dirname, '..', '..', 'public');
+const legacySizes = new Map();
+function webpSize(buf) {
+  if (buf.length < 30 || buf.toString('ascii', 0, 4) !== 'RIFF') return null;
+  const kind = buf.toString('ascii', 12, 16);
+  if (kind === 'VP8 ')
+    return { width: buf.readUInt16LE(26) & 0x3fff, height: buf.readUInt16LE(28) & 0x3fff };
+  if (kind === 'VP8L') {
+    const b = buf.readUInt32LE(21);
+    return { width: (b & 0x3fff) + 1, height: ((b >> 14) & 0x3fff) + 1 };
+  }
+  if (kind === 'VP8X')
+    return { width: buf.readUIntLE(24, 3) + 1, height: buf.readUIntLE(27, 3) + 1 };
+  return null;
+}
+function legacySize(base) {
+  if (!legacySizes.has(base)) {
+    const widths = legacyWidths(base);
+    let size = null;
+    try {
+      const fd = fs.openSync(path.join(PUBLIC_DIR, `${base}-${widths[widths.length - 1]}.webp`));
+      const head = Buffer.alloc(32);
+      fs.readSync(fd, head, 0, 32, 0);
+      fs.closeSync(fd);
+      size = webpSize(head);
+    } catch {
+      size = null; // file gone (e.g. an old upload): no size attributes
+    }
+    legacySizes.set(base, size);
+  }
+  return legacySizes.get(base);
+}
+
+/**
+ * width/height attributes for an <img> (stops layout shift): the crop size when both are
+ * given, else the requested width scaled by the image's own shape. '' when unknown.
+ */
+function imgSize(img, { w, h } = {}) {
+  if (!img) return '';
+  if (w && h) return `width="${Math.round(w)}" height="${Math.round(h)}"`;
+  const own = img.legacy ? legacySize(img.legacy) : img.width && img.height ? img : null;
+  if (!own) return '';
+  const width = Math.round(w || own.width);
+  return `width="${width}" height="${Math.round((width * own.height) / own.width)}"`;
+}
+
 /** Site photo slots (Settings → Site photos) and their bundled placeholders. */
 const SITE_SLOTS = {
   hero: {
@@ -121,6 +170,8 @@ module.exports = {
   imageOf,
   imageUrl,
   srcset,
+  imgSize,
+  webpSize,
   siteImage,
   transform,
   legacyWidths,

@@ -8,11 +8,9 @@
     <meta name="theme-color" content="#F4F1EC" data-theme-color />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <meta name="csrf-token" content="<%= csrfToken %>" />
-    <script src="/js/boot.js"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Gloock&family=Inter:wght@400;500;600&display=swap" />
-    <link rel="stylesheet" href="/css/app.css" />
+    <script src="<%= asset('/js/boot.js') %>"></script>
+    <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="<%= asset('/css/app.css') %>" />
   </head>
   <body class="admin-body min-h-screen bg-paper" data-no-smoother>
     <a href="#main" class="sr-only z-[60] rounded-full bg-ink px-4 py-2 text-paper focus:not-sr-only focus:fixed focus:left-3 focus:top-3">Skip to content</a>
@@ -109,9 +107,9 @@
       <main id="main"><%- body %></main>
     <% } %>
 
-    <script src="/vendor/gsap/gsap.min.js" defer></script>
-    <script src="/js/site.js" defer></script>
-    <script src="/js/booking.js" defer></script>
-    <script src="/js/admin.js" defer></script>
+    <script src="<%= asset('/vendor/gsap/gsap.min.js') %>" defer></script>
+    <script src="<%= asset('/js/site.js') %>" defer></script>
+    <script src="<%= asset('/js/booking.js') %>" defer></script>
+    <script src="<%= asset('/js/admin.js') %>" defer></script>
   </body>
 </html>

@@ -44,7 +44,7 @@ the owner's dashboard.
 
 **Website**
 - Editorial home page: hero, intro collage, services with category filters, craft section, barbers, home-visit steps with a live price estimator, products, and a "Take the Chair" footer.
-- Animation with GSAP: intro loader, smooth scrolling on desktop, line-by-line heading reveals, a Flip-animated services filter, and a pinned horizontal product row.
+- Animation with GSAP: intro loader and smooth scrolling on desktop, line-by-line heading reveals, a Flip-animated services filter, and a pinned horizontal product row.
 - Premium hover and press states for every button, with touch-friendly fallbacks.
 - **Light and dark mode:** follows the OS until the visitor picks, the choice is remembered, and there is no flash on load. The sun/moon toggle reveals the new theme in a circle growing from the button. Text meets WCAG AA contrast in both themes.
 - **Back-to-top button:** a frosted disc with a scroll-progress ring and a rolling arrow. It glides to the top and sits above the mobile "Book now" pill.

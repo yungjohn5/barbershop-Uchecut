@@ -16,7 +16,7 @@
           <a href="/book?barber=<%= b.id %>" class="relative block overflow-hidden bg-ink/5" data-cursor="Book" aria-label="Book with <%= b.name %>">
             <% if (imageOf(b, 'photo')) { %>
               <img
-                src="<%= imageUrl(imageOf(b, 'photo'), { w: 900 }) %>"
+                src="<%= imageUrl(imageOf(b, 'photo'), { w: 900 }) %>" <%- imgSize(imageOf(b, 'photo'), { w: 900 }) %>
                 srcset="<%= srcset(imageOf(b, 'photo'), [500, 900, 1200]) %>"
                 sizes="(min-width: 768px) 44vw, 92vw"
                 alt="Portrait of <%= b.name %>"

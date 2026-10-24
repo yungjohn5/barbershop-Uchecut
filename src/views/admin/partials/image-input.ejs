@@ -6,7 +6,7 @@
 <div class="a-image-input a-image-<%= shape %> <%= locals.error ? 'has-error' : '' %>" data-image-input>
   <div class="a-image-preview" data-image-preview>
     <% if (locals.current) { %>
-      <img src="<%= imageUrl(current, { w: width }) %>" alt="" />
+      <img src="<%= imageUrl(current, { w: width }) %>" <%- imgSize(current, { w: width }) %> alt="" loading="lazy" />
     <% } else { %>
       <span class="a-image-empty" aria-hidden="true"><%- include('icon', { name: 'gallery' }) %></span>
     <% } %>

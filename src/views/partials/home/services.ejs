@@ -29,7 +29,7 @@
           <div class="relative overflow-hidden bg-paper-deep">
             <% if (imageOf(s)) { %>
               <img
-                src="<%= imageUrl(imageOf(s), { w: 900 }) %>"
+                src="<%= imageUrl(imageOf(s), { w: 900 }) %>" <%- imgSize(imageOf(s), { w: 900 }) %>
                 srcset="<%= srcset(imageOf(s), [500, 900, 1200]) %>"
                 sizes="(min-width: 768px) 30vw, 46vw"
                 alt="<%= s.name %>"

@@ -192,10 +192,37 @@
 
   // ----------------------------------------------------------- data-bg photos
   // Background photos chosen in Settings (CSP blocks inline styles, so set them via CSSOM).
-  $('[data-bg]').forEach(function (el) {
+  $$('[data-bg]').forEach(function (el) {
     var url = el.getAttribute('data-bg');
     if (url) el.style.setProperty('--chair-bg', 'url("' + url.replace(/"/g, '%22') + '")');
   });
+
+  // ------------------------------------------------------ setup in small tasks
+  // Animation setup (splits, triggers) runs one step per task, in order, so a slow phone
+  // never sees one long blocking task while the page loads. Page scripts use Site.later too.
+  var queue = [];
+  var draining = false;
+  function drain() {
+    var fn = queue.shift();
+    if (fn) {
+      try {
+        fn();
+      } catch (err) {
+        window.setTimeout(function () {
+          throw err; // report, but keep the rest of the queue running
+        });
+      }
+    }
+    if (queue.length) window.setTimeout(drain, 0);
+    else draining = false;
+  }
+  function later(fn) {
+    queue.push(fn);
+    if (!draining) {
+      draining = true;
+      window.setTimeout(drain, 0);
+    }
+  }
 
   // ----------------------------------------------------------- motion helpers
   function initMotion() {
@@ -204,158 +231,166 @@
 
     // Headings: line-by-line masked reveal. autoSplit re-splits on resize/font changes.
     $$('[data-split]').forEach(function (el) {
-      gsap.set(el, { visibility: 'visible' });
-      window.SplitText.create(el, {
-        type: 'lines',
-        mask: 'lines',
-        linesClass: 'split-line',
-        autoSplit: true,
-        onSplit: function (self) {
-          return gsap.from(self.lines, {
-            yPercent: 110,
-            duration: 1.25,
+      later(function () {
+        gsap.set(el, { opacity: 1 });
+        window.SplitText.create(el, {
+          type: 'lines',
+          mask: 'lines',
+          linesClass: 'split-line',
+          autoSplit: true,
+          onSplit: function (self) {
+            return gsap.from(self.lines, {
+              yPercent: 110,
+              duration: 1.25,
+              ease: 'expo.out',
+              stagger: 0.1,
+              scrollTrigger: { trigger: el, start: 'top 85%', once: true },
+            });
+          },
+        });
+      });
+    });
+
+    later(function () {
+      // Fade-up for everything else, batched so neighbours stagger together.
+      gsap.set('[data-reveal]', { y: 40 });
+      ST.batch('[data-reveal]', {
+        start: 'top 90%',
+        once: true,
+        onEnter: function (batch) {
+          gsap.to(batch, {
+            opacity: 1,
+            y: 0,
+            duration: 1.1,
             ease: 'expo.out',
-            stagger: 0.1,
-            scrollTrigger: { trigger: el, start: 'top 85%', once: true },
+            stagger: 0.09,
+            overwrite: true,
           });
         },
       });
+
+      // Image frames that wipe open.
+      $$('[data-clip]').forEach(function (el) {
+        gsap.fromTo(
+          el,
+          { clipPath: 'inset(100% 0% 0% 0%)' },
+          {
+            clipPath: 'inset(0% 0% 0% 0%)',
+            duration: 1.6,
+            ease: 'expo.inOut',
+            scrollTrigger: { trigger: el, start: 'top 82%', once: true },
+          },
+        );
+      });
     });
 
-    // Fade-up for everything else, batched so neighbours stagger together.
-    gsap.set('[data-reveal]', { y: 40 });
-    ST.batch('[data-reveal]', {
-      start: 'top 90%',
-      once: true,
-      onEnter: function (batch) {
-        gsap.to(batch, {
-          opacity: 1,
-          y: 0,
-          duration: 1.1,
+    later(function () {
+      // Slow drift of photos inside their frames.
+      $$('[data-parallax-img]').forEach(function (img) {
+        gsap.fromTo(
+          img,
+          { yPercent: -7, scale: 1.16 },
+          {
+            yPercent: 7,
+            scale: 1.16,
+            ease: 'none',
+            scrollTrigger: {
+              trigger: img.parentElement,
+              start: 'top bottom',
+              end: 'bottom top',
+              scrub: true,
+            },
+          },
+        );
+      });
+
+      // Whole elements moving at different speeds (collage depth).
+      $$('[data-speed]').forEach(function (el) {
+        var speed = parseFloat(el.getAttribute('data-speed')) || 0;
+        gsap.to(el, {
+          yPercent: -speed * 100,
+          ease: 'none',
+          scrollTrigger: { trigger: el, start: 'top bottom', end: 'bottom top', scrub: true },
+        });
+      });
+
+      // Construction lines drawing down.
+      $$('[data-line-y]').forEach(function (el) {
+        gsap.fromTo(
+          el,
+          { scaleY: 0 },
+          {
+            scaleY: 1,
+            ease: 'none',
+            scrollTrigger: { trigger: el, start: 'top 85%', end: 'bottom 60%', scrub: true },
+          },
+        );
+      });
+    });
+
+    later(function () {
+      // Rotating text rings, faster on hover.
+      $$('[data-ring]').forEach(function (ring) {
+        var spin = gsap.to(ring, {
+          rotation: 360,
+          duration: 18,
+          ease: 'none',
+          repeat: -1,
+          transformOrigin: '50% 50%',
+        });
+        var btn = ring.closest('a');
+        if (!btn) return;
+        btn.addEventListener('mouseenter', function () {
+          gsap.to(spin, { timeScale: 3.5, duration: 0.6 });
+        });
+        btn.addEventListener('mouseleave', function () {
+          gsap.to(spin, { timeScale: 1, duration: 0.8 });
+        });
+      });
+
+      // Magnetic pull on round buttons (precise pointers only).
+      if (window.matchMedia('(pointer: fine)').matches) {
+        $$('[data-magnetic]').forEach(function (el) {
+          var xTo = gsap.quickTo(el, 'x', { duration: 0.6, ease: 'power3' });
+          var yTo = gsap.quickTo(el, 'y', { duration: 0.6, ease: 'power3' });
+          el.addEventListener('mousemove', function (e) {
+            var r = el.getBoundingClientRect();
+            xTo((e.clientX - (r.left + r.width / 2)) * 0.35);
+            yTo((e.clientY - (r.top + r.height / 2)) * 0.35);
+          });
+          el.addEventListener('mouseleave', function () {
+            xTo(0);
+            yTo(0);
+          });
+        });
+      }
+
+      // "Take the Chair": rise in, then the photo inside the letters drifts as you scroll.
+      var chair = $('[data-chair]');
+      if (chair) {
+        gsap.from(chair, {
+          yPercent: 100,
+          duration: 1.5,
           ease: 'expo.out',
-          stagger: 0.09,
-          overwrite: true,
+          scrollTrigger: { trigger: chair, start: 'top 92%', once: true },
         });
-      },
-    });
-
-    // Image frames that wipe open.
-    $$('[data-clip]').forEach(function (el) {
-      gsap.fromTo(
-        el,
-        { clipPath: 'inset(100% 0% 0% 0%)' },
-        {
-          clipPath: 'inset(0% 0% 0% 0%)',
-          duration: 1.6,
-          ease: 'expo.inOut',
-          scrollTrigger: { trigger: el, start: 'top 82%', once: true },
-        },
-      );
-    });
-
-    // Slow drift of photos inside their frames.
-    $$('[data-parallax-img]').forEach(function (img) {
-      gsap.fromTo(
-        img,
-        { yPercent: -7, scale: 1.16 },
-        {
-          yPercent: 7,
-          scale: 1.16,
-          ease: 'none',
-          scrollTrigger: {
-            trigger: img.parentElement,
-            start: 'top bottom',
-            end: 'bottom top',
-            scrub: true,
+        gsap.fromTo(
+          chair,
+          { backgroundPosition: '50% 18%' },
+          {
+            // stay in the bright upper band of the photo so the letters keep their contrast
+            backgroundPosition: '50% 52%',
+            ease: 'none',
+            scrollTrigger: {
+              trigger: '#visit',
+              start: 'top bottom',
+              end: 'bottom bottom',
+              scrub: true,
+            },
           },
-        },
-      );
+        );
+      }
     });
-
-    // Whole elements moving at different speeds (collage depth).
-    $$('[data-speed]').forEach(function (el) {
-      var speed = parseFloat(el.getAttribute('data-speed')) || 0;
-      gsap.to(el, {
-        yPercent: -speed * 100,
-        ease: 'none',
-        scrollTrigger: { trigger: el, start: 'top bottom', end: 'bottom top', scrub: true },
-      });
-    });
-
-    // Construction lines drawing down.
-    $$('[data-line-y]').forEach(function (el) {
-      gsap.fromTo(
-        el,
-        { scaleY: 0 },
-        {
-          scaleY: 1,
-          ease: 'none',
-          scrollTrigger: { trigger: el, start: 'top 85%', end: 'bottom 60%', scrub: true },
-        },
-      );
-    });
-
-    // Rotating text rings, faster on hover.
-    $$('[data-ring]').forEach(function (ring) {
-      var spin = gsap.to(ring, {
-        rotation: 360,
-        duration: 18,
-        ease: 'none',
-        repeat: -1,
-        transformOrigin: '50% 50%',
-      });
-      var btn = ring.closest('a');
-      if (!btn) return;
-      btn.addEventListener('mouseenter', function () {
-        gsap.to(spin, { timeScale: 3.5, duration: 0.6 });
-      });
-      btn.addEventListener('mouseleave', function () {
-        gsap.to(spin, { timeScale: 1, duration: 0.8 });
-      });
-    });
-
-    // Magnetic pull on round buttons (precise pointers only).
-    if (window.matchMedia('(pointer: fine)').matches) {
-      $$('[data-magnetic]').forEach(function (el) {
-        var xTo = gsap.quickTo(el, 'x', { duration: 0.6, ease: 'power3' });
-        var yTo = gsap.quickTo(el, 'y', { duration: 0.6, ease: 'power3' });
-        el.addEventListener('mousemove', function (e) {
-          var r = el.getBoundingClientRect();
-          xTo((e.clientX - (r.left + r.width / 2)) * 0.35);
-          yTo((e.clientY - (r.top + r.height / 2)) * 0.35);
-        });
-        el.addEventListener('mouseleave', function () {
-          xTo(0);
-          yTo(0);
-        });
-      });
-    }
-
-    // "Take the Chair": rise in, then the photo inside the letters drifts as you scroll.
-    var chair = $('[data-chair]');
-    if (chair) {
-      gsap.from(chair, {
-        yPercent: 100,
-        duration: 1.5,
-        ease: 'expo.out',
-        scrollTrigger: { trigger: chair, start: 'top 92%', once: true },
-      });
-      gsap.fromTo(
-        chair,
-        { backgroundPosition: '50% 18%' },
-        {
-          // stay in the bright upper band of the photo so the letters keep their contrast
-          backgroundPosition: '50% 52%',
-          ease: 'none',
-          scrollTrigger: {
-            trigger: '#visit',
-            start: 'top bottom',
-            end: 'bottom bottom',
-            scrub: true,
-          },
-        },
-      );
-    }
   }
 
   // ------------------------------------------------------------- light / dark
@@ -586,6 +621,7 @@
     hasGsap: hasGsap,
     reduce: reduce,
     smoother: smoother,
+    later: later,
   };
 
   // Wait for web fonts (bounded) so line splits and fit-text measure real glyphs.

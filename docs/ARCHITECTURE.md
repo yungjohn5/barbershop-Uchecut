@@ -32,7 +32,7 @@ Node 22 LTS (`.nvmrc`, `engines >=22`; Node 20 is end-of-life) + Express 4, EJS 
 | --- | --- | --- |
 | Server | `express`, `helmet`, `compression`, `morgan` | Security headers, gzip, request logs |
 | Views | `ejs`, `express-ejs-layouts` | Shared layout, partials per section |
-| Styling | `tailwindcss` (CLI build) | Gloock headings, DM Serif Display italic accents, Inter body (Google Fonts) |
+| Styling | `tailwindcss` (CLI build) | Gloock headings, DM Serif Display italic accents, Inter body, self-hosted WOFF2 in `public/fonts` (latin + latin-ext, ₦ in its own ~2 KB file) |
 | Motion | `gsap` 3.15 (ScrollTrigger, SplitText, Flip, ScrollSmoother) | Added at the client's request. Served from `node_modules` at `/vendor/gsap` so the CSP stays `script-src 'self'`. Everything renders without JS; `prefers-reduced-motion` disables all animation |
 | Database | `prisma`, `@prisma/client` | Migrations + seed script |
 | Validation | `zod` | One schema per form/endpoint |
@@ -328,8 +328,14 @@ The home page follows the reference's six sections in order, adapted with a home
 - Images live on Cloudinary. `lib/images.js` turns a record into a descriptor (`imageOf(record, 'image'|'photo')` → `{ publicId, version, width, height }`, or `{ legacy: base }` while only a legacy path exists) and builds delivery URLs: `imageUrl(img, { w, h, crop, gravity })` and `srcset(img, widths, { ratio })`, always with `f_auto,q_auto`. Legacy descriptors map to the bundled `${base}-${width}.webp` files.
 - Home-page photos (hero, intro, craft, home visit, footer chair) are named slots in the `siteImages` setting, edited in Settings → Site photos. `siteImg(slot)` returns the uploaded asset or the bundled placeholder in `public/images/site`.
 - Current photos are Pexels placeholders, listed in `public/images/site/CREDITS.md`.
+- Performance:
+  - `<img>` tags get `width`/`height` from `imgSize()`: the crop size, Cloudinary's stored size, or the bundled WebP's own header. Every image below the hero is `loading="lazy"`; the hero has `fetchpriority="high"`.
+  - CSS/JS are linked through `asset()` (`lib/assets.js`) as `/css/app.css?v=<content hash>`. Those responses are `public, max-age=31536000, immutable`; unhashed files (photos, icons, fonts) get a week in production.
+  - Fonts are self-hosted and preloaded (Inter, Gloock latin). No third-party request blocks first paint.
+  - Animation setup runs through `Site.later()`: one step per task (splits, reveals, marquee, steps, product rail, then a single `ScrollTrigger.refresh()`), so phones never get one long blocking task.
+  - Split headings wait with `opacity: 0`, not `visibility: hidden`, so they stay in the accessibility tree.
 - Motion: `public/js/boot.js` (pre-paint flags + 2.5 s failsafe), `site.js` (menu, sticky nav, reveals, parallax, rings, fit-text), `home.js` (hero timeline, marquee, Flip service filter, step progress, pinned product rail on desktop).
-- Premium layer: first-visit intro loader (once per session, `sessionStorage`), desktop-only ScrollSmoother (created/destroyed with the `(min-width:1024px) and (pointer:fine)` breakpoint; fixed UI lives outside `#smooth-wrapper`), cursor companion that labels `[data-cursor]` targets and hides over round buttons, `*accent*` words in copy rendered by `rich()`, live open/closed status from barbers' `WorkingHours` (`shopStatus`), and a home-visit price estimator.
+- Premium layer: first-visit intro loader (once per session, `sessionStorage`; desktop only, so phones on mobile data go straight to the hero), desktop-only ScrollSmoother (created/destroyed with the `(min-width:1024px) and (pointer:fine)` breakpoint; fixed UI lives outside `#smooth-wrapper`), cursor companion that labels `[data-cursor]` targets and hides over round buttons, `*accent*` words in copy rendered by `rich()`, live open/closed status from barbers' `WorkingHours` (`shopStatus`), and a home-visit price estimator.
 - The hero's rotating "Book Appointment" ring button (`partials/ring-btn.ejs`, `.ring-btn`) is signed off by the client: do not change its look, size, position or hover.
 - Until the booking wizard ships, `/book` renders a holding page with WhatsApp and call links, so no CTA is dead.
 
@@ -443,7 +449,7 @@ SMS goes through Termii (good Nigerian delivery rates) behind a small `sms.send(
 
 **Security**
 
-- `helmet` headers. CSP: scripts from `'self'` only (no inline scripts anywhere; GSAP served from `/vendor`), styles and fonts from self + Google Fonts, images from self/`data:`/`blob:`/`https://res.cloudinary.com`, no inline styles (background photos go through `data-bg` → a CSS variable set by `site.js`), `object-src 'none'`, `frame-ancestors 'none'`. HSTS (1 year, subdomains) in production only. `trust proxy` is set for Nginx, so client IPs (rate limits) and `secure` cookies work; session cookies are `httpOnly` + `sameSite=lax` and `secure` in production.
+- `helmet` headers. CSP: scripts from `'self'` only (no inline scripts anywhere; GSAP served from `/vendor`), styles and fonts from `'self'` only (fonts are self-hosted), images from self/`data:`/`blob:`/`https://res.cloudinary.com`, no inline styles (background photos go through `data-bg` → a CSS variable set by `site.js`), `object-src 'none'`, `frame-ancestors 'none'`. HSTS (1 year, subdomains) in production only. `trust proxy` is set for Nginx, so client IPs (rate limits) and `secure` cookies work; session cookies are `httpOnly` + `sameSite=lax` and `secure` in production.
 - CSRF tokens on every form; `express-rate-limit` on booking submissions and manage-link actions (10 per 15 min), every `/manage/*` request including page views (100 per 15 min, slows token guessing), the JSON API (60 per min) and `/admin/login` (20 per 15 min), per IP. When a limit is hit, pages get the branded 429 page (minutes until reset, plus a WhatsApp button for bookings), the JSON API gets `{ error: { code: 'RATE_LIMITED', message } }`, and the login form is shown again with the message. Limits use the in-memory store, so each PM2 worker counts separately.
 - zod validation on every input; Nigerian phone numbers normalised to `+234…`.
 - Admin passwords hashed with bcrypt (cost 12); login lockout after 5 failed attempts.
@@ -460,7 +466,7 @@ SMS goes through Termii (good Nigerian delivery rates) behind a small `sms.send(
 
 1. Contabo VPS, Ubuntu 24.04 LTS (4 GB RAM is comfortable for v1: web, worker and Postgres on one box). Non-root deploy user, SSH keys only, `ufw` (22/80/443), `fail2ban`, unattended security upgrades.
 2. **Self-hosted PostgreSQL 17** on the VPS, listening on localhost only. Nightly `pg_dump` (compressed, encrypted) shipped **off-site** (e.g. Backblaze B2 or S3-compatible storage via `rclone`), keeping 14 daily + 8 weekly copies; restore tested before launch.
-3. Nginx reverse proxy + Let's Encrypt (certbot) for the domain; HTTP → HTTPS; long-cache headers for `/css`, `/js`, `/vendor`; `trust proxy` is set in the app.
+3. Nginx reverse proxy + Let's Encrypt (certbot) for the domain; HTTP → HTTPS; the app already sends `Cache-Control: immutable` (1 year) for fingerprinted `?v=` CSS/JS, so Nginx just passes headers through; `trust proxy` is set in the app.
 4. PM2 (`ecosystem.config.js`): `web` in cluster mode (one per core) and `worker` as a **single** instance, so jobs never run twice (each job also takes an advisory lock as a safety net). `pm2 startup` + `pm2 save` for reboots; log rotation via `pm2-logrotate`.
 5. **Images live on Cloudinary**, not on the VPS, so the server holds no user files: backups are the database only.
 6. Deploys: GitHub Actions runs lint + Jest on push; on `main`, SSH → `git pull` → `npm ci --omit=dev` → `npm run build:css` → `prisma migrate deploy` → `pm2 reload ecosystem.config.js`.

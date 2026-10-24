@@ -17,7 +17,7 @@
           <div class="overflow-hidden bg-paper-deep">
             <% if (imageOf(p)) { %>
               <img
-                src="<%= imageUrl(imageOf(p), { w: 800 }) %>"
+                src="<%= imageUrl(imageOf(p), { w: 800 }) %>" <%- imgSize(imageOf(p), { w: 800 }) %>
                 srcset="<%= srcset(imageOf(p), [400, 800]) %>"
                 sizes="(min-width: 1024px) 21rem, 68vw"
                 alt="<%= p.name %>"

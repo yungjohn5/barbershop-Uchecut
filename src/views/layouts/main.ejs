@@ -33,14 +33,11 @@
     <link rel="manifest" href="/site.webmanifest" />
     <% if (seo.jsonLd) { %><script type="application/ld+json"><%- seoJson(seo.jsonLd) %></script><% } %>
     <meta name="csrf-token" content="<%= csrfToken %>" />
-    <script src="/js/boot.js"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Gloock&family=Inter:wght@400;500;600;800;900&display=swap"
-    />
-    <link rel="stylesheet" href="/css/app.css" />
+    <script src="<%= asset('/js/boot.js') %>"></script>
+    <%# Self-hosted fonts (@font-face in app.css); the two first-screen faces load early. %>
+    <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/gloock-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="<%= asset('/css/app.css') %>" />
   </head>
   <body class="min-h-screen overflow-x-clip" <%- inFlow ? 'data-no-smoother' : '' %>>
     <a href="#main" class="sr-only z-[60] rounded-full bg-ink px-4 py-2 text-paper focus:not-sr-only focus:fixed focus:left-3 focus:top-3">Skip to content</a>
@@ -82,13 +79,13 @@
     </div>
     <% } %>
 
-    <script src="/vendor/gsap/gsap.min.js" defer></script>
-    <script src="/vendor/gsap/ScrollTrigger.min.js" defer></script>
-    <script src="/vendor/gsap/SplitText.min.js" defer></script>
-    <script src="/vendor/gsap/Flip.min.js" defer></script>
-    <script src="/vendor/gsap/ScrollSmoother.min.js" defer></script>
-    <script src="/js/site.js" defer></script>
-    <% if (page === 'home') { %><script src="/js/home.js" defer></script><% } %>
-    <% if (inFlow) { %><script src="/js/booking.js" defer></script><% } %>
+    <script src="<%= asset('/vendor/gsap/gsap.min.js') %>" defer></script>
+    <script src="<%= asset('/vendor/gsap/ScrollTrigger.min.js') %>" defer></script>
+    <script src="<%= asset('/vendor/gsap/SplitText.min.js') %>" defer></script>
+    <script src="<%= asset('/vendor/gsap/Flip.min.js') %>" defer></script>
+    <script src="<%= asset('/vendor/gsap/ScrollSmoother.min.js') %>" defer></script>
+    <script src="<%= asset('/js/site.js') %>" defer></script>
+    <% if (page === 'home') { %><script src="<%= asset('/js/home.js') %>" defer></script><% } %>
+    <% if (inFlow) { %><script src="<%= asset('/js/booking.js') %>" defer></script><% } %>
   </body>
 </html>

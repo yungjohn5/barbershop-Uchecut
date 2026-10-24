@@ -17,9 +17,9 @@
       <%# Phones: photo fills the top two-thirds and fades into solid ink under the type. %>
       <div class="absolute -left-[3%] -right-[3%] -top-[3%] h-[70%] md:-inset-[3%] md:h-auto" data-hero-media>
         <img
-          src="<%= imageUrl(siteImg('hero'), { w: 2200 }) %>"
-          srcset="<%= srcset(siteImg('hero'), [800, 1400, 2200]) %>"
-          sizes="(max-width: 767px) 160vh, (max-width: 1279px) 110vw, calc(100vw - 2.5rem)"
+          src="<%= imageUrl(siteImg('hero'), { w: 2200 }) %>" <%- imgSize(siteImg('hero'), { w: 2200 }) %>
+          srcset="<%= srcset(siteImg('hero'), [800, 1100, 1400, 2200]) %>"
+          sizes="(max-width: 767px) 95vh, (max-width: 1279px) 110vw, calc(100vw - 2.5rem)"
           alt="A barber shaping a client’s fade with a brush and clippers"
           class="h-full w-full object-cover object-[58%_50%] md:object-[60%_34%]"
           fetchpriority="high"

@@ -57,7 +57,7 @@
         <% barbers.forEach((b) => { %>
           <label class="a-check <%= b.active ? '' : 'is-muted' %>">
             <input type="checkbox" name="barberIds" value="<%= b.id %>" class="sr-only" <%= (v.barberIds || []).includes(b.id) ? 'checked' : '' %> />
-            <% if (imageOf(b, 'photo')) { %><img src="<%= imageUrl(imageOf(b, 'photo'), { w: 64, h: 64 }) %>" alt="" class="h-8 w-8 rounded-full object-cover object-top" /><% } else { %><span class="grid h-8 w-8 place-items-center rounded-full bg-paper-deep font-serif"><%= b.name[0] %></span><% } %>
+            <% if (imageOf(b, 'photo')) { %><img src="<%= imageUrl(imageOf(b, 'photo'), { w: 64, h: 64 }) %>" <%- imgSize(imageOf(b, 'photo'), { w: 64, h: 64 }) %> alt="" class="h-8 w-8 rounded-full object-cover object-top" loading="lazy" /><% } else { %><span class="grid h-8 w-8 place-items-center rounded-full bg-paper-deep font-serif"><%= b.name[0] %></span><% } %>
             <span><%= b.name %><% if (!b.active) { %> <span class="text-xs text-ink/55">(inactive)</span><% } %></span>
             <span class="choice-check ml-auto shrink-0" aria-hidden="true"></span>
           </label>

@@ -41,7 +41,7 @@
               <span class="builder-url"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="11" width="12" height="9" rx="2"/><path d="M8.5 11V8a3.5 3.5 0 0 1 7 0v3"/></svg><%= shop.name %> · Book online</span>
             </div>
             <div class="builder-screen">
-              <img src="<%= imageUrl(siteImg('hero'), { w: 1400 }) %>" srcset="<%= srcset(siteImg('hero'), [800, 1400]) %>" sizes="(min-width: 1024px) 34vw, 86vw" alt="" loading="lazy" />
+              <img src="<%= imageUrl(siteImg('hero'), { w: 1400 }) %>" <%- imgSize(siteImg('hero'), { w: 1400 }) %> srcset="<%= srcset(siteImg('hero'), [800, 1400]) %>" sizes="(min-width: 1024px) 34vw, 86vw" alt="" loading="lazy" />
               <div class="builder-screen-shade"></div>
               <div class="builder-screen-nav"><span class="font-serif"><%= shop.name.split(' ')[0] %></span><span class="builder-mini-btn">Book now</span></div>
               <div class="builder-screen-copy">

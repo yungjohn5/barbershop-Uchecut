@@ -16,7 +16,7 @@
   <% barbers.forEach((b, i) => { %>
     <article class="a-barber <%= b.active ? '' : 'is-muted' %>">
       <a href="/admin/barbers/<%= b.id %>" class="a-barber-photo" tabindex="-1" aria-hidden="true">
-        <% if (imageOf(b, 'photo')) { %><img src="<%= imageUrl(imageOf(b, 'photo'), { w: 800 }) %>" alt="" loading="lazy" /><% } else { %><span class="font-serif text-6xl"><%= b.name[0] %></span><% } %>
+        <% if (imageOf(b, 'photo')) { %><img src="<%= imageUrl(imageOf(b, 'photo'), { w: 800 }) %>" <%- imgSize(imageOf(b, 'photo'), { w: 800 }) %> alt="" loading="lazy" /><% } else { %><span class="font-serif text-6xl"><%= b.name[0] %></span><% } %>
         <span class="a-barber-tags">
           <% if (!b.active) { %><span class="a-type bg-surface">Inactive</span><% } %>
           <% if (b.doesHomeService) { %><span class="a-type a-type-home bg-surface">Home visits</span><% } %>

@@ -279,99 +279,110 @@
       });
     }
 
+    // Everything below the hero is set up in small tasks (Site.later), after the
+    // site-wide reveals, so loading never blocks the main thread for long.
     // ------------------------------------------------------------------ marquee
     // Two bands in opposite directions; both speed up with scroll velocity.
-    var loops = $$('[data-marquee]').map(function (track) {
-      var reverse = track.getAttribute('data-marquee') === 'reverse';
-      return gsap.fromTo(
-        track,
-        { xPercent: reverse ? -50 : 0 },
-        { xPercent: reverse ? 0 : -50, duration: reverse ? 55 : 42, ease: 'none', repeat: -1 },
-      );
-    });
-    if (loops.length) {
-      var settle;
-      ST.create({
-        start: 0,
-        end: 'max',
-        onUpdate: function (self) {
-          var boost = 1 + Math.min(Math.abs(self.getVelocity()) / 700, 5);
-          gsap.to(loops, { timeScale: boost, duration: 0.2, overwrite: true });
-          clearTimeout(settle);
-          settle = setTimeout(function () {
-            gsap.to(loops, { timeScale: 1, duration: 1.2, ease: 'power2.out', overwrite: true });
-          }, 120);
-        },
+    Site.later(function () {
+      var loops = $$('[data-marquee]').map(function (track) {
+        var reverse = track.getAttribute('data-marquee') === 'reverse';
+        return gsap.fromTo(
+          track,
+          { xPercent: reverse ? -50 : 0 },
+          { xPercent: reverse ? 0 : -50, duration: reverse ? 55 : 42, ease: 'none', repeat: -1 },
+        );
       });
-    }
+      if (loops.length) {
+        var settle;
+        ST.create({
+          start: 0,
+          end: 'max',
+          onUpdate: function (self) {
+            var boost = 1 + Math.min(Math.abs(self.getVelocity()) / 700, 5);
+            gsap.to(loops, { timeScale: boost, duration: 0.2, overwrite: true });
+            clearTimeout(settle);
+            settle = setTimeout(function () {
+              gsap.to(loops, { timeScale: 1, duration: 1.2, ease: 'power2.out', overwrite: true });
+            }, 120);
+          },
+        });
+      }
+    });
 
     // ------------------------------------------------------- home-visit steps
-    var steps = $('[data-steps]');
-    if (steps) {
-      gsap.fromTo(
-        '[data-progress]',
-        { scaleY: 0 },
-        {
-          scaleY: 1,
-          ease: 'none',
-          scrollTrigger: { trigger: steps, start: 'top 70%', end: 'bottom 55%', scrub: true },
-        },
-      );
-      $$('[data-step]', steps).forEach(function (step) {
-        ST.create({
-          trigger: step,
-          start: 'top 68%',
-          toggleClass: { targets: step, className: 'is-active' },
+    Site.later(function () {
+      var steps = $('[data-steps]');
+      if (steps) {
+        gsap.fromTo(
+          '[data-progress]',
+          { scaleY: 0 },
+          {
+            scaleY: 1,
+            ease: 'none',
+            scrollTrigger: { trigger: steps, start: 'top 70%', end: 'bottom 55%', scrub: true },
+          },
+        );
+        $$('[data-step]', steps).forEach(function (step) {
+          ST.create({
+            trigger: step,
+            start: 'top 68%',
+            toggleClass: { targets: step, className: 'is-active' },
+          });
+          gsap.from(step, {
+            opacity: 0,
+            x: 30,
+            duration: 1.1,
+            ease: 'expo.out',
+            scrollTrigger: { trigger: step, start: 'top 85%', once: true },
+          });
         });
-        gsap.from(step, {
-          opacity: 0,
-          x: 30,
-          duration: 1.1,
-          ease: 'expo.out',
-          scrollTrigger: { trigger: step, start: 'top 85%', once: true },
-        });
-      });
-    }
+      }
+    });
 
     // ------------------------------------------- product rail (pinned on desktop)
-    var mm = gsap.matchMedia();
-    mm.add('(min-width: 1024px)', function () {
-      var section = $('[data-products]');
-      var rail = $('[data-rail]');
-      if (!section || !rail) return;
-      // The pin drives the rail; native horizontal scroll is restored when this context reverts.
-      gsap.set(rail, { overflow: 'visible', scrollSnapType: 'none' });
-      var distance = function () {
-        return Math.max(0, rail.scrollWidth - document.documentElement.clientWidth);
-      };
-      gsap.to(rail, {
-        x: function () {
-          return -distance();
-        },
-        ease: 'none',
-        scrollTrigger: {
-          trigger: section,
-          start: 'top top',
-          end: function () {
-            return '+=' + distance();
+    Site.later(function () {
+      var mm = gsap.matchMedia();
+      mm.add('(min-width: 1024px)', function () {
+        var section = $('[data-products]');
+        var rail = $('[data-rail]');
+        if (!section || !rail) return;
+        // The pin drives the rail; native horizontal scroll is restored when this context reverts.
+        gsap.set(rail, { overflow: 'visible', scrollSnapType: 'none' });
+        var distance = function () {
+          return Math.max(0, rail.scrollWidth - document.documentElement.clientWidth);
+        };
+        gsap.to(rail, {
+          x: function () {
+            return -distance();
           },
-          pin: true,
-          scrub: 0.8,
-          anticipatePin: 1,
-          invalidateOnRefresh: true,
-          onUpdate: function (self) {
-            gsap.set('[data-rail-progress]', { scaleX: self.progress });
-            var idx = $('[data-rail-index]');
-            var n = rail.querySelectorAll('figure').length;
-            if (idx && n)
-              idx.textContent = String(
-                Math.min(n, Math.round(self.progress * (n - 1)) + 1),
-              ).padStart(2, '0');
+          ease: 'none',
+          scrollTrigger: {
+            trigger: section,
+            start: 'top top',
+            end: function () {
+              return '+=' + distance();
+            },
+            pin: true,
+            scrub: 0.8,
+            anticipatePin: 1,
+            invalidateOnRefresh: true,
+            onUpdate: function (self) {
+              gsap.set('[data-rail-progress]', { scaleX: self.progress });
+              var idx = $('[data-rail-index]');
+              var n = rail.querySelectorAll('figure').length;
+              if (idx && n)
+                idx.textContent = String(
+                  Math.min(n, Math.round(self.progress * (n - 1)) + 1),
+                ).padStart(2, '0');
+            },
           },
-        },
+        });
       });
     });
 
-    ST.refresh();
+    // Last step: one refresh once every trigger exists, so positions account for the pin.
+    Site.later(function () {
+      ST.refresh();
+    });
   });
 })();

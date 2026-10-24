@@ -6,7 +6,7 @@
       <p class="mt-6 max-w-md text-[1.02rem] leading-relaxed text-paper/75" data-reveal><%= copy.homeText %></p>
       <figure class="mt-12 overflow-hidden" data-clip>
         <img
-          src="<%= imageUrl(siteImg('homeVisit'), { w: 1300 }) %>"
+          src="<%= imageUrl(siteImg('homeVisit'), { w: 1300 }) %>" <%- imgSize(siteImg('homeVisit'), { w: 1300 }) %>
           srcset="<%= srcset(siteImg('homeVisit'), [700, 1300]) %>"
           sizes="(min-width: 1024px) 38vw, 92vw"
           alt="A barber lining up a client’s hairline in soft window light"

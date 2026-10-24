@@ -46,3 +46,14 @@ test('HSTS only in production; session cookie is httpOnly', async () => {
   expect(cookie).toMatch(/HttpOnly/);
   expect(cookie).toMatch(/SameSite=Lax/);
 });
+
+test('CSS/JS are linked with a content hash and cached for a year as immutable', async () => {
+  const html = (await request(app).get('/').expect(200)).text;
+  const css = html.match(/href="(\/css\/app\.css\?v=[0-9a-f]{10})"/);
+  expect(css).not.toBeNull();
+  expect(html).toMatch(/src="\/vendor\/gsap\/gsap\.min\.js\?v=[0-9a-f]{10}"/);
+  const res = await request(app).get(css[1]).expect(200);
+  expect(res.headers['cache-control']).toBe('public, max-age=31536000, immutable');
+  const plain = await request(app).get('/css/app.css').expect(200);
+  expect(plain.headers['cache-control']).not.toContain('immutable');
+});

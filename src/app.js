@@ -16,6 +16,7 @@ const prisma = require('./lib/prisma');
 const logger = require('./lib/logger');
 const { homeVisitsOpen } = require('./services/content');
 const seo = require('./services/seo');
+const assets = require('./lib/assets');
 
 function createApp({ sessionPool } = {}) {
   const app = express();
@@ -33,8 +34,8 @@ function createApp({ sessionPool } = {}) {
         directives: {
           'default-src': ["'self'"],
           'script-src': ["'self'"],
-          'style-src': ["'self'", 'https://fonts.googleapis.com'],
-          'font-src': ["'self'", 'https://fonts.gstatic.com'],
+          'style-src': ["'self'"],
+          'font-src': ["'self'"], // fonts are self-hosted in public/fonts
           // Cloudinary serves every uploaded image; blob: previews admin uploads.
           'img-src': ["'self'", 'data:', 'blob:', 'https://res.cloudinary.com'],
           'object-src': ["'none'"],
@@ -68,21 +69,26 @@ function createApp({ sessionPool } = {}) {
     }),
   );
 
-  app.use(express.static(path.join(__dirname, '..', 'public'), { maxAge: env.isProd ? '7d' : 0 }));
+  // CSS/JS are linked through asset() with a content hash (?v=…): those get a year, immutable.
+  // Unhashed files (photos, icons) get a week in production.
+  const staticCache = assets.cacheHeaders(env.isProd ? 'public, max-age=604800' : 'no-cache');
+  app.use(express.static(path.join(__dirname, '..', 'public'), { setHeaders: staticCache }));
   // GSAP served from node_modules so the CSP can stay script-src 'self'.
   app.use(
     '/vendor/gsap',
     express.static(path.join(__dirname, '..', 'node_modules', 'gsap', 'dist'), {
-      maxAge: env.isProd ? '30d' : 0,
+      setHeaders: staticCache,
     }),
   );
   Object.assign(app.locals, require('./lib/viewHelpers'));
+  app.locals.asset = assets.createAsset({ memo: env.isProd });
   app.locals.credits = require('./config/credits'); // builder section + footer credit
   const images = require('./lib/images');
   Object.assign(app.locals, {
     imageOf: images.imageOf,
     imageUrl: images.imageUrl,
     srcset: images.srcset,
+    imgSize: images.imgSize,
     seoJson: seo.jsonLdScript,
   });
   app.use(express.urlencoded({ extended: false, limit: '50kb' }));

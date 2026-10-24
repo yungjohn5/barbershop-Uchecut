@@ -2,7 +2,8 @@
 // - data-theme: saved choice, else the OS setting (no flash of the wrong theme).
 // - `motion-ok` lets CSS pre-hide elements that GSAP will reveal; it is removed again
 //   if GSAP has not started within 2.5 s, so content is never stuck invisible.
-// - `show-loader` shows the intro once per browser session on the home page.
+// - `show-loader` shows the intro once per browser session on the home page, on desktop
+//   only: phones (often on mobile data) go straight to the hero.
 (function () {
   var root = document.documentElement;
   root.classList.remove('no-js');
@@ -24,7 +25,8 @@
   if (reduce) return;
   root.classList.add('motion-ok');
 
-  if (window.location.pathname === '/') {
+  var desktop = window.matchMedia('(min-width: 1024px) and (pointer: fine)').matches;
+  if (window.location.pathname === '/' && desktop) {
     try {
       if (!window.sessionStorage.getItem('vb-intro')) root.classList.add('show-loader');
     } catch {
