@@ -9,6 +9,7 @@ const { generateReference, generateManageToken } = require('../lib/ids');
 const { HttpError, SlotTakenError, ValidationError } = require('../lib/errors');
 const { toShopDate, wallClockToUtc, addDays } = require('../lib/time');
 const { ACTIVE_STATUSES } = require('../config/constants');
+const env = require('../config/env');
 const settingsService = require('./settings');
 const notifications = require('./notifications');
 const { computeDay, pickLeastBusy, staffSettings } = require('./availability');
@@ -34,6 +35,13 @@ const bookingInputSchema = z
     notes: z.string().trim().max(500).optional(),
   })
   .superRefine((v, ctx) => {
+    if (env.emailRequired && !v.customer.email) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['customer', 'email'],
+        message: 'Add an email: it’s how we send the confirmation and reminders.',
+      });
+    }
     if (v.type === 'HOME' && (!v.address || v.address.length < 5)) {
       ctx.addIssue({
         code: 'custom',

@@ -83,6 +83,7 @@ function createApp({ sessionPool } = {}) {
   Object.assign(app.locals, require('./lib/viewHelpers'));
   app.locals.asset = assets.createAsset({ memo: env.isProd });
   app.locals.smsEnabled = env.smsEnabled; // copy says "SMS" only while Termii is set up
+  app.locals.emailRequired = env.emailRequired; // email is the only customer channel
   app.locals.credits = require('./config/credits'); // builder section + footer credit
   const images = require('./lib/images');
   Object.assign(app.locals, {

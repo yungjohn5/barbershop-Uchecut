@@ -69,29 +69,30 @@ async function enqueue(tx, rows) {
   return count;
 }
 
+// Messages sent on exactly ONE channel: whichever is live when it's queued. Their dedupe key
+// leaves the channel out, so switching SMS on or off can never send the same one twice.
+const ONE_CHANNEL = ['reminder-2h'];
+
 /**
  * Customer rows for a template: SMS when SMS is on (phone is required), email when we have
- * one. While Termii isn't set up (env.smsEnabled false), customers get email only.
+ * one. While Termii isn't set up (env.smsEnabled false), customers get email only, and the
+ * 2-hour reminder (normally SMS-only) goes by email instead.
  */
 function customerRows(booking, template, payload, keySuffix, sendAfter) {
   const t = templates.TEMPLATES[template];
   const rows = [];
   const base = { bookingId: booking.id, template, payload, ...(sendAfter ? { sendAfter } : {}) };
-  if (t.sms && env.smsEnabled) {
-    rows.push({
-      ...base,
-      channel: 'SMS',
-      to: booking.customer.phone,
-      dedupeKey: `${booking.reference}:${template}:SMS${keySuffix}`,
-    });
+  const oneChannel = ONE_CHANNEL.includes(template);
+  const key = (channel) =>
+    oneChannel
+      ? `${booking.reference}:${template}${keySuffix}`
+      : `${booking.reference}:${template}:${channel}${keySuffix}`;
+  const sms = Boolean(t.sms && env.smsEnabled);
+  if (sms) {
+    rows.push({ ...base, channel: 'SMS', to: booking.customer.phone, dedupeKey: key('SMS') });
   }
-  if (booking.customer.email && template !== 'reminder-2h') {
-    rows.push({
-      ...base,
-      channel: 'EMAIL',
-      to: booking.customer.email,
-      dedupeKey: `${booking.reference}:${template}:EMAIL${keySuffix}`,
-    });
+  if (booking.customer.email && !(oneChannel && sms)) {
+    rows.push({ ...base, channel: 'EMAIL', to: booking.customer.email, dedupeKey: key('EMAIL') });
   }
   return rows;
 }

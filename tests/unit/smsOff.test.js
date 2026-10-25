@@ -57,10 +57,39 @@ describe('messages while SMS is off', () => {
     const rows = notifications.customerRows(booking('kunle@example.com'), 'shop-confirmed', {}, '');
     expect(rows.map((r) => r.channel)).toEqual(['EMAIL']);
     expect(notifications.customerRows(booking(null), 'shop-confirmed', {}, '')).toEqual([]);
-    // the 2-hour reminder is SMS-only, so it's not queued at all
-    expect(notifications.customerRows(booking('k@example.com'), 'reminder-2h', {}, ':x')).toEqual(
-      [],
-    );
+  });
+
+  test('the 2-hour reminder goes by email, with a channel-free key (never sent twice)', () => {
+    const [row] = notifications.customerRows(booking('k@example.com'), 'reminder-2h', {}, ':t1');
+    expect(row).toMatchObject({ channel: 'EMAIL', dedupeKey: 'VB-ABCDE:reminder-2h:t1' });
+    // SMS back on: the same reminder becomes one SMS with the SAME key, so whichever row
+    // was queued first wins and the other is dropped by the unique dedupeKey.
+    env.smsEnabled = true;
+    const rows = notifications.customerRows(booking('k@example.com'), 'reminder-2h', {}, ':t1');
+    expect(rows).toEqual([
+      expect.objectContaining({ channel: 'SMS', dedupeKey: 'VB-ABCDE:reminder-2h:t1' }),
+    ]);
+  });
+
+  test('email is required on bookings while it is the only channel', () => {
+    const { bookingInputSchema } = require('../../src/services/booking');
+    const input = {
+      type: 'SHOP',
+      serviceIds: [1],
+      startsAt: new Date().toISOString(),
+      customer: { name: 'Kunle', phone: '08030000091', email: '' },
+    };
+    const was = env.emailRequired;
+    try {
+      env.emailRequired = true;
+      const res = bookingInputSchema.safeParse(input);
+      expect(res.success).toBe(false);
+      expect(res.error.issues[0].path).toEqual(['customer', 'email']);
+      env.emailRequired = false;
+      expect(bookingInputSchema.safeParse(input).success).toBe(true);
+    } finally {
+      env.emailRequired = was;
+    }
   });
 
   test('an SMS queued before the switch is skipped, never sent or retried', async () => {

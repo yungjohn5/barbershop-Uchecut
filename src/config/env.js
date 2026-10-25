@@ -110,6 +110,9 @@ env.smsEnabled =
   env.SMS_ENABLED === ''
     ? Boolean(env.TERMII_API_KEY && env.TERMII_SENDER_ID)
     : env.SMS_ENABLED === 'true';
+// Email is the only way to reach a customer while SMS (and any future WhatsApp channel) is
+// off, so booking forms require it then; it goes back to optional when a text channel is on.
+env.emailRequired = !env.smsEnabled;
 if (env.NOTIFY_MODE === 'live') {
   const needed = ['SMTP_HOST', 'MAIL_FROM'];
   if (env.smsEnabled) needed.push('TERMII_API_KEY', 'TERMII_SENDER_ID');

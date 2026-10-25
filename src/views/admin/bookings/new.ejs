@@ -91,9 +91,11 @@
           <label for="s-name">Full name</label>
           <% if (err('name')) { %><p class="field-error">Please enter a name.</p><% } %>
         </div>
-        <div class="field-float sm:col-span-2">
-          <input id="s-email" name="email" type="email" placeholder=" " value="<%= v.email || '' %>" data-staff-email />
-          <label for="s-email">Email <span class="font-normal opacity-70">(optional)</span></label>
+        <div class="field-float sm:col-span-2 <%= err('email') ? 'has-error' : '' %>">
+          <input id="s-email" name="email" type="email" placeholder=" " <%= emailRequired ? 'required' : '' %> value="<%= v.email || '' %>" data-staff-email />
+          <label for="s-email">Email<% if (!emailRequired) { %> <span class="font-normal opacity-70">(optional)</span><% } %></label>
+          <% if (emailRequired) { %><p class="field-hint">We email the confirmation and reminders, so the customer needs one.</p><% } %>
+          <% if (err('email')) { %><p class="field-error"><%= err('email') %></p><% } %>
         </div>
         <div class="zones-address field-float sm:col-span-2 <%= err('address') ? 'has-error' : '' %>">
           <input id="s-address" name="address" type="text" placeholder=" " value="<%= v.address || '' %>" />
@@ -124,7 +126,7 @@
         <span class="font-medium">Total</span><span class="font-serif text-3xl tabular-nums" data-ss-total>—</span>
       </div>
       <button type="submit" class="btn-primary mt-6 w-full justify-center" data-staff-submit>Create booking <span class="arrow" aria-hidden="true">→</span></button>
-      <p class="mt-3 text-xs text-ink/65">Paid on the day. <%= smsEnabled ? 'The customer gets an SMS (and email, if given) with their booking and manage link.' : 'The customer gets an email with their booking and manage link, if you add their email.' %></p>
+      <p class="mt-3 text-xs text-ink/65">Paid on the day. <%= smsEnabled ? 'The customer gets an SMS (and email, if given) with their booking and manage link.' : 'The customer gets an email with their booking and manage link.' %></p>
     </div>
   </aside>
 </form>
