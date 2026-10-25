@@ -24,7 +24,8 @@
     "db:seed": "prisma db seed",
     "db:seed:demo": "node scripts/seed-demo.js",
     "images:upload": "node scripts/upload-local-images.js",
-    "db:reset": "prisma migrate reset"
+    "db:reset": "prisma migrate reset",
+    "record:demo": "node scripts/record-demo.js"
   },
   "prisma": {
     "seed": "node prisma/seed.js"
@@ -71,6 +72,7 @@
     "globals": "^17.13.0",
     "jest": "^30.5.2",
     "nodemon": "^3.1.14",
+    "playwright": "1.58.2",
     "prettier": "^3.9.9",
     "prisma": "^6.19.3",
     "supertest": "^7.3.1",

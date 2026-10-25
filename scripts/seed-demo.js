@@ -1,6 +1,7 @@
-// DEMO data only: placeholder services, barbers, hours, zones and products so the site and
-// admin have something to show. Never for production (refuses to run there); real content is
-// entered in the admin (see docs/LAUNCH-CONTENT.md). Idempotent: safe to re-run.
+// DEMO data only: placeholder services, barbers, hours, zones, products, fake customers
+// (0803 000 00xx) and ~6 weeks of bookings (scripts/demo-bookings.js) so the site and admin
+// have something to show. Never for production (refuses to run there); real content is
+// entered in the admin (see docs/LAUNCH-CONTENT.md). Only runs on an empty catalogue.
 // Run after the base seed:  npm run db:seed && npm run db:seed:demo
 require('dotenv').config({ quiet: true });
 const { PrismaClient } = require('@prisma/client');
@@ -11,6 +12,9 @@ if (process.env.NODE_ENV === 'production') {
   );
   process.exit(1);
 }
+
+const { DEFAULT_SETTINGS } = require('../src/config/constants');
+const { seedDemoBookings } = require('./demo-bookings');
 
 const prisma = new PrismaClient();
 const naira = (n) => n * 100; // → kobo
@@ -266,9 +270,37 @@ async function main() {
     });
   }
 
+  // Demo shop contacts: obviously fake, so screenshots and recordings never show a real number.
+  await prisma.setting.upsert({
+    where: { key: 'shop' },
+    update: {},
+    create: {
+      key: 'shop',
+      value: {
+        ...DEFAULT_SETTINGS.shop,
+        address: ['Admiralty Way, Lekki Phase 1', 'Lagos, Nigeria'],
+        phone: '+2348030000000',
+        whatsapp: '2348030000000',
+        email: 'hello@victory.example',
+      },
+    },
+  });
+
+  const [svcRows, barberRows, zoneRows] = await Promise.all([
+    prisma.service.findMany({ where: { active: true } }),
+    prisma.barber.findMany({ include: { hours: true } }),
+    prisma.zone.findMany({ where: { active: true } }),
+  ]);
+  const history = await seedDemoBookings(prisma, {
+    services: svcRows,
+    barbers: barberRows,
+    zones: zoneRows,
+  });
+
   console.log(
     `Demo data: ${categories.length} categories, ${services.length} services, ` +
-      `${barbers.length} barbers, ${zones.length} zones, ${products.length} products.`,
+      `${barbers.length} barbers, ${zones.length} zones, ${products.length} products, ` +
+      `${history.customers} customers (0803 000 00xx), ${history.bookings} bookings.`,
   );
 
   // Demo photos point at the bundled files; move them to Cloudinary when it's configured.
