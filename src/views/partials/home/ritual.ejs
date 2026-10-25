@@ -9,11 +9,11 @@
 <% const ritualSlots = ['ritualConsult', 'ritualCut', 'ritualDetail', 'ritualFinish']; %>
 <section id="ritual" class="keep-dark relative overflow-hidden bg-ink text-paper grain" data-ritual>
   <div class="ritual-glow" aria-hidden="true"></div>
-  <div class="relative mx-auto max-w-[88rem] px-5 py-24 sm:px-8 lg:grid lg:min-h-[100svh] lg:grid-cols-12 lg:items-center lg:gap-10 lg:px-10 lg:py-20" data-ritual-pin>
+  <div class="relative mx-auto max-w-[88rem] px-5 py-24 sm:px-8 lg:grid lg:min-h-[100svh] lg:grid-cols-12 lg:items-center lg:gap-10 lg:px-10 lg:pb-12 lg:pt-28" data-ritual-pin>
     <div class="lg:col-span-5">
       <p class="eyebrow !text-paper/55"><span class="eyebrow-num"><%= locals.sec ? sec() : '03' %></span>The ritual</p>
-      <h2 class="mt-5 text-title" data-split><%- rich(copy.ritualTitle) %></h2>
-      <p class="mt-6 max-w-md text-[1.02rem] leading-relaxed text-paper/70" data-reveal><%= copy.ritualText %></p>
+      <h2 class="ritual-heading mt-5 text-title" data-split><%- rich(copy.ritualTitle) %></h2>
+      <p class="ritual-intro mt-6 max-w-md text-[1.02rem] leading-relaxed text-paper/70" data-reveal><%= copy.ritualText %></p>
 
       <ol class="ritual-steps relative mt-12 lg:mt-14" data-ritual-steps>
         <span class="ritual-rail hidden lg:block" aria-hidden="true"><span class="ritual-rail-fill" data-ritual-progress></span></span>
@@ -39,6 +39,11 @@
           </li>
         <% }) %>
       </ol>
+      <%# After four stacked steps on phones/tablets, a way straight into booking. %>
+      <div class="mt-12 flex flex-wrap gap-3 lg:hidden" data-reveal>
+        <a href="/book?type=SHOP" class="btn-primary">Book your chair <span class="arrow" aria-hidden="true">→</span></a>
+        <% if (homeOpen) { %><a href="/book?type=HOME" class="btn-ghost-light">Book a home visit</a><% } %>
+      </div>
     </div>
 
     <%# Desktop frame: one photo per step, stacked; home.js wipes each in as its step activates. %>

@@ -8,7 +8,9 @@
   </div>
   <nav aria-label="Mobile" class="relative flex-1 px-5 pt-6 sm:px-8">
     <ul class="space-y-1">
-      <% [['About', '/#intro'], ['Services', '/#services'], ['Barbers', '/#barbers'], ['Home visits', '/#home-service'], ['Products', '/#products'], ['Visit us', '/#visit']].forEach(([label, href], i) => { %>
+      <% const menuLinks = [['About', '/#intro'], ['Services', '/#services'], ['Barbers', '/#barbers'], ['Home visits', '/#home-service'], ['Products', '/#products'], ['Visit us', '/#visit']];
+         if (locals.gallery && gallery.length) menuLinks.splice(3, 0, ['Lookbook', '/#lookbook']); %>
+      <% menuLinks.forEach(([label, href], i) => { %>
         <li class="overflow-hidden">
           <a href="<%= href %>" class="menu-link flex items-baseline gap-4 py-1 font-serif text-[2.6rem] leading-tight" data-menu-link>
             <span class="font-sans text-xs tabular-nums text-paper/40"><%= pad2(i + 1) %></span><%= label %>

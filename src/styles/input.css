@@ -184,6 +184,10 @@
     @apply bg-paper text-ink antialiased;
     scroll-behavior: smooth;
   }
+  /* Anchor jumps (/#services…) land below the floating nav, not under it. */
+  #smooth-content :is(section, footer)[id] {
+    scroll-margin-top: 5.5rem;
+  }
   body {
     @apply font-sans text-base leading-relaxed;
   }
@@ -4457,5 +4461,28 @@ button.a-live:hover {
   }
   .svc-card.offset-sm {
     margin-top: 6rem;
+  }
+}
+
+/* Short laptop screens (1366×768, 1280×720): the pinned ritual must fit one screen. */
+@media (min-width: 1024px) and (max-height: 860px) {
+  .ritual-heading {
+    font-size: clamp(2.2rem, 3.4vw, 3.1rem);
+  }
+  .ritual-intro {
+    display: none;
+  }
+  .ritual-steps {
+    margin-top: 2rem;
+    gap: 1rem;
+  }
+  .ritual-title {
+    font-size: clamp(1.45rem, 2vw, 1.85rem);
+  }
+  .ritual-text {
+    font-size: 0.95rem;
+  }
+  .ritual-frame {
+    max-height: 74svh;
   }
 }

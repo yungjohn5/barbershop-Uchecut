@@ -479,7 +479,7 @@
             {
               y: drift[c] / 2,
               ease: 'none',
-              scrollTrigger: { trigger: wall, start: 'top bottom', end: 'bottom top', scrub: true },
+              scrollTrigger: { trigger: wall, start: 'top bottom', end: 'bottom top', scrub: 0.6 },
             },
           );
         });

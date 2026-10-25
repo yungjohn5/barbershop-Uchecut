@@ -11,6 +11,9 @@
   if (hasGsap) {
     gsap.registerPlugin(window.ScrollTrigger, window.SplitText, window.Flip);
     if (window.ScrollSmoother) gsap.registerPlugin(window.ScrollSmoother);
+    // Phones: the address bar showing/hiding resizes the viewport; recalculating every
+    // trigger then makes the page jump mid-scroll. Real orientation changes still refresh.
+    window.ScrollTrigger.config({ ignoreMobileResize: true });
     window.__motionReady = true;
   } else {
     root.classList.remove('motion-ok');
