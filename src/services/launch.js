@@ -26,6 +26,7 @@ function contentGaps({
   products = [],
   zones = [],
   hours = [],
+  gallery = [],
 }) {
   const gaps = [];
   const add = (key, level, label, href) => gaps.push({ key, level, label, href });
@@ -122,6 +123,14 @@ function contentGaps({
       'Add the map pin so Google can place the shop',
       '/admin/settings#shop',
     );
+  const shown = gallery.filter((g) => g.visible);
+  if (!shown.length || shown.every((g) => isStock(imageOf(g))))
+    add(
+      'lookbook',
+      RECOMMENDED,
+      'Add your own cuts to the Lookbook (Gallery; stock photos until then)',
+      '/admin/gallery',
+    );
   if (!Object.values(shop.socials || {}).some(Boolean))
     add('socials', RECOMMENDED, 'Add social links (Instagram, TikTok…)', '/admin/settings#shop');
   if (!zones.some((z) => z.active))
@@ -136,15 +145,16 @@ function contentGaps({
 }
 
 async function launchChecklist({ db = prisma } = {}) {
-  const [settings, services, barbers, products, zones, hours] = await Promise.all([
+  const [settings, services, barbers, products, zones, hours, gallery] = await Promise.all([
     settingsService.getAll(),
     db.service.findMany(),
     db.barber.findMany({ orderBy: [{ sortOrder: 'asc' }, { id: 'asc' }] }),
     db.product.findMany(),
     db.zone.findMany(),
     db.workingHours.findMany({ select: { barberId: true } }),
+    db.galleryItem.findMany(),
   ]);
-  return contentGaps({ settings, services, barbers, products, zones, hours });
+  return contentGaps({ settings, services, barbers, products, zones, hours, gallery });
 }
 
 module.exports = { contentGaps, launchChecklist, REQUIRED, RECOMMENDED };

@@ -95,8 +95,18 @@ function homeFacts({ services, zones, barbers }) {
   };
 }
 
+/** Pure: "Title | text" lines → [{ title, text }] (a line without "|" is all title). */
+function ritualSteps(lines = []) {
+  return lines.map((line) => {
+    const at = line.indexOf('|');
+    return at === -1
+      ? { title: line.trim(), text: '' }
+      : { title: line.slice(0, at).trim(), text: line.slice(at + 1).trim() };
+  });
+}
+
 async function getHomeContent({ db = prisma, now = new Date() } = {}) {
-  const [settings, categories, barbers, zones, products, hours] = await Promise.all([
+  const [settings, categories, barbers, zones, products, hours, gallery] = await Promise.all([
     settingsService.getAll(),
     db.serviceCategory.findMany({
       orderBy: { sortOrder: 'asc' },
@@ -111,6 +121,12 @@ async function getHomeContent({ db = prisma, now = new Date() } = {}) {
     db.workingHours.findMany({
       where: { barber: { active: true } },
       select: { weekday: true, startMin: true, endMin: true },
+    }),
+    db.galleryItem.findMany({
+      where: { visible: true },
+      orderBy: [{ sortOrder: 'asc' }, { id: 'asc' }],
+      take: 12,
+      include: { barber: { select: { name: true, active: true } } },
     }),
   ]);
 
@@ -129,6 +145,8 @@ async function getHomeContent({ db = prisma, now = new Date() } = {}) {
     status: shopStatus({ now, hours }),
     hours: hoursSummary(hours),
     weeklyHours: hours, // raw union of shifts, for the BarberShop JSON-LD
+    gallery, // Lookbook section (hidden while empty)
+    ritual: ritualSteps(settings.home.ritualSteps),
   };
 }
 
@@ -152,4 +170,11 @@ async function homeVisitsOpen({ db = prisma } = {}) {
   return Boolean(barber && zone);
 }
 
-module.exports = { getHomeContent, homeFacts, shopStatus, hoursSummary, homeVisitsOpen };
+module.exports = {
+  getHomeContent,
+  homeFacts,
+  shopStatus,
+  hoursSummary,
+  homeVisitsOpen,
+  ritualSteps,
+};

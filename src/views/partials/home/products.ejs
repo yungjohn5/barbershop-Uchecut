@@ -1,7 +1,7 @@
 <section id="products" class="relative overflow-hidden bg-paper lg:flex lg:h-[100svh] lg:min-h-[40rem] lg:flex-col lg:justify-center lg:pb-8 lg:pt-28" data-products>
   <div class="mx-auto grid w-full max-w-[88rem] gap-6 px-5 pt-24 sm:px-8 lg:grid-cols-12 lg:items-end lg:px-10 lg:pt-0">
     <div class="lg:col-span-6">
-      <p class="eyebrow"><span class="eyebrow-num">06</span>Product</p>
+      <p class="eyebrow"><span class="eyebrow-num"><%= locals.sec ? sec() : '06' %></span>Product</p>
       <h2 class="mt-5 text-title" data-split><%- rich(copy.productsTitle) %></h2>
     </div>
     <div class="lg:col-span-4 lg:col-start-9" data-reveal>

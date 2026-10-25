@@ -42,6 +42,19 @@ const DEFAULT_SETTINGS = {
     servicesTitle: 'We Provide A *Variety* Of Services',
     servicesText:
       'Every service starts with a short consultation. Prices are fixed and shown upfront, and you pay on the day, in the shop or when we arrive.',
+    ritualTitle: 'Every Visit, The Same *Ritual*.',
+    ritualText:
+      'Four unhurried steps, the same for every client, whether it’s a quick shape-up or the full works.',
+    // One line per step: "Title | text" (exactly four).
+    ritualSteps: [
+      'Consultation | We ask how you wear it, look at your hairline and growth, and agree the cut before a single pass.',
+      'The cut | Clippers for the structure, scissors for the shape. Worked slowly, checked from every angle.',
+      'The detail | Razor line-up, beard shaped to your face, neckline cleaned. The part people notice.',
+      'The finish | Hot towel, a cooling tonic and a look in the mirror together. You leave when you’re happy.',
+    ],
+    lookbookTitle: 'Fresh From *The Chair*.',
+    lookbookText:
+      'Recent work from the shop floor. Show your barber a picture you like; we’ll tell you honestly how it will sit on your hair.',
     craftTitle: 'We Don’t Follow Trends Blindly. We Adapt Them, *Carefully*.',
     craftText:
       'Our barbers are trained professionals with a deep respect for the discipline. Each brings their own eye; all work to one standard: quality without compromise.',

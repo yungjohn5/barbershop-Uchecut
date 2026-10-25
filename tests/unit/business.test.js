@@ -283,6 +283,11 @@ describe('settings forms', () => {
       productsTitle: 'a',
       productsText: 'a',
       footerText: 'a',
+      ritualTitle: 'a',
+      ritualText: 'a',
+      ritualSteps: ['One | a', 'Two | b', 'Three | c', 'Four | d'].join('\n'),
+      lookbookTitle: 'a',
+      lookbookText: 'a',
     };
     expect(() => rowsFor('home', { ...copy, heroLines: 'One\nTwo' })).toThrow(
       expect.objectContaining({
@@ -294,6 +299,25 @@ describe('settings forms', () => {
       'Two',
       'Three',
     ]);
+
+    // The ritual needs exactly four "Title | text" steps.
+    const good = { ...copy, heroLines: 'One\nTwo\nThree' };
+    expect(rowsFor('home', good)[0].value.ritualSteps).toHaveLength(4);
+    expect(() =>
+      rowsFor('home', { ...good, ritualSteps: 'One | a\nTwo | b\nThree | c' }),
+    ).toThrow();
+    expect(() =>
+      rowsFor('home', { ...good, ritualSteps: 'One | a\nTwo | b\nThree | c\nNo pipe here' }),
+    ).toThrow(
+      expect.objectContaining({
+        details: [
+          expect.objectContaining({
+            path: 'ritualSteps',
+            message: expect.stringMatching(/Title \| text/),
+          }),
+        ],
+      }),
+    );
   });
 });
 

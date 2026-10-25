@@ -1,0 +1,67 @@
+<%#
+  The Ritual: four steps of every visit.
+    phones–md   stacked: each step with its own photo, revealed on scroll
+    lg+         pinned scroll story: the step list on the left lights up in turn while the
+                matching photo wipes in on the right (home.js · ritual). Without motion the
+                list shows every step and the frame shows the first photo.
+  Copy: Settings → Home page → The ritual. Photos: Settings → Site photos → Ritual 1–4.
+%>
+<% const ritualSlots = ['ritualConsult', 'ritualCut', 'ritualDetail', 'ritualFinish']; %>
+<section id="ritual" class="keep-dark relative overflow-hidden bg-ink text-paper grain" data-ritual>
+  <div class="ritual-glow" aria-hidden="true"></div>
+  <div class="relative mx-auto max-w-[88rem] px-5 py-24 sm:px-8 lg:grid lg:min-h-[100svh] lg:grid-cols-12 lg:items-center lg:gap-10 lg:px-10 lg:py-20" data-ritual-pin>
+    <div class="lg:col-span-5">
+      <p class="eyebrow !text-paper/55"><span class="eyebrow-num"><%= locals.sec ? sec() : '03' %></span>The ritual</p>
+      <h2 class="mt-5 text-title" data-split><%- rich(copy.ritualTitle) %></h2>
+      <p class="mt-6 max-w-md text-[1.02rem] leading-relaxed text-paper/70" data-reveal><%= copy.ritualText %></p>
+
+      <ol class="ritual-steps relative mt-12 lg:mt-14" data-ritual-steps>
+        <span class="ritual-rail hidden lg:block" aria-hidden="true"><span class="ritual-rail-fill" data-ritual-progress></span></span>
+        <% ritual.forEach((step, i) => { %>
+          <li class="ritual-step <%= i === 0 ? 'is-active' : '' %>" data-ritual-step>
+            <figure class="ritual-step-photo lg:hidden" data-clip>
+              <img
+                src="<%= imageUrl(siteImg(ritualSlots[i]), { w: 1300 }) %>" <%- imgSize(siteImg(ritualSlots[i]), { w: 1300 }) %>
+                srcset="<%= srcset(siteImg(ritualSlots[i]), [700, 1300]) %>"
+                sizes="92vw"
+                alt=""
+                class="aspect-[4/3] w-full object-cover"
+                loading="lazy"
+              />
+            </figure>
+            <div class="flex gap-5 sm:gap-7">
+              <span class="ritual-num"><%= pad2(i + 1) %></span>
+              <div>
+                <h3 class="ritual-title"><%= step.title %></h3>
+                <% if (step.text) { %><div class="ritual-text"><p><%= step.text %></p></div><% } %>
+              </div>
+            </div>
+          </li>
+        <% }) %>
+      </ol>
+    </div>
+
+    <%# Desktop frame: one photo per step, stacked; home.js wipes each in as its step activates. %>
+    <div class="relative hidden lg:col-span-6 lg:col-start-7 lg:block" aria-hidden="true">
+      <div class="ritual-frame" data-ritual-frame>
+        <% ritual.forEach((step, i) => { %>
+          <figure class="ritual-shot <%= i === 0 ? 'is-first' : '' %>" data-ritual-shot>
+            <img
+              src="<%= imageUrl(siteImg(ritualSlots[i]), { w: 1300 }) %>" <%- imgSize(siteImg(ritualSlots[i]), { w: 1300 }) %>
+              srcset="<%= srcset(siteImg(ritualSlots[i]), [700, 1300]) %>"
+              sizes="(min-width: 1024px) 44vw, 1px"
+              alt=""
+              class="h-full w-full object-cover"
+              loading="lazy"
+              data-ritual-img
+            />
+          </figure>
+        <% }) %>
+        <div class="ritual-frame-shade"></div>
+        <div class="ritual-counter"><span data-ritual-count>01</span><span class="text-paper/40"> / <%= pad2(ritual.length) %></span></div>
+        <p class="ritual-caption" data-ritual-caption><%= ritual[0] && ritual[0].title %></p>
+      </div>
+      <span class="ritual-word" aria-hidden="true">Ritual</span>
+    </div>
+  </div>
+</section>

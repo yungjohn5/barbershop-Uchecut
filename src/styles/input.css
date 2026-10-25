@@ -4220,3 +4220,242 @@ button.a-live:hover {
   text-decoration: underline;
   text-underline-offset: 0.2em;
 }
+
+/* ---------- The Ritual (home): pinned step story on lg+, stacked cards below ---------- */
+.ritual-glow {
+  position: absolute;
+  inset: auto -10% -30% auto;
+  width: 60vw;
+  height: 60vw;
+  border-radius: 9999px;
+  background: radial-gradient(closest-side, rgba(184, 131, 62, 0.16), transparent 70%);
+  pointer-events: none;
+}
+.ritual-steps {
+  display: grid;
+  gap: 3.5rem;
+}
+.ritual-step-photo {
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+.ritual-num {
+  flex-shrink: 0;
+  width: 2.75rem;
+  padding-top: 0.35rem;
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-style: italic;
+  font-size: 1.15rem;
+  color: #d9a863;
+  font-variant-numeric: tabular-nums;
+}
+.ritual-title {
+  font-family: Gloock, Georgia, serif;
+  font-size: clamp(1.7rem, 2.6vw, 2.35rem);
+  line-height: 1.05;
+}
+.ritual-text {
+  margin-top: 0.75rem;
+  max-width: 28rem;
+  font-size: 1rem;
+  line-height: 1.65;
+  color: rgb(244 241 236 / 0.7);
+}
+@media (min-width: 1024px) {
+  .ritual-steps {
+    gap: 1.6rem;
+    padding-left: 1.75rem;
+  }
+  .ritual-rail {
+    position: absolute;
+    left: 0;
+    top: 0.5rem;
+    bottom: 0.5rem;
+    width: 1px;
+    background: rgb(244 241 236 / 0.14);
+  }
+  .ritual-rail-fill {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(#d9a863, #b8833e);
+    transform-origin: top;
+    transform: scaleY(0.25);
+  }
+  /* Steps dim until their turn; the text of the active one opens up. */
+  .motion-ok .ritual-step {
+    opacity: 0.32;
+    transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .motion-ok .ritual-step.is-active {
+    opacity: 1;
+  }
+  .motion-ok .ritual-step .ritual-text {
+    display: grid;
+    grid-template-rows: 0fr;
+    margin-top: 0;
+    transition:
+      grid-template-rows 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+      margin-top 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .motion-ok .ritual-step .ritual-text > p {
+    min-height: 0;
+    overflow: hidden;
+  }
+  .motion-ok .ritual-step.is-active .ritual-text {
+    grid-template-rows: 1fr;
+    margin-top: 0.75rem;
+  }
+  .ritual-frame {
+    position: relative;
+    z-index: 1;
+    aspect-ratio: 4 / 5;
+    max-height: 82svh;
+    margin-left: auto;
+    overflow: hidden;
+    background: #1a1816;
+    box-shadow: 0 60px 120px -60px rgba(0, 0, 0, 0.8);
+  }
+  .ritual-shot {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+  }
+  .ritual-shot img {
+    transform: scale(1.12);
+    transform-origin: center;
+  }
+  /* Later shots wait below their mask; GSAP wipes them up (no motion: first shot only). */
+  .ritual-shot:not(.is-first) {
+    clip-path: inset(100% 0 0 0);
+  }
+  .ritual-frame-shade {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(to top, rgba(16, 15, 14, 0.78), transparent 45%),
+      linear-gradient(to bottom, rgba(16, 15, 14, 0.55), transparent 22%);
+    pointer-events: none;
+  }
+  .ritual-counter {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.75rem;
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-style: italic;
+    font-size: 1.25rem;
+    color: #f4f1ec;
+    font-variant-numeric: tabular-nums;
+  }
+  .ritual-caption {
+    position: absolute;
+    left: 1.75rem;
+    bottom: 1.5rem;
+    font-family: Gloock, Georgia, serif;
+    font-size: clamp(1.6rem, 2.4vw, 2.4rem);
+    color: #f4f1ec;
+  }
+  /* Sits behind the frame: only the letters outside it show. */
+  .ritual-word {
+    position: absolute;
+    z-index: 0;
+    left: -4rem;
+    bottom: -3.25rem;
+    font-family: Gloock, Georgia, serif;
+    font-size: clamp(6rem, 11vw, 11rem);
+    line-height: 1;
+    color: transparent;
+    -webkit-text-stroke: 1px rgb(244 241 236 / 0.16);
+    pointer-events: none;
+    user-select: none;
+  }
+}
+
+/* ---------- Lookbook (home): two columns on phones, three drifting columns on md+ ---------- */
+.look-wall {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem 0.75rem;
+}
+.look-col {
+  display: contents;
+}
+@media (min-width: 768px) {
+  .look-wall {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.5rem;
+  }
+  .look-col {
+    display: flex;
+    flex: 1 1 0;
+    min-width: 0;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  .look-col-mid {
+    margin-top: 6rem;
+  }
+}
+@media (min-width: 1280px) {
+  .look-wall,
+  .look-col {
+    gap: 2rem;
+  }
+  .look-col-mid {
+    margin-top: 9rem;
+  }
+}
+.look-media {
+  position: relative;
+  overflow: hidden;
+  background: rgb(var(--paper-deep));
+}
+.look-media img {
+  transform: scale(1.08);
+  transition:
+    transform 1.4s cubic-bezier(0.16, 1, 0.3, 1),
+    filter 1.4s cubic-bezier(0.16, 1, 0.3, 1);
+  filter: saturate(0.85);
+}
+.look-frame:hover .look-media img {
+  transform: scale(1.14);
+  filter: saturate(1);
+}
+.look-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(16, 15, 14, 0.35), transparent 40%);
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+.look-frame:hover .look-shade {
+  opacity: 1;
+}
+.look-caption {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+  font-size: 0.88rem;
+  min-width: 0;
+}
+@media (min-width: 768px) {
+  .look-caption {
+    font-size: 0.92rem;
+    transform: translateY(0.25rem);
+    transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .look-frame:hover .look-caption {
+    transform: translateY(0);
+  }
+}
+
+/* ---------- Services: four columns on wide screens (8 services = two full rows) ---------- */
+@media (min-width: 1280px) {
+  .svc-card.offset-md {
+    margin-top: 0;
+  }
+  .svc-card.offset-sm {
+    margin-top: 6rem;
+  }
+}

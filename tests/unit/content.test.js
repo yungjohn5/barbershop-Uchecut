@@ -138,3 +138,18 @@ describe('hoursSummary', () => {
     });
   });
 });
+
+describe('ritual steps', () => {
+  const { ritualSteps } = require('../../src/services/content');
+
+  test('"Title | text" lines become steps; extra pipes stay in the text', () => {
+    expect(ritualSteps(['Consultation | We ask first.', 'The cut|Slow | careful.'])).toEqual([
+      { title: 'Consultation', text: 'We ask first.' },
+      { title: 'The cut', text: 'Slow | careful.' },
+    ]);
+  });
+
+  test('a line without a pipe is all title', () => {
+    expect(ritualSteps(['The finish'])).toEqual([{ title: 'The finish', text: '' }]);
+  });
+});

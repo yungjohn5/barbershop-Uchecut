@@ -2,7 +2,7 @@
   <div class="mx-auto max-w-[88rem] px-5 py-24 sm:px-8 lg:px-10 lg:py-32">
     <div class="grid gap-8 lg:grid-cols-12 lg:items-end">
       <div class="lg:col-span-7">
-        <p class="eyebrow"><span class="eyebrow-num">04</span>The barbers</p>
+        <p class="eyebrow"><span class="eyebrow-num"><%= locals.sec ? sec() : '04' %></span>The barbers</p>
         <h2 class="mt-5 text-title" data-split><%- rich(copy.barbersTitle) %></h2>
       </div>
       <p class="max-w-md text-[1.02rem] leading-relaxed text-ink/70 lg:col-span-4 lg:col-start-9" data-reveal>

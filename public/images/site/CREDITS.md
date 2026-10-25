@@ -36,3 +36,13 @@ product names. Files are resized to WebP at the widths in their filename.
 | prod-razor | 9456810 |
 
 Photo page: `https://www.pexels.com/photo/<id>/`
+
+Added for the Ritual and Lookbook sections (same Pexels barbershop shoot):
+
+| File prefix | Pexels photo ID |
+| --- | --- |
+| ritual-consult | 7697212 |
+| ritual-cut | 7697224 |
+| ritual-detail | 7697679 |
+| ritual-finish | 7697672 |
+| look-01 … look-12 | 7697221, 7697656, 7697675, 7697229, 7697234, 7697664, 7697226, 7697233, 7697677, 7697673, 7697676, 7697205 |

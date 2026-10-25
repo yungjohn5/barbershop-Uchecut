@@ -380,8 +380,134 @@
       });
     });
 
-    // Last step: one refresh once every trigger exists, so positions account for the pin.
+    // ------------------------------------------- the ritual (pinned story on desktop)
+    // Each photo wipes up over the last while the matching step lights up on the left.
     Site.later(function () {
+      var ritual = $('[data-ritual]');
+      if (!ritual) return;
+      gsap.matchMedia().add('(min-width: 1024px)', function () {
+        var pin = $('[data-ritual-pin]', ritual);
+        var steps = $$('[data-ritual-step]', ritual);
+        var shots = $$('[data-ritual-shot]', ritual);
+        var imgs = $$('[data-ritual-img]', ritual);
+        var count = $('[data-ritual-count]', ritual);
+        var caption = $('[data-ritual-caption]', ritual);
+        var n = shots.length;
+        if (!pin || n < 2) return;
+        var titles = steps.map(function (s) {
+          var t = s.querySelector('.ritual-title');
+          return t ? t.textContent : '';
+        });
+        var current = 0;
+        var setStep = function (i) {
+          if (i === current) return;
+          current = i;
+          steps.forEach(function (s, k) {
+            s.classList.toggle('is-active', k === i);
+          });
+          if (count) count.textContent = String(i + 1).padStart(2, '0');
+          if (caption) {
+            caption.textContent = titles[i];
+            gsap.fromTo(
+              caption,
+              { yPercent: 60, opacity: 0 },
+              { yPercent: 0, opacity: 1, duration: 0.8, ease: 'expo.out', overwrite: true },
+            );
+          }
+        };
+
+        var tl = gsap.timeline({
+          defaults: { ease: 'none' },
+          scrollTrigger: {
+            trigger: pin,
+            start: 'top top',
+            end: '+=' + (n - 1) * 85 + '%',
+            pin: true,
+            scrub: 0.8,
+            anticipatePin: 1,
+            onUpdate: function (self) {
+              setStep(Math.min(n - 1, Math.round(self.progress * (n - 1))));
+            },
+          },
+        });
+        tl.fromTo('[data-ritual-progress]', { scaleY: 1 / n }, { scaleY: 1, duration: n - 1 }, 0);
+        shots.forEach(function (shot, i) {
+          if (!i) return;
+          tl.fromTo(
+            shot,
+            { clipPath: 'inset(100% 0% 0% 0%)' },
+            { clipPath: 'inset(0% 0% 0% 0%)', duration: 1, ease: 'power2.inOut' },
+            i - 1,
+          )
+            .fromTo(imgs[i], { scale: 1.32 }, { scale: 1.12, duration: 1 }, i - 1)
+            .to(imgs[i - 1], { scale: 1.02, yPercent: -5, duration: 1 }, i - 1);
+        });
+
+        return function () {
+          current = 0;
+          steps.forEach(function (s, k) {
+            s.classList.toggle('is-active', k === 0);
+          });
+        };
+      });
+    });
+
+    // ------------------------------------------------------- lookbook (gallery wall)
+    // Frames wipe open as they arrive; on md+ the three columns drift at different speeds.
+    Site.later(function () {
+      var wall = $('[data-lookbook]');
+      if (!wall) return;
+      $$('[data-look-frame]', wall).forEach(function (frame) {
+        var media = $('.look-media', frame);
+        gsap.fromTo(
+          media,
+          { clipPath: 'inset(0% 0% 100% 0%)' },
+          {
+            clipPath: 'inset(0% 0% 0% 0%)',
+            duration: 1.4,
+            ease: 'expo.inOut',
+            scrollTrigger: { trigger: frame, start: 'top 90%', once: true },
+          },
+        );
+      });
+      gsap.matchMedia().add('(min-width: 768px)', function () {
+        var drift = [-70, 110, -140]; // px over the section's scroll, per column
+        $$('[data-look-col]', wall).forEach(function (col, c) {
+          gsap.fromTo(
+            col,
+            { y: -drift[c] / 2 },
+            {
+              y: drift[c] / 2,
+              ease: 'none',
+              scrollTrigger: { trigger: wall, start: 'top bottom', end: 'bottom top', scrub: true },
+            },
+          );
+        });
+      });
+    });
+
+    // ------------------------------------------- home visits: photo column holds (desktop)
+    // Once the photo's bottom reaches the screen edge it stays put until the steps and fees
+    // beside it have scrolled past (CSS sticky can't work inside ScrollSmoother).
+    Site.later(function () {
+      var aside = $('[data-home-aside]');
+      if (!aside || !aside.nextElementSibling) return;
+      gsap.matchMedia().add('(min-width: 1024px)', function () {
+        ST.create({
+          trigger: aside,
+          start: 'bottom bottom-=48',
+          endTrigger: aside.nextElementSibling,
+          end: 'bottom bottom-=48',
+          pin: true,
+          pinSpacing: false,
+          invalidateOnRefresh: true,
+        });
+      });
+    });
+
+    // Last step: one refresh once every trigger exists, so positions account for the pins.
+    Site.later(function () {
+      ST.sort(); // pins were created out of page order (ritual after the product rail)
       ST.refresh();
     });
   });

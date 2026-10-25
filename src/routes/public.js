@@ -16,6 +16,9 @@ router.get(
       services: content.services,
       image: res.locals.seo.image.url,
     });
+    // Section numbers (01, 02…) in render order, so they stay sequential when a section hides.
+    let n = 0;
+    res.locals.sec = () => String((n += 1)).padStart(2, '0');
     res.render('pages/home', { title: null, page: 'home', ...content });
   }),
 );

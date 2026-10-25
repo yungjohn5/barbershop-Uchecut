@@ -1,7 +1,7 @@
 <section id="home-service" class="keep-dark relative overflow-hidden bg-ink text-paper grain">
   <div class="relative mx-auto grid max-w-[88rem] gap-16 px-5 py-24 sm:px-8 lg:grid-cols-12 lg:gap-8 lg:px-10 lg:py-36">
-    <div class="lg:col-span-5">
-      <p class="eyebrow !text-paper/55"><span class="eyebrow-num">05</span>Home service</p>
+    <div class="lg:col-span-5 lg:self-start" data-home-aside>
+      <p class="eyebrow !text-paper/55"><span class="eyebrow-num"><%= locals.sec ? sec() : '05' %></span>Home service</p>
       <h2 class="mt-5 text-title" data-split><%- rich(copy.homeTitle) %></h2>
       <p class="mt-6 max-w-md text-[1.02rem] leading-relaxed text-paper/75" data-reveal><%= copy.homeText %></p>
       <figure class="mt-12 overflow-hidden" data-clip>
@@ -10,7 +10,7 @@
           srcset="<%= srcset(siteImg('homeVisit'), [700, 1300]) %>"
           sizes="(min-width: 1024px) 38vw, 92vw"
           alt="A barber lining up a client’s hairline in soft window light"
-          class="aspect-[3/2] w-full object-cover"
+          class="aspect-[3/2] w-full object-cover lg:aspect-[4/5]"
           loading="lazy"
           data-parallax-img
         />

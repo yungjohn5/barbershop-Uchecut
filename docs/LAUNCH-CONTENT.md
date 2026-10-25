@@ -59,10 +59,11 @@ The site ships with stock placeholder photos. Replace them with the shop's own.
 | --- | --- | --- | --- |
 | Hero (top of home page) | Settings → Site photos → Hero | 2000 px+ wide, landscape | Dark, moody, a cut in progress; the left third sits under text |
 | Intro, craft, home-visit and footer photos | Settings → Site photos | 1600 px+ | Portraits for "portrait" slots, landscape for the rest |
+| The ritual (4 steps) | Settings → Site photos → Ritual 1–4 | 1600 px+, portrait (4:5) works best | Consultation, the cut, the detail, the finish; same chair and light |
 | Barber portraits | Barbers → edit | 1000 px+, portrait (3:4) | Same background and light for every barber |
 | Service photos | Services → edit | 1000 px+, portrait (4:5) | One clear subject per photo |
 | Products | Products | 800 px+, square | Plain background |
-| Gallery | Gallery | 1200 px+ | Finished cuts, good light |
+| Gallery (home page Lookbook) | Gallery | 1200 px+ | Finished cuts, good light; the first 12 visible show on the home page. Replace the demo shots |
 
 JPG, PNG or WebP, up to 8 MB each. Photos are stored on Cloudinary and resized automatically.
 The hero photo also becomes the preview image when the site is shared on WhatsApp, X or

@@ -316,7 +316,9 @@ The home page follows the reference's six sections in order, adapted with a home
 | 1 | Hero: photo, big serif headline, circular Book button | Hero with "Book in shop" and "Book a home visit" CTAs | `partials/hero.ejs` | `Setting` (headline, image) |
 | 2 | Intro collage: "Modern Ritual of Grooming" | About the shop, 3-photo collage | `partials/intro.ejs` | `Setting` |
 | 3 | Services grid with filter tabs | Services preview, tabs by category, price + duration on each card | `partials/service-card.ejs` | `ServiceCategory`, `Service` |
+| — | (new) | The ritual: 4 steps of every visit. Desktop pins and walks the steps while each photo wipes in; phones stack photo cards | `partials/home/ritual.ejs` | `Setting` (`home.ritual*`, site photo slots `ritual*`) |
 | 4 | Barbers / philosophy | Team cards linking to profiles | `partials/barber-card.ejs` | `Barber` |
+| — | (new) | Lookbook: up to 12 visible Gallery photos in three drifting columns (two on phones); hidden while the gallery is empty | `partials/home/lookbook.ejs` | `GalleryItem`, `Setting` (`home.lookbook*`) |
 | — | (new) | Home service: how it works in 3 steps + zone fee list | `partials/home-service.ejs` | `Zone` |
 | 5 | Products carousel | Product showcase, no cart | `partials/product-rail.ejs` | `Product` |
 | — | (new) | "Website & booking system by Cyberninja Innovations": 4 service chips, "Get a website like this →" and "Chat on WhatsApp" CTAs; shown when `shop.showBuilderSection` | `partials/builder-promo.ejs` | `config/credits.js`, `Setting` |
@@ -326,7 +328,9 @@ The home page follows the reference's six sections in order, adapted with a home
 
 - Section partials live in `views/partials/home/`; data comes from `services/content.js` (`getHomeContent`), copy from the `home` setting (code defaults in `config/constants.js` until the owner edits it).
 - Images live on Cloudinary. `lib/images.js` turns a record into a descriptor (`imageOf(record, 'image'|'photo')` → `{ publicId, version, width, height }`, or `{ legacy: base }` while only a legacy path exists) and builds delivery URLs: `imageUrl(img, { w, h, crop, gravity })` and `srcset(img, widths, { ratio })`, always with `f_auto,q_auto`. Legacy descriptors map to the bundled `${base}-${width}.webp` files.
-- Home-page photos (hero, intro, craft, home visit, footer chair) are named slots in the `siteImages` setting, edited in Settings → Site photos. `siteImg(slot)` returns the uploaded asset or the bundled placeholder in `public/images/site`.
+- Section numbers (01, 02…) come from a counter the home route passes as `sec()`, so they stay in order when a section (e.g. the Lookbook) is hidden.
+- Motion added for the ritual, lookbook and home-visit sections runs through `Site.later()` in `home.js`: the ritual pins on lg+, lookbook columns drift on md+, the home-visit photo column holds while the fees scroll past; `ScrollTrigger.sort()` then one refresh at the end, because pins are created out of page order.
+- Home-page photos (hero, intro, ritual 1–4, craft, home visit, footer chair) are named slots in the `siteImages` setting, edited in Settings → Site photos. `siteImg(slot)` returns the uploaded asset or the bundled placeholder in `public/images/site`.
 - Current photos are Pexels placeholders, listed in `public/images/site/CREDITS.md`.
 - Performance:
   - `<img>` tags get `width`/`height` from `imgSize()`: the crop size, Cloudinary's stored size, or the bundled WebP's own header. Every image below the hero is `loading="lazy"`; the hero has `fetchpriority="high"`.

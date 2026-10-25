@@ -1,0 +1,55 @@
+<%#
+  Lookbook: recent work from Gallery (admin → Gallery; hidden while empty).
+    phones   two columns
+    md+      three columns that drift at different speeds as you scroll (home.js · lookbook),
+             each frame wiping open on entry; hover lifts the caption.
+  Frames cycle through four shapes so the wall never looks like a grid of squares.
+%>
+<% if (gallery && gallery.length) {
+  const cols = [[], [], []];
+  gallery.forEach((g, i) => cols[i % 3].push({ g, i }));
+  const shapes = ['aspect-[4/5]', 'aspect-[3/4]', 'aspect-[1/1]', 'aspect-[4/5]', 'aspect-[5/6]'];
+%>
+<section id="lookbook" class="relative overflow-hidden bg-paper" data-lookbook>
+  <div class="mx-auto max-w-[88rem] px-5 py-24 sm:px-8 lg:px-10 lg:py-32">
+    <div class="grid gap-8 lg:grid-cols-12 lg:items-end">
+      <div class="lg:col-span-7">
+        <p class="eyebrow"><span class="eyebrow-num"><%= locals.sec ? sec() : '06' %></span>Lookbook <span class="text-ink/65">· <%= gallery.length %> recent cuts</span></p>
+        <h2 class="mt-5 text-title" data-split><%- rich(copy.lookbookTitle) %></h2>
+      </div>
+      <div class="lg:col-span-4 lg:col-start-9" data-reveal>
+        <p class="max-w-md text-[1.02rem] leading-relaxed text-ink/70"><%= copy.lookbookText %></p>
+        <a href="/book" class="link-u mt-5 inline-flex text-[0.95rem] font-medium">Book your cut <span class="arrow ml-1" aria-hidden="true">→</span></a>
+      </div>
+    </div>
+
+    <div class="look-wall mt-14 lg:mt-20">
+      <% cols.forEach((col, c) => { %>
+        <div class="look-col <%= c === 1 ? 'look-col-mid' : '' %>" data-look-col="<%= c %>">
+          <% col.forEach(({ g, i }) => { const img = imageOf(g); %>
+            <figure class="look-frame group" data-look-frame>
+              <div class="look-media <%= shapes[i % shapes.length] %>">
+                <img
+                  src="<%= imageUrl(img, { w: 1200 }) %>" <%- imgSize(img, { w: 1200 }) %>
+                  srcset="<%= srcset(img, [600, 1200]) %>"
+                  sizes="(min-width: 768px) 30vw, 46vw"
+                  alt="<%= g.caption || 'A recent cut from the shop' %>"
+                  class="h-full w-full object-cover"
+                  loading="lazy"
+                  data-look-img
+                />
+                <span class="look-shade" aria-hidden="true"></span>
+              </div>
+              <figcaption class="look-caption">
+                <span class="tabular-nums text-ink/50"><%= pad2(i + 1) %></span>
+                <span class="truncate"><%= g.caption || 'Fresh from the chair' %></span>
+                <% if (g.barber && g.barber.active) { %><span class="ml-auto shrink-0 text-ink/55"><%= g.barber.name %></span><% } %>
+              </figcaption>
+            </figure>
+          <% }) %>
+        </div>
+      <% }) %>
+    </div>
+  </div>
+</section>
+<% } %>

@@ -167,6 +167,22 @@ const weeklyHours = [
   { weekday: 6, startMin: 600, endMin: 1080 },
 ];
 
+// Lookbook (Gallery). Images: public/images/site/look-NN-{600,1200}.webp; barber = slug or null.
+const gallery = [
+  ['Tools of the trade', null],
+  ['Clean neckline', 'tunde'],
+  ['Ready for the next chair', 'tunde'],
+  ['Taper, worked slowly', 'tunde'],
+  ['Clipper detail', null],
+  ['The mirror moment', 'emeka'],
+  ['Low fade in progress', 'tunde'],
+  ['Crown work', 'tunde'],
+  ['Line-up', 'tunde'],
+  ['First proper cut', 'emeka'],
+  ['Trimmer set to zero', 'tunde'],
+  ['Shape check', 'emeka'],
+];
+
 const zones = [
   { name: 'Lekki', fee: 5000, buffer: 45, sortOrder: 1 },
   { name: 'Victoria Island', fee: 4000, buffer: 40, sortOrder: 2 },
@@ -270,6 +286,20 @@ async function main() {
     });
   }
 
+  const barberIdBySlug = Object.fromEntries(
+    (await prisma.barber.findMany({ select: { id: true, slug: true } })).map((b) => [b.slug, b.id]),
+  );
+  if (!(await prisma.galleryItem.count())) {
+    await prisma.galleryItem.createMany({
+      data: gallery.map(([caption, barber], i) => ({
+        caption,
+        legacyImagePath: `/images/site/look-${String(i + 1).padStart(2, '0')}`,
+        barberId: barber ? barberIdBySlug[barber] : null,
+        sortOrder: i + 1,
+      })),
+    });
+  }
+
   // Demo shop contacts: obviously fake, so screenshots and recordings never show a real number.
   await prisma.setting.upsert({
     where: { key: 'shop' },
@@ -299,7 +329,7 @@ async function main() {
 
   console.log(
     `Demo data: ${categories.length} categories, ${services.length} services, ` +
-      `${barbers.length} barbers, ${zones.length} zones, ${products.length} products, ` +
+      `${barbers.length} barbers, ${zones.length} zones, ${products.length} products, ${gallery.length} lookbook photos, ` +
       `${history.customers} customers (0803 000 00xx), ${history.bookings} bookings.`,
   );
 

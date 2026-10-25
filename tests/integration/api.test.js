@@ -103,6 +103,29 @@ describe('JSON API', () => {
     expect(res.text).toContain('In shop only'); // shave is shop-only
     expect(res.text).toContain('Matte Clay');
     expect(res.text).toContain('2 services · from ₦6,000');
+    // The ritual: four steps from Settings, photos from the site slots.
+    expect(res.text).toContain('id="ritual"');
+    expect(res.text).toContain('Consultation');
+    expect(res.text).toContain('/images/site/ritual-finish-1300.webp');
+    // No gallery photos yet → no Lookbook, and section numbers stay sequential.
+    expect(res.text).not.toContain('id="lookbook"');
+    const nums = [...res.text.matchAll(/eyebrow-num">(\d\d)</g)].map((m) => m[1]);
+    expect(nums).toEqual(nums.map((_, i) => String(i + 1).padStart(2, '0')));
+  });
+
+  test('the Lookbook shows visible gallery photos with captions and barber tags', async () => {
+    await prisma.galleryItem.createMany({
+      data: [
+        { caption: 'Low taper', legacyImagePath: '/images/site/look-01', sortOrder: 1 },
+        { caption: 'Hidden one', legacyImagePath: '/images/site/look-02', visible: false },
+      ],
+    });
+    const res = await request(app).get('/').expect(200);
+    expect(res.text).toContain('id="lookbook"');
+    expect(res.text).toContain('Low taper');
+    expect(res.text).not.toContain('Hidden one');
+    expect(res.text).toContain('/images/site/look-01-1200.webp');
+    expect(res.text).toContain('1 recent cuts');
   });
 
   test('GET /book?type=HOME opens the wizard with Home visit preselected', async () => {

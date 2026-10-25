@@ -132,6 +132,14 @@ const SCHEMAS = {
     introText: trimmed(600, 'the intro text'),
     servicesTitle: trimmed(90, 'the services title'),
     servicesText: trimmed(400, 'the services text'),
+    ritualTitle: trimmed(90, 'the ritual title'),
+    ritualText: trimmed(300, 'the ritual text'),
+    ritualSteps: lines(4, 4, 220, 'ritual step').refine(
+      (steps) => steps.every((s) => /^[^|]{2,40}\|\s*\S/.test(s)),
+      'Write each step as “Title | text”, e.g. “Consultation | We ask how you wear it…”.',
+    ),
+    lookbookTitle: trimmed(90, 'the lookbook title'),
+    lookbookText: trimmed(300, 'the lookbook text'),
     craftTitle: trimmed(120, 'the craft title'),
     craftText: trimmed(500, 'the craft text'),
     craftNote: trimmed(200, 'the craft note'),
@@ -213,7 +221,11 @@ function formValues(all) {
           : '',
       ...(all.shop.socials || {}),
     },
-    home: { ...all.home, heroLines: all.home.heroLines.join('\n') },
+    home: {
+      ...all.home,
+      heroLines: all.home.heroLines.join('\n'),
+      ritualSteps: all.home.ritualSteps.join('\n'),
+    },
   };
 }
 

@@ -11,7 +11,7 @@
 
   <div class="relative grid gap-10 md:grid-cols-2 md:gap-x-10 md:gap-y-8 lg:gap-x-16 xl:grid-cols-12 xl:grid-rows-[auto_1fr] xl:gap-x-8 xl:gap-y-10">
     <div class="md:col-start-1 md:row-start-1 xl:col-span-4 xl:col-start-9 xl:text-right">
-      <p class="eyebrow"><span class="eyebrow-num">01</span>Intro</p>
+      <p class="eyebrow"><span class="eyebrow-num"><%= locals.sec ? sec() : '01' %></span>Intro</p>
       <h2 class="mt-5 text-title" data-split><%- rich(copy.introTitle) %></h2>
     </div>
 
@@ -36,17 +36,17 @@
           srcset="<%= srcset(siteImg('introTools'), [500, 900]) %>"
           sizes="(min-width: 1280px) 22vw, (min-width: 768px) 22vw, 45vw"
           alt="Clippers, trimmers, scissors and a brush laid out on the station"
-          class="aspect-[4/5] w-full object-cover"
+          class="aspect-[4/5] w-full object-cover xl:aspect-[3/4]"
           loading="lazy"
         />
       </figure>
-      <figure class="overflow-hidden xl:col-span-2 xl:col-start-11 xl:row-start-2 xl:self-end" data-speed="-0.1">
+      <figure class="overflow-hidden xl:col-span-3 xl:col-start-10 xl:row-start-2 xl:mt-10 xl:self-end" data-speed="-0.1">
         <img
           src="<%= imageUrl(siteImg('introStill'), { w: 800 }) %>" <%- imgSize(siteImg('introStill'), { w: 800 }) %>
           srcset="<%= srcset(siteImg('introStill'), [400, 800]) %>"
-          sizes="(min-width: 1280px) 15vw, (min-width: 768px) 22vw, 45vw"
+          sizes="(min-width: 1280px) 22vw, (min-width: 768px) 22vw, 45vw"
           alt="Neck brush and tonic bottles at the barber’s station"
-          class="aspect-[4/5] w-full object-cover"
+          class="aspect-[4/5] w-full object-cover xl:aspect-[3/4]"
           loading="lazy"
         />
       </figure>

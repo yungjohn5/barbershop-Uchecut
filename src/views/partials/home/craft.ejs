@@ -13,19 +13,20 @@
     </figure>
 
     <div class="relative z-10 -mt-20 bg-surface p-6 shadow-[0_40px_90px_-50px_rgba(20,20,20,0.45)] sm:mx-6 sm:p-10 lg:mx-0 lg:my-16 lg:w-[66%] lg:p-14">
-      <p class="eyebrow"><span class="eyebrow-num">03</span>Craft comes first</p>
+      <p class="eyebrow"><span class="eyebrow-num"><%= locals.sec ? sec() : '03' %></span>Craft comes first</p>
       <h2 class="mt-5 max-w-2xl text-[clamp(2rem,3.6vw,3.5rem)] leading-[1.04]" data-split><%- rich(copy.craftTitle) %></h2>
 
-      <div class="mt-12 grid gap-10 md:grid-cols-[1fr_1.15fr_1fr] md:items-end lg:grid-cols-[1fr_1.1fr] xl:grid-cols-[1fr_1.15fr_1fr]">
-        <p class="text-sm leading-relaxed text-ink/65 md:pb-2" data-reveal><%= copy.craftNote %></p>
-        <div class="grid grid-cols-2 gap-3 md:grid-cols-1">
+      <%# Two detail shots side by side with the note beneath; copy and the ring button on the right. %>
+      <div class="mt-12 grid gap-10 md:grid-cols-[1.45fr_1fr] md:items-end lg:grid-cols-1 xl:grid-cols-[1.45fr_1fr]">
+        <div>
+        <div class="grid grid-cols-2 gap-3 sm:gap-4">
           <figure class="overflow-hidden" data-speed="0.08">
             <img
               src="<%= imageUrl(siteImg('craftA'), { w: 900 }) %>" <%- imgSize(siteImg('craftA'), { w: 900 }) %>
               srcset="<%= srcset(siteImg('craftA'), [500, 900]) %>"
-              sizes="(min-width: 768px) 22vw, 42vw"
+              sizes="(min-width: 1280px) 18vw, (min-width: 768px) 26vw, 44vw"
               alt="Barber working a clipper over a client’s crown"
-              class="aspect-[4/3] w-full object-cover"
+              class="aspect-[4/5] w-full object-cover"
               loading="lazy"
             />
           </figure>
@@ -33,14 +34,16 @@
             <img
               src="<%= imageUrl(siteImg('craftB'), { w: 900 }) %>" <%- imgSize(siteImg('craftB'), { w: 900 }) %>
               srcset="<%= srcset(siteImg('craftB'), [500, 900]) %>"
-              sizes="(min-width: 768px) 22vw, 42vw"
+              sizes="(min-width: 1280px) 18vw, (min-width: 768px) 26vw, 44vw"
               alt="The shop floor mid-afternoon, clients in the chair and waiting"
-              class="aspect-[4/3] w-full object-cover"
+              class="aspect-[4/5] w-full object-cover"
               loading="lazy"
             />
           </figure>
         </div>
-        <div class="flex flex-col items-start gap-8 lg:col-span-2 lg:flex-row lg:items-end lg:justify-between xl:col-span-1 xl:flex-col xl:items-start" data-reveal>
+        <p class="mt-6 flex max-w-md items-start gap-3 text-sm leading-relaxed text-ink/65" data-reveal><span class="mt-[0.6rem] h-px w-8 shrink-0 bg-amber" aria-hidden="true"></span><%= copy.craftNote %></p>
+        </div>
+        <div class="flex flex-col items-start gap-8 lg:flex-row lg:items-end lg:justify-between xl:flex-col xl:items-start" data-reveal>
           <p class="max-w-md text-sm leading-relaxed text-ink/75"><%= copy.craftText %></p>
           <%- include('../ring-btn', { href: '/book', label: ['Booking', 'now'], ring: 'Craft comes first · Book now · Craft comes first · ', tone: 'dark', id: 'craft' }) %>
         </div>

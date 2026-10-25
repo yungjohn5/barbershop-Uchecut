@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const { contentGaps } = require('../../src/services/launch');
 const { DEFAULT_SETTINGS } = require('../../src/config/constants');
+const { SITE_SLOTS } = require('../../src/lib/images');
 
 const real = {
   ...DEFAULT_SETTINGS,
@@ -19,17 +20,10 @@ const real = {
   },
   home: { ...DEFAULT_SETTINGS.home, heroText: 'Our own words.' },
   siteImages: Object.fromEntries(
-    [
-      'hero',
-      'introPortrait',
-      'introTools',
-      'introStill',
-      'craftPortrait',
-      'craftA',
-      'craftB',
-      'homeVisit',
-      'chair',
-    ].map((slot) => [slot, { publicId: `v/site/${slot}`, version: 1, width: 2000, height: 1300 }]),
+    Object.keys(SITE_SLOTS).map((slot) => [
+      slot,
+      { publicId: `v/site/${slot}`, version: 1, width: 2000, height: 1300 },
+    ]),
   ),
 };
 const cloud = { imagePublicId: 'v/x', photoPublicId: 'v/y' };
@@ -40,6 +34,7 @@ const ready = {
   products: [{ id: 1, visible: true, ...cloud }],
   zones: [{ id: 1, active: true }],
   hours: [{ barberId: 7 }],
+  gallery: [{ id: 1, visible: true, ...cloud }],
 };
 const keys = (gaps) => gaps.map((g) => g.key);
 
@@ -76,6 +71,7 @@ describe('launch checklist', () => {
         'map-pin',
         'socials',
         'zones',
+        'lookbook',
       ]),
     );
     const firstRecommended = gaps.findIndex((g) => g.level === 'recommended');
