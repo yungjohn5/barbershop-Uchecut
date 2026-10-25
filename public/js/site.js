@@ -484,13 +484,27 @@
   var toTop = $('[data-to-top]');
   if (toTop) {
     var ticking = false;
+    // Phones/tablets: the button sits over the promo's "Chat on WhatsApp" button, so it
+    // steps aside while that section is on screen.
+    var narrow = window.matchMedia('(max-width: 1023px)');
+    var promoInView = false;
+    var promo = $('#built-by');
     var updateToTop = function () {
       ticking = false;
       var max = document.documentElement.scrollHeight - window.innerHeight;
       var y = window.scrollY;
       toTop.style.setProperty('--progress', max > 0 ? Math.min(1, y / max).toFixed(4) : 0);
-      toTop.classList.toggle('is-visible', y > window.innerHeight * 0.8);
+      toTop.classList.toggle(
+        'is-visible',
+        y > window.innerHeight * 0.8 && !(promoInView && narrow.matches),
+      );
     };
+    if (promo && 'IntersectionObserver' in window) {
+      new IntersectionObserver(function (entries) {
+        promoInView = entries[entries.length - 1].isIntersecting; // newest record wins
+        updateToTop();
+      }).observe(promo);
+    }
     window.addEventListener(
       'scroll',
       function () {

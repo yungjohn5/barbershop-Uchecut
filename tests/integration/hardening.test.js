@@ -57,3 +57,16 @@ test('CSS/JS are linked with a content hash and cached for a year as immutable',
   const plain = await request(app).get('/css/app.css').expect(200);
   expect(plain.headers['cache-control']).not.toContain('immutable');
 });
+
+test('photos, icons and fonts cache for 30 days; referrer shares only our origin', async () => {
+  for (const p of [
+    '/images/site/hero-800.webp',
+    '/icons/icon-192.png',
+    '/fonts/inter-latin.woff2',
+  ]) {
+    const res = await request(app).get(p).expect(200);
+    expect(res.headers['cache-control']).toBe('public, max-age=2592000');
+  }
+  const home = await request(app).get('/').expect(200);
+  expect(home.headers['referrer-policy']).toBe('strict-origin-when-cross-origin');
+});

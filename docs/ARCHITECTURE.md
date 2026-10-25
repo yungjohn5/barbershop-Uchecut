@@ -334,7 +334,7 @@ The home page follows the reference's six sections in order, adapted with a home
 - Current photos are Pexels placeholders, listed in `public/images/site/CREDITS.md`.
 - Performance:
   - `<img>` tags get `width`/`height` from `imgSize()`: the crop size, Cloudinary's stored size, or the bundled WebP's own header. Every image below the hero is `loading="lazy"`; the hero has `fetchpriority="high"`.
-  - CSS/JS are linked through `asset()` (`lib/assets.js`) as `/css/app.css?v=<content hash>`. Those responses are `public, max-age=31536000, immutable`; unhashed files (photos, icons, fonts) get a week in production.
+  - CSS/JS are linked through `asset()` (`lib/assets.js`) as `/css/app.css?v=<content hash>`. Those responses are `public, max-age=31536000, immutable`; photos, icons and fonts (`/images`, `/icons`, `/fonts`) get `public, max-age=2592000` (30 days) in every environment; other unhashed files get a week in production.
   - Fonts are self-hosted and preloaded (Inter, Gloock latin). No third-party request blocks first paint.
   - Animation setup runs through `Site.later()`: one step per task (splits, reveals, marquee, steps, product rail, then a single `ScrollTrigger.refresh()`), so phones never get one long blocking task.
   - Split headings wait with `opacity: 0`, not `visibility: hidden`, so they stay in the accessibility tree.
@@ -436,12 +436,14 @@ Without a deposit, reminders are the main defence against no-shows, so every boo
 
 **Outbox.** Every booking change writes `Notification` rows (channel, template, recipient, payload snapshot) in the **same transaction** as the change (`services/notifications.js`: create, confirm, reschedule, cancel by customer or staff, auto-cancel), so a message exists only if the change committed. `dedupeKey` is unique (`VB-K7M2P:shop-confirmed:SMS`, plus the booking-event id or start time for messages that can repeat), so nothing is ever sent twice. Moving, cancelling or completing a booking marks its unsent reminders SKIPPED. The worker sends due rows; a failure retries after 1, 5 and 30 minutes, and the 4th failure marks the row FAILED and adds a "Message failed to send" entry to the booking history. The admin booking page lists every message with its status and a **Resend** button on FAILED ones. Owner alerts go to `OWNER_EMAIL`, falling back to the shop email in Settings.
 
+**Owner alerts** (email, to `OWNER_EMAIL` or the shop email): new web bookings, home-visit requests, cancellations by the customer or the system, and moves the customer makes themselves (`owner-rescheduled`, with the old and new times). Staff actions don't alert the owner.
+
 **Worker and jobs** (`src/jobs/`). A separate process (`npm run worker`; PM2 runs exactly one), never inside the web app, so cluster mode can't run a job twice. Each run also takes a transaction-scoped Postgres advisory lock (`pg_try_advisory_xact_lock(7342, jobId)`) and skips if another worker holds it. Schedules are in Africa/Lagos time:
 
 | Job | When | What |
 | --- | --- | --- |
 | `send-due` | every minute | Send due outbox rows (retries and FAILED as above) |
-| `reminders` | every 5 min | Queue the 24 h reminder (SMS + email) when the start is within 24 h but more than 2 h away, and the 2 h reminder (SMS) within 2 h, for CONFIRMED bookings. Skipped when the booking was made, confirmed or moved inside that window. Keys include the start time, so a move gets fresh reminders. |
+| `reminders` | every 5 min | Queue the 24 h reminder (SMS + email) when the start is within 24 h but more than 2 h away, and the 2 h reminder within 2 h (SMS, or email while SMS is off; never both, its key has no channel), for CONFIRMED bookings. Skipped when the booking was made, confirmed or moved inside that window. Keys include the start time, so a move gets fresh reminders. |
 | `auto-cancel` | every 5 min | Cancel PENDING home requests within `homeAutoCancelHours` of the start (history: "Cancelled by system"), tell the customer (with a rebook link) and the owner |
 | `cleanup` | 03:00 | Delete expired sessions, and SENT/SKIPPED messages older than 90 days (FAILED are kept) |
 
@@ -457,7 +459,7 @@ SMS goes through Termii (good Nigerian delivery rates) behind a small `sms.send(
 
 **Security**
 
-- `helmet` headers. CSP: scripts from `'self'` only (no inline scripts anywhere; GSAP served from `/vendor`), styles and fonts from `'self'` only (fonts are self-hosted), images from self/`data:`/`blob:`/`https://res.cloudinary.com`, no inline styles (background photos go through `data-bg` → a CSS variable set by `site.js`), `object-src 'none'`, `frame-ancestors 'none'`. HSTS (1 year, subdomains) in production only. `trust proxy` is set for Nginx, so client IPs (rate limits) and `secure` cookies work; session cookies are `httpOnly` + `sameSite=lax` and `secure` in production.
+- `helmet` headers. CSP: scripts from `'self'` only (no inline scripts anywhere; GSAP served from `/vendor`), styles and fonts from `'self'` only (fonts are self-hosted), images from self/`data:`/`blob:`/`https://res.cloudinary.com`, no inline styles (background photos go through `data-bg` → a CSS variable set by `site.js`), `object-src 'none'`, `frame-ancestors 'none'`; `Referrer-Policy: strict-origin-when-cross-origin` (other sites see only our origin, never a path such as `/manage/<token>`). HSTS (1 year, subdomains) in production only. `trust proxy` is set for Nginx, so client IPs (rate limits) and `secure` cookies work; session cookies are `httpOnly` + `sameSite=lax` and `secure` in production.
 - CSRF tokens on every form; `express-rate-limit` on booking submissions and manage-link actions (10 per 15 min), every `/manage/*` request including page views (100 per 15 min, slows token guessing), the JSON API (60 per min) and `/admin/login` (20 per 15 min), per IP. When a limit is hit, pages get the branded 429 page (minutes until reset, plus a WhatsApp button for bookings), the JSON API gets `{ error: { code: 'RATE_LIMITED', message } }`, and the login form is shown again with the message. Limits use the in-memory store, so each PM2 worker counts separately.
 - zod validation on every input; Nigerian phone numbers normalised to `+234…`.
 - Admin passwords hashed with bcrypt (cost 12); login lockout after 5 failed attempts.

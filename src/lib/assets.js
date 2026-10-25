@@ -36,12 +36,22 @@ function createAsset({ memo = true } = {}) {
   };
 }
 
-/** express.static setHeaders: a year + immutable for fingerprinted URLs, else `fallback`. */
+// Photos, icons and fonts aren't fingerprinted but rarely change in place (a new site photo
+// is a new upload): cache them for 30 days in every environment.
+const THIRTY_DAYS = 'public, max-age=2592000';
+const LONG_LIVED = /^\/(images|icons|fonts)\//;
+
+/**
+ * express.static setHeaders: a year + immutable for fingerprinted URLs (?v=…), 30 days for
+ * photos/icons/fonts, else `fallback`.
+ */
 function cacheHeaders(fallback) {
   return (res) => {
-    const v = res.req && res.req.query && res.req.query.v;
-    res.setHeader('Cache-Control', v ? ONE_YEAR : fallback);
+    const req = res.req || {};
+    const v = req.query && req.query.v;
+    const p = (req.originalUrl || '').split('?')[0];
+    res.setHeader('Cache-Control', v ? ONE_YEAR : LONG_LIVED.test(p) ? THIRTY_DAYS : fallback);
   };
 }
 
-module.exports = { createAsset, cacheHeaders, hashOf, ONE_YEAR };
+module.exports = { createAsset, cacheHeaders, hashOf, ONE_YEAR, THIRTY_DAYS };

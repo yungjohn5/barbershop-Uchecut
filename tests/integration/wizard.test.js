@@ -91,6 +91,9 @@ describe('booking wizard', () => {
     const confirmed = await agent.get(`/book/confirmed/${ref}`).expect(200);
     expect(confirmed.text).toContain('You’re booked.');
     expect(confirmed.text).toContain(ref);
+    expect(confirmed.text).toMatch(
+      /We’ve emailed your confirmation to <strong[^>]*>ada@example\.com</,
+    );
     // the confirmation is private to the booking session
     await request(app).get(`/book/confirmed/${ref}`).expect(404);
 

@@ -58,6 +58,11 @@ const TEMPLATES = {
     owner: true,
     subject: (p) => `Home visit request to confirm: ${p.customerName}, ${p.when} · ${p.reference}`,
   },
+  'owner-rescheduled': {
+    owner: true,
+    subject: (p) =>
+      `Moved: ${p.customerName}, ${p.fromWhen ? `${p.fromWhen} → ` : ''}${p.when} · ${p.reference}`,
+  },
   'owner-cancelled': {
     owner: true,
     subject: (p) => `Cancelled: ${p.customerName}, ${p.when} · ${p.reference}`,

@@ -143,6 +143,27 @@ describe('enqueue', () => {
     const moved = all.filter((n) => n.template === 'rescheduled');
     expect(moved).toHaveLength(2);
     expect(moved[0].payload.fromWhen).toBeTruthy();
+    // The owner hears about a customer's own move, by email, with the old and new times.
+    const alert = all.filter((n) => n.template === 'owner-rescheduled');
+    expect(alert).toHaveLength(1);
+    expect(alert[0]).toMatchObject({ channel: 'EMAIL', status: 'PENDING' });
+    const { TEMPLATES } = require('../../src/services/notifyTemplates');
+    expect(TEMPLATES['owner-rescheduled'].subject(alert[0].payload)).toMatch(
+      /^Moved: .+ → .+ · VB-/,
+    );
+  });
+
+  test('a move made by staff does not alert the owner', async () => {
+    const b = await book();
+    const to = wallClockToUtc(DAY(3), 840).toISOString();
+    await rescheduleBooking(
+      b.manageToken,
+      { startsAt: to, barberId: String(fx.homeBarber.id) },
+      { staff: true, adminName: 'Ada' },
+    );
+    const all = await rows(b.id);
+    expect(all.some((n) => n.template === 'rescheduled')).toBe(true);
+    expect(all.some((n) => n.template === 'owner-rescheduled')).toBe(false);
   });
 
   test('customer cancel alerts the owner; staff cancel tells the customer the reason', async () => {

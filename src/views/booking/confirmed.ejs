@@ -16,6 +16,12 @@
           ? `Your barber will call ${fmtPhone(booking.customer.phone)} to confirm the visit before setting off.`
           : `See you ${day}, ${booking.customer.name.split(' ')[0]}. Your chair will be ready.` %>
       </p>
+      <% if (booking.customer.email) { %>
+        <%# Shown in full so a typo is easy to spot; this page is only visible to the session that booked. %>
+        <p class="mx-auto mt-3 max-w-md text-center text-sm text-paper/60">
+          We’ve emailed your <%= pending ? 'request details' : 'confirmation' %> to <strong class="break-all font-medium text-paper/90"><%= booking.customer.email %></strong>
+        </p>
+      <% } %>
       <div class="mt-8 flex flex-col items-center gap-2">
         <span class="text-[0.7rem] uppercase tracking-[0.28em] text-paper/55">Reference</span>
         <button type="button" class="ref-pill" data-copy="<%= booking.reference %>" aria-label="Copy reference <%= booking.reference %>">

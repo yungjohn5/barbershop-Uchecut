@@ -169,6 +169,8 @@ async function enqueueForEvent(tx, booking, type, opts = {}) {
     case 'RESCHEDULED':
       await skipReminders(tx, booking.id, 'Booking moved');
       rows.push(...customerRows(booking, 'rescheduled', payload, suffix));
+      if (opts.by === 'customer')
+        rows.push(...ownerRow(booking, 'owner-rescheduled', payload, suffix, shop));
       break;
     case 'CANCELLED':
       await skipReminders(tx, booking.id, 'Booking cancelled');

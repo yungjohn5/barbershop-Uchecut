@@ -48,6 +48,9 @@ function createApp({ sessionPool } = {}) {
       },
       // HSTS only in production (HTTPS via Nginx); never pin localhost to HTTPS.
       strictTransportSecurity: env.isProd ? { maxAge: 31536000, includeSubDomains: true } : false,
+      // Other sites see only our origin (so the studio's analytics can count referrals);
+      // full paths, e.g. /manage/<token>, never leave the site.
+      referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
     }),
   );
   app.use(compression());
@@ -70,7 +73,7 @@ function createApp({ sessionPool } = {}) {
   );
 
   // CSS/JS are linked through asset() with a content hash (?v=…): those get a year, immutable.
-  // Unhashed files (photos, icons) get a week in production.
+  // Photos, icons and fonts get 30 days; anything else a week in production.
   const staticCache = assets.cacheHeaders(env.isProd ? 'public, max-age=604800' : 'no-cache');
   app.use(express.static(path.join(__dirname, '..', 'public'), { setHeaders: staticCache }));
   // GSAP served from node_modules so the CSP can stay script-src 'self'.

@@ -1,0 +1,2 @@
+<p style="margin:0;">A customer moved their booking<% if (p.fromWhen) { %> from <s style="color:#8a8178;"><%= p.fromWhen %></s><% } %> to <strong><%= p.when %></strong>.<% if (p.needsConfirm) { %> It's a home visit, so it's back to <strong>pending</strong>: please confirm the new time with them.<% } %></p>
+<%- include('_owner') %>
