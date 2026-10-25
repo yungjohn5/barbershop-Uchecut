@@ -152,7 +152,8 @@ required value is missing.
 | `NOTIFY_ALLOWLIST` | | Outside production, live mode only messages these phones/emails |
 | `OWNER_EMAIL` | | Owner alerts; defaults to the shop email in Settings |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM` | live mode | Email |
-| `TERMII_API_KEY`, `TERMII_SENDER_ID`, `TERMII_BASE_URL` | live mode | SMS |
+| `TERMII_API_KEY`, `TERMII_SENDER_ID`, `TERMII_BASE_URL` | for SMS | SMS. Optional: without both keys SMS is off and customers are messaged by email only |
+| `SMS_ENABLED` | | Force SMS `true`/`false`; blank = on only when the Termii keys are set |
 | `CLOUDINARY_URL` | production | `cloudinary://key:secret@cloud`; server-side only. Empty in dev = bundled photos, uploads disabled |
 | `CLOUDINARY_FOLDER` | | Upload folder (default `victory/dev`, `victory/prod` in production) |
 | `LOG_LEVEL` | | pino level (default `info`) |

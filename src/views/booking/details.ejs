@@ -35,7 +35,7 @@
         <div class="field-float <%= err('email') ? 'has-error' : '' %>" data-b-reveal>
           <input id="f-email" name="email" type="email" autocomplete="email" placeholder=" " value="<%= values.email || '' %>" aria-describedby="h-email<%= err('email') ? ' e-email' : '' %>" <%- err('email') ? 'aria-invalid="true"' : '' %> />
           <label for="f-email">Email <span class="font-normal opacity-70">(optional)</span></label>
-          <p id="h-email" class="field-hint">For your confirmation and calendar invite</p>
+          <p id="h-email" class="field-hint"><%= smsEnabled ? 'For your confirmation and calendar invite' : 'Add it to get your confirmation and reminders by email' %></p>
           <% if (err('email')) { %><p id="e-email" class="field-error">That email doesn’t look right.</p><% } %>
         </div>
 

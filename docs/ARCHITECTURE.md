@@ -449,7 +449,9 @@ Without a deposit, reminders are the main defence against no-shows, so every boo
 
 **Templates.** Emails are EJS in `views/emails/` (table layout, inline styles, plus a generated plain-text part); SMS texts live in `services/notifyTemplates.js` and fit one 160-character segment with a real domain and token (tested). Every customer message has the reference and the manage link; times are Africa/Lagos.
 
-**Modes.** `NOTIFY_MODE=log` (default outside production) renders and records messages and writes them to the log (recipients and manage tokens masked) without calling a provider. `live` (default in production) sends via SMTP (`lib/mailer.js`) and Termii (`lib/sms.js`); outside production it only messages recipients listed in `NOTIFY_ALLOWLIST`, so dev never texts real customers. Starting in live mode without SMTP/Termii settings fails at boot.
+**Modes.** `NOTIFY_MODE=log` (default outside production) renders and records messages and writes them to the log (recipients and manage tokens masked) without calling a provider. `live` (default in production) sends via SMTP (`lib/mailer.js`) and Termii (`lib/sms.js`); outside production it only messages recipients listed in `NOTIFY_ALLOWLIST`, so dev never texts real customers. Starting in live mode without SMTP settings fails at boot (and without Termii keys when SMS is on).
+
+**SMS is optional.** `env.smsEnabled` is on only when both Termii keys are set (`SMS_ENABLED=true|false` forces it). While it is off, no SMS rows are queued: customers get email (if they gave one) and the owner gets email as always; the 2-hour reminder, which is SMS-only, is not sent; SMS rows queued before the switch are marked SKIPPED ("SMS is off") instead of retried. Customer-facing and admin copy that mentions SMS follows the switch (`app.locals.smsEnabled`). Adding the keys later turns SMS back on with no code change.
 
 SMS goes through Termii (good Nigerian delivery rates) behind a small `sms.send()` wrapper, so the provider can be swapped. A `wa.me` WhatsApp link sits on the confirmation page for quick contact; WhatsApp Business API messaging can come later.
 
@@ -461,7 +463,7 @@ SMS goes through Termii (good Nigerian delivery rates) behind a small `sms.send(
 - Admin passwords hashed with bcrypt (cost 12); login lockout after 5 failed attempts.
 - Manage links use 32-byte random tokens; references are short and non-sequential.
 - Customer addresses visible only to admins; production database backups daily (off-site, see Deployment).
-- **Startup checks** (`config/env.js`, zod): invalid env stops the app; in production it also refuses a weak or example `SESSION_SECRET`, an example/short `ADMIN_PASSWORD`, and a non-https `APP_URL`. `NOTIFY_MODE=live` without SMTP/Termii settings refuses to start.
+- **Startup checks** (`config/env.js`, zod): invalid env stops the app; in production it also refuses a weak or example `SESSION_SECRET`, an example/short `ADMIN_PASSWORD`, and a non-https `APP_URL`. `NOTIFY_MODE=live` without SMTP settings (or Termii keys while SMS is on) refuses to start.
 - **Logging**: pino (JSON) with pino-http. Phone, email, address and cookie fields are redacted at any depth; logged URLs mask manage tokens (`/manage/abcdef…`) and `phone`/`q`/`email` query values; static files and `/healthz` aren't logged.
 - **Health**: `GET /healthz` runs `SELECT 1` (2 s timeout) and returns 200 `{ ok: true, db: "up" }` or 503.
 - **Uploads**: type checked from the file's magic bytes (JPEG/PNG/WebP only; SVG, GIF and anything else refused) before any decoder sees it, 8 MB cap, one file per request.

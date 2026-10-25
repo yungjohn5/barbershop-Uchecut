@@ -124,7 +124,7 @@
         <span class="font-medium">Total</span><span class="font-serif text-3xl tabular-nums" data-ss-total>—</span>
       </div>
       <button type="submit" class="btn-primary mt-6 w-full justify-center" data-staff-submit>Create booking <span class="arrow" aria-hidden="true">→</span></button>
-      <p class="mt-3 text-xs text-ink/65">Paid on the day. The customer gets an SMS (and email, if given) with their booking and manage link.</p>
+      <p class="mt-3 text-xs text-ink/65">Paid on the day. <%= smsEnabled ? 'The customer gets an SMS (and email, if given) with their booking and manage link.' : 'The customer gets an email with their booking and manage link, if you add their email.' %></p>
     </div>
   </aside>
 </form>

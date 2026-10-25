@@ -26,7 +26,7 @@
         <input type="hidden" name="action" value="cancel" />
         <p class="eyebrow">Cancel booking</p>
         <h2 id="cancel-title-<%= booking.id %>" class="mt-4 text-3xl">Cancel <%= booking.reference %>?</h2>
-        <p class="mt-3 text-ink/70"><%= booking.customer.name %>’s slot will be released, and they’ll get an SMS and email saying it was cancelled (with your reason, if you add one).</p>
+        <p class="mt-3 text-ink/70"><%= booking.customer.name %>’s slot will be released, and they’ll get <%= smsEnabled ? 'an SMS and email' : 'an email (if we have it)' %> saying it was cancelled (with your reason, if you add one).</p>
         <div class="field-float mt-6">
           <textarea id="reason-<%= booking.id %>" name="reason" rows="2" placeholder=" " maxlength="300"></textarea>
           <label for="reason-<%= booking.id %>">Reason <span class="font-normal opacity-70">(optional)</span></label>

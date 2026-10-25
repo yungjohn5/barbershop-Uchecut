@@ -4,3 +4,5 @@ const { testDatabaseUrl } = require('./testDb');
 
 process.env.NODE_ENV = 'test';
 process.env.DATABASE_URL = testDatabaseUrl().url;
+// Existing notification tests cover the SMS path; tests/unit/smsOff.test.js covers it off.
+process.env.SMS_ENABLED ||= 'true';

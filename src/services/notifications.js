@@ -69,12 +69,15 @@ async function enqueue(tx, rows) {
   return count;
 }
 
-/** Customer rows for a template: SMS always (phone is required), email when we have one. */
+/**
+ * Customer rows for a template: SMS when SMS is on (phone is required), email when we have
+ * one. While Termii isn't set up (env.smsEnabled false), customers get email only.
+ */
 function customerRows(booking, template, payload, keySuffix, sendAfter) {
   const t = templates.TEMPLATES[template];
   const rows = [];
   const base = { bookingId: booking.id, template, payload, ...(sendAfter ? { sendAfter } : {}) };
-  if (t.sms) {
+  if (t.sms && env.smsEnabled) {
     rows.push({
       ...base,
       channel: 'SMS',
@@ -221,6 +224,13 @@ async function deliver(n, { mode = env.NOTIFY_MODE, now = new Date(), db = prism
       return db.notification.update({
         where: { id: n.id },
         data: { status: 'SENT', attempts, sentAt: now, providerRef: 'log', lastError: null },
+      });
+    }
+    if (n.channel === 'SMS' && !env.smsEnabled) {
+      // Queued before SMS was switched off: don't retry against a provider we don't have.
+      return db.notification.update({
+        where: { id: n.id },
+        data: { status: 'SKIPPED', attempts, lastError: 'SMS is off (Termii not set up)' },
       });
     }
     if (!allowed(n.to)) {

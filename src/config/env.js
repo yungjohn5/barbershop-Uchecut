@@ -15,6 +15,8 @@ const schema = z.object({
   TERMII_API_KEY: z.string().optional().default(''),
   TERMII_SENDER_ID: z.string().optional().default(''),
   TERMII_BASE_URL: z.string().url().default('https://api.ng.termii.com'),
+  // '' (default) = SMS on only when the Termii keys are set; 'true' / 'false' force it.
+  SMS_ENABLED: z.enum(['', 'true', 'false']).optional().default(''),
   // log: messages are written to the console and the Notification table only, never sent.
   // Defaults to "live" in production and "log" everywhere else.
   NOTIFY_MODE: z.enum(['log', 'live']).optional(),
@@ -102,10 +104,16 @@ if (env.isProd) {
     throw new Error(`Refusing to start in production:\n${list}`);
   }
 }
+// SMS (Termii) is optional: on when both keys are set, unless SMS_ENABLED says otherwise.
+// While it's off, customers are messaged by email only and no SMS is queued.
+env.smsEnabled =
+  env.SMS_ENABLED === ''
+    ? Boolean(env.TERMII_API_KEY && env.TERMII_SENDER_ID)
+    : env.SMS_ENABLED === 'true';
 if (env.NOTIFY_MODE === 'live') {
-  const missing = ['SMTP_HOST', 'MAIL_FROM', 'TERMII_API_KEY', 'TERMII_SENDER_ID'].filter(
-    (k) => !env[k],
-  );
+  const needed = ['SMTP_HOST', 'MAIL_FROM'];
+  if (env.smsEnabled) needed.push('TERMII_API_KEY', 'TERMII_SENDER_ID');
+  const missing = needed.filter((k) => !env[k]);
   if (missing.length) {
     throw new Error(
       `NOTIFY_MODE=live needs: ${missing.join(', ')}. Set them, or use NOTIFY_MODE=log.`,
