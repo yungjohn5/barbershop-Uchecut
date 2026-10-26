@@ -300,20 +300,26 @@ async function main() {
     });
   }
 
-  // Demo shop contacts: obviously fake, so screenshots and recordings never show a real number.
+  // Demo shop contacts: obviously fake, so screenshots and recordings never show a real number
+  // or the "Placeholder address". The base seed may already have written the shop row with
+  // the defaults, so fill in only the fields still at their placeholder value.
+  const demoContacts = {
+    address: ['Admiralty Way, Lekki Phase 1', 'Lagos, Nigeria'],
+    phone: '+2348030000000',
+    whatsapp: '2348030000000',
+    email: 'hello@victory.example',
+  };
+  const shopRow = await prisma.setting.findUnique({ where: { key: 'shop' } });
+  const current = { ...DEFAULT_SETTINGS.shop, ...((shopRow && shopRow.value) || {}) };
+  const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+  const filled = { ...current };
+  for (const [k, v] of Object.entries(demoContacts)) {
+    if (same(current[k], DEFAULT_SETTINGS.shop[k])) filled[k] = v;
+  }
   await prisma.setting.upsert({
     where: { key: 'shop' },
-    update: {},
-    create: {
-      key: 'shop',
-      value: {
-        ...DEFAULT_SETTINGS.shop,
-        address: ['Admiralty Way, Lekki Phase 1', 'Lagos, Nigeria'],
-        phone: '+2348030000000',
-        whatsapp: '2348030000000',
-        email: 'hello@victory.example',
-      },
-    },
+    update: { value: filled },
+    create: { key: 'shop', value: filled },
   });
 
   const [svcRows, barberRows, zoneRows] = await Promise.all([

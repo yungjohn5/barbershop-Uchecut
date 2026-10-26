@@ -69,6 +69,7 @@
     "concurrently": "^10.0.6",
     "eslint": "^9.39.5",
     "eslint-config-prettier": "^10.1.8",
+    "ffmpeg-static": "5.2.0",
     "globals": "^17.13.0",
     "jest": "^30.5.2",
     "nodemon": "^3.1.14",

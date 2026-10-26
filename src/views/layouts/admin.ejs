@@ -95,7 +95,10 @@
               <span class="burger" aria-hidden="true"><i></i><i></i></span>
             </button>
             <a href="/admin" class="font-serif text-xl"><%= shop.name.split(' ')[0] %> <span class="font-sans text-[0.6rem] uppercase tracking-[0.28em] text-ink/55">Admin</span></a>
-            <a href="/admin/bookings/new" class="icon-btn-dark !h-11 !w-11" aria-label="New booking"><%- include('../admin/partials/icon', { name: 'plus' }) %></a>
+            <div class="flex items-center gap-2">
+              <%- include('../partials/theme-toggle', { tone: 'dark', id: 'admin-top' }) %>
+              <a href="/admin/bookings/new" class="icon-btn-dark !h-11 !w-11" aria-label="New booking"><%- include('../admin/partials/icon', { name: 'plus' }) %></a>
+            </div>
           </header>
           <main id="main" class="a-content">
             <%- include('../admin/partials/flash') %>

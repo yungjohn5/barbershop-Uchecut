@@ -89,7 +89,7 @@ router.get(
     const isOwner = res.locals.admin && res.locals.admin.role === 'OWNER';
     const [data, launch] = await Promise.all([
       adminBookings.todayOverview(),
-      isOwner ? launchChecklist() : [],
+      isOwner && !env.demoMode ? launchChecklist() : [], // demo recordings hide setup UI
     ]);
     view(req, res, 'dashboard', {
       title: 'Today',

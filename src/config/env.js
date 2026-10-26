@@ -17,6 +17,8 @@ const schema = z.object({
   TERMII_BASE_URL: z.string().url().default('https://api.ng.termii.com'),
   // '' (default) = SMS on only when the Termii keys are set; 'true' / 'false' force it.
   SMS_ENABLED: z.enum(['', 'true', 'false']).optional().default(''),
+  // Recording/demo builds only: hides setup-only UI (the launch checklist). Refused in production.
+  DEMO_MODE: z.enum(['', '0', '1']).optional().default(''),
   // log: messages are written to the console and the Notification table only, never sent.
   // Defaults to "live" in production and "log" everywhere else.
   NOTIFY_MODE: z.enum(['log', 'live']).optional(),
@@ -76,6 +78,7 @@ function productionProblems(e) {
       `CLOUDINARY_FOLDER is "${e.CLOUDINARY_FOLDER}"; use the production folder (e.g. victory/prod).`,
     );
   }
+  if (e.DEMO_MODE === '1') problems.push('DEMO_MODE is for recordings only; unset it in production.');
   if (!e.APP_URL.startsWith('https://'))
     problems.push('APP_URL must start with https:// in production.');
   if ((e.NOTIFY_MODE || 'live') === 'live' && /@example\.(com|org|net)\b/i.test(e.MAIL_FROM || ''))
@@ -123,6 +126,7 @@ if (env.NOTIFY_MODE === 'live') {
     );
   }
 }
+env.demoMode = env.DEMO_MODE === '1';
 env.isTest = env.NODE_ENV === 'test';
 env.isDev = env.NODE_ENV === 'development';
 

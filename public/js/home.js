@@ -509,6 +509,8 @@
     Site.later(function () {
       ST.sort(); // pins were created out of page order (ritual after the product rail)
       ST.refresh();
+      // Setup finished: scroll positions are final (tests and the demo recorder wait on this).
+      document.documentElement.setAttribute('data-motion-ready', '');
     });
   });
 })();

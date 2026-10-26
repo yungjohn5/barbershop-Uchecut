@@ -182,7 +182,7 @@ address, socials, home-page copy) live in the `Setting` table. Defaults are in
 | `npm run images:upload` | One-off: move bundled/legacy local photos to Cloudinary (`-- --dry-run` to preview) |
 | `npm run worker` / `npm run worker:once` | Jobs worker (sends, reminders, auto-cancel, cleanup) / run each job once |
 | `npm run db:reset` | Drop, re-migrate and re-seed the dev database ⚠️ |
-| `npm run record:demo` | Promo videos (Playwright): vertical 1080×1920 and landscape 1920×1080 into `recordings/` (git-ignored). Uses its own fresh `uchecut_demo` database with fake customers (0803 000 00xx), so stop `npm run dev` first. `-- --only=vertical\|landscape`, `-- --headed`. MP4 copies are made when `ffmpeg` is on PATH |
+| `npm run record:demo` | Promo videos: `recordings/victory-demo-vertical.mp4` (1080×1920) and `victory-demo-landscape.mp4` (1920×1080), H.264 30 fps, ~55 s, plus one still per scene in `recordings/stills/` (all git-ignored). Builds a fresh `uchecut_demo` database with fake customers (0803 000 00xx), runs the app on its own port with `DEMO_MODE=1` and `NOTIFY_MODE=log`, captures via Chrome screencast and encodes with `ffmpeg-static`. Starts dark and switches theme 4 times at scene changes (`DEMO_SEED`, default 7). Options: `-- --only=vertical|landscape`, `-- --webm`, `-- --headed` |
 
 ---
 

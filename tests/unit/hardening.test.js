@@ -38,6 +38,13 @@ describe('production startup checks', () => {
     expect(has({ CLOUDINARY_FOLDER: 'victory/dev' }, /CLOUDINARY_FOLDER/)).toBe(true);
   });
 
+  test('DEMO_MODE (recordings only) is refused in production', () => {
+    const has = (overrides) =>
+      productionProblems({ ...ok, ...overrides }).some((p) => /DEMO_MODE/.test(p));
+    expect(has({ DEMO_MODE: '1' })).toBe(true);
+    expect(has({ DEMO_MODE: '' })).toBe(false);
+  });
+
   test('the example MAIL_FROM is refused when messages go out for real', () => {
     const example = 'Victory Barbershop <bookings@example.com>';
     const has = (overrides) =>
