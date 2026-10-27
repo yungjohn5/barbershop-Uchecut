@@ -63,10 +63,25 @@ test('photos, icons and fonts cache for 30 days; referrer shares only our origin
     '/images/site/hero-800.webp',
     '/icons/icon-192.png',
     '/fonts/inter-latin.woff2',
+    '/images/client/look-01-480.webp',
+    '/media/reels/reel-01.mp4',
   ]) {
     const res = await request(app).get(p).expect(200);
     expect(res.headers['cache-control']).toBe('public, max-age=2592000');
   }
   const home = await request(app).get('/').expect(200);
   expect(home.headers['referrer-policy']).toBe('strict-origin-when-cross-origin');
+});
+
+test('home shows the logo lockup and the prepared reels, each lazy with a poster', async () => {
+  const html = (await request(app).get('/').expect(200)).text;
+  expect(html).toContain('<span class="brand-main">Verified Energy</span>');
+  expect(html).toContain('<span class="brand-sub">Auch</span>');
+  expect(html).toContain('href="/icons/icon-32.png"');
+  const reels = html.split('id="reels"')[1].split('</section>')[0];
+  const { REELS } = require('../../src/config/media');
+  expect(reels.match(/<video/g)).toHaveLength(REELS.length);
+  expect(reels).toContain('src="/media/reels/reel-01.mp4"');
+  expect(reels).toContain('poster="/media/reels/reel-01-poster.webp"');
+  expect(reels.match(/preload="none"/g)).toHaveLength(REELS.length);
 });

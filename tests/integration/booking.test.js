@@ -69,7 +69,7 @@ describe('createBooking', () => {
     const b = await createBooking(shopInput(), { now: NOW });
     expect(b.status).toBe('CONFIRMED');
     expect(b.confirmedAt).not.toBeNull();
-    expect(b.reference).toMatch(/^VB-[A-Z2-9]{5}$/);
+    expect(b.reference).toMatch(/^VE-[A-Z2-9]{5}$/);
     expect(b.manageToken).toHaveLength(43);
     expect(b.startsAt.toISOString()).toBe(at('10:00').toISOString());
     expect(b.endsAt.toISOString()).toBe(at('10:30').toISOString());

@@ -138,6 +138,8 @@ const SCHEMAS = {
       (steps) => steps.every((s) => /^[^|]{2,40}\|\s*\S/.test(s)),
       'Write each step as “Title | text”, e.g. “Consultation | We ask how you wear it…”.',
     ),
+    reelsTitle: trimmed(90, 'the reels title'),
+    reelsText: trimmed(300, 'the reels text'),
     lookbookTitle: trimmed(90, 'the lookbook title'),
     lookbookText: trimmed(300, 'the lookbook text'),
     craftTitle: trimmed(120, 'the craft title'),

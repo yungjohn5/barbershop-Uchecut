@@ -1,6 +1,6 @@
 <div id="mobile-menu" class="keep-dark fixed inset-0 z-50 flex flex-col overflow-y-auto bg-ink text-paper grain" role="dialog" aria-modal="true" aria-label="Menu" hidden data-menu>
   <div class="relative flex items-center justify-between px-5 py-5 sm:px-8">
-    <a href="/" class="font-serif text-[1.75rem] leading-none"><%= shop.name.split(' ')[0] %></a>
+    <%- include('brand', { size: 'md' }) %>
     <button type="button" class="icon-btn-light" data-menu-close>
       <span class="sr-only">Close menu</span>
       <svg class="close-x" width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" stroke-width="1.6"/></svg>

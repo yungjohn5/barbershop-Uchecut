@@ -4,7 +4,9 @@ Oct 8, 2026
 
 ## Overview
 
-One Node.js/Express app serves an editorial, Victory-style marketing site and a booking engine for in-shop and home-service appointments, with no online payment.
+One Node.js/Express app serves an editorial marketing site and a booking engine for in-shop and home-service appointments, with no online payment.
+
+**The client:** Verified Energy Auch ("VE Auch"), a barbershop in Lagos. Uche is the founder and, for now, the only barber. Taglines from the brand board: "Precision. Confidence. Energy." (site default) and "Precision cuts. Premium vibes."
 
 **Goals**
 
@@ -173,7 +175,7 @@ model Zone {
 
 model Booking {
   id             Int              @id @default(autoincrement())
-  reference      String           @unique   // VB-7K3QX, shown to customer
+  reference      String           @unique   // VE-7K3QX, shown to customer
   type           BookingType
   status         BookingStatus    @default(PENDING)
   startsAt       DateTime         // service start, stored in UTC
@@ -317,7 +319,8 @@ The home page follows the reference's six sections in order, adapted with a home
 | 2 | Intro collage: "Modern Ritual of Grooming" | About the shop, 3-photo collage | `partials/intro.ejs` | `Setting` |
 | 3 | Services grid with filter tabs | Services preview, tabs by category, price + duration on each card | `partials/service-card.ejs` | `ServiceCategory`, `Service` |
 | — | (new) | The ritual: 4 steps of every visit. Desktop pins and walks the steps while each photo wipes in; phones stack photo cards | `partials/home/ritual.ejs` | `Setting` (`home.ritual*`, site photo slots `ritual*`) |
-| 4 | Barbers / philosophy | Team cards linking to profiles | `partials/barber-card.ejs` | `Barber` |
+| 4 | Barbers / philosophy | Team cards linking to profiles; with one active barber it becomes a single feature ("The barber": big portrait, specialties, bio, "Book with {name}", plus "Book a home visit" when they do home visits and home visits are open) | `partials/home/barbers.ejs` | `Barber` |
+| — | (new) | Reels: the client's upright clips in a swipeable rail, muted and looped only while on screen, a sound button each, ending in a "Your cut next?" Book card; hidden while no clip is prepared | `partials/home/reels.ejs` | `config/media.js` (`REELS`), `Setting` (`home.reels*`) |
 | — | (new) | Lookbook: up to 12 visible Gallery photos in three drifting columns (two on phones); hidden while the gallery is empty | `partials/home/lookbook.ejs` | `GalleryItem`, `Setting` (`home.lookbook*`) |
 | — | (new) | Home service: how it works in 3 steps + zone fee list | `partials/home-service.ejs` | `Zone` |
 | 5 | Products carousel | Product showcase, no cart | `partials/product-rail.ejs` | `Product` |
@@ -331,10 +334,16 @@ The home page follows the reference's six sections in order, adapted with a home
 - Section numbers (01, 02…) come from a counter the home route passes as `sec()`, so they stay in order when a section (e.g. the Lookbook) is hidden.
 - Motion added for the ritual, lookbook and home-visit sections runs through `Site.later()` in `home.js`: the ritual pins on lg+, lookbook columns drift on md+, the home-visit photo column holds while the fees scroll past; `ScrollTrigger.sort()` then one refresh at the end, because pins are created out of page order.
 - Home-page photos (hero, intro, ritual 1–4, craft, home visit, footer chair) are named slots in the `siteImages` setting, edited in Settings → Site photos. `siteImg(slot)` returns the uploaded asset or the bundled placeholder in `public/images/site`.
-- Current photos are Pexels placeholders, listed in `public/images/site/CREDITS.md`.
+- The hero, intro, ritual, craft, home-visit and footer slots still hold Pexels placeholders, listed in `public/images/site/CREDITS.md`. The barber portrait, Lookbook and Reels use the client's own media.
+- **Client media.** The client's originals live in `media/client/{logos,photos,videos}`. They are kept in git but not served. `npm run media:prepare` (`scripts/prepare-client-media.js`; `--only=brand|photos|videos`) turns them into web files, using bundled `ffmpeg-static` and headless Chrome. It is a dev-only step and its outputs are committed.
+  - Brand: the VE crown is cut from the black background into `public/images/brand/mark.{png,webp}`, and the full badge into `logo.*` (dark surfaces only). It also generates the favicon and app icons in `public/icons/` and the share image `og-default.jpg`.
+  - Photos: one colour grade (it neutralises the shop's purple strip light), a light vignette, then WebP at `public/images/client/<id>-<w>.webp`.
+  - Videos: the same grade, a 12-second cut from the middle of each clip at 540×960 30 fps, H.264 (crf 29, about 1 Mbps cap, faststart) with AAC audio, plus a WebP poster, all in `public/media/reels/`.
+  - `src/config/media.js` lists every source, id and caption. `LEGACY_WIDTHS` in `lib/images.js` knows the client widths, so seeds point barbers and gallery items at `/images/client/...` until real uploads replace them.
+- **Brand lockup.** `partials/brand.ejs` is the crown mark plus the shop name from Settings, split like the logo by `brandParts()`: "Verified Energy" over an amber "AUCH". It is used in the header, sticky nav, mobile menu, admin and login. Below 400px the sticky nav shows the mark alone.
 - Performance:
   - `<img>` tags get `width`/`height` from `imgSize()`: the crop size, Cloudinary's stored size, or the bundled WebP's own header. Every image below the hero is `loading="lazy"`; the hero has `fetchpriority="high"`.
-  - CSS/JS are linked through `asset()` (`lib/assets.js`) as `/css/app.css?v=<content hash>`. Those responses are `public, max-age=31536000, immutable`; photos, icons and fonts (`/images`, `/icons`, `/fonts`) get `public, max-age=2592000` (30 days) in every environment; other unhashed files get a week in production.
+  - CSS/JS are linked through `asset()` (`lib/assets.js`) as `/css/app.css?v=<content hash>`. Those responses are `public, max-age=31536000, immutable`; photos, reels, icons and fonts (`/images`, `/media`, `/icons`, `/fonts`) get `public, max-age=2592000` (30 days) in every environment; other unhashed files get a week in production.
   - Fonts are self-hosted and preloaded (Inter, Gloock latin). No third-party request blocks first paint.
   - Animation setup runs through `Site.later()`: one step per task (splits, reveals, marquee, steps, product rail, then a single `ScrollTrigger.refresh()`), so phones never get one long blocking task.
   - Split headings wait with `opacity: 0`, not `visibility: hidden`, so they stay in the accessibility tree.
@@ -434,7 +443,7 @@ Without a deposit, reminders are the main defence against no-shows, so every boo
 | Cancelled / rescheduled | Email + SMS | Email to owner |
 | Auto-cancel of unconfirmed home request | Email + SMS with rebook link | Email to owner |
 
-**Outbox.** Every booking change writes `Notification` rows (channel, template, recipient, payload snapshot) in the **same transaction** as the change (`services/notifications.js`: create, confirm, reschedule, cancel by customer or staff, auto-cancel), so a message exists only if the change committed. `dedupeKey` is unique (`VB-K7M2P:shop-confirmed:SMS`, plus the booking-event id or start time for messages that can repeat), so nothing is ever sent twice. Moving, cancelling or completing a booking marks its unsent reminders SKIPPED. The worker sends due rows; a failure retries after 1, 5 and 30 minutes, and the 4th failure marks the row FAILED and adds a "Message failed to send" entry to the booking history. The admin booking page lists every message with its status and a **Resend** button on FAILED ones. Owner alerts go to `OWNER_EMAIL`, falling back to the shop email in Settings.
+**Outbox.** Every booking change writes `Notification` rows (channel, template, recipient, payload snapshot) in the **same transaction** as the change (`services/notifications.js`: create, confirm, reschedule, cancel by customer or staff, auto-cancel), so a message exists only if the change committed. `dedupeKey` is unique (`VE-K7M2P:shop-confirmed:SMS`, plus the booking-event id or start time for messages that can repeat), so nothing is ever sent twice. Moving, cancelling or completing a booking marks its unsent reminders SKIPPED. The worker sends due rows; a failure retries after 1, 5 and 30 minutes, and the 4th failure marks the row FAILED and adds a "Message failed to send" entry to the booking history. The admin booking page lists every message with its status and a **Resend** button on FAILED ones. Owner alerts go to `OWNER_EMAIL`, falling back to the shop email in Settings.
 
 **Owner alerts** (email, to `OWNER_EMAIL` or the shop email): new web bookings, home-visit requests, cancellations by the customer or the system, and moves the customer makes themselves (`owner-rescheduled`, with the old and new times). Staff actions don't alert the owner.
 
@@ -469,7 +478,7 @@ SMS goes through Termii (good Nigerian delivery rates) behind a small `sms.send(
 - **Logging**: pino (JSON) with pino-http. Phone, email, address and cookie fields are redacted at any depth; logged URLs mask manage tokens (`/manage/abcdef…`) and `phone`/`q`/`email` query values; static files and `/healthz` aren't logged.
 - **Health**: `GET /healthz` runs `SELECT 1` (2 s timeout) and returns 200 `{ ok: true, db: "up" }` or 503.
 - **Uploads**: type checked from the file's magic bytes (JPEG/PNG/WebP only; SVG, GIF and anything else refused) before any decoder sees it, 8 MB cap, one file per request.
-- **Seeds**: `npm run db:seed` is production-safe (categories, default settings, owner from env; never overwrites edits). `npm run db:seed:demo` (`scripts/seed-demo.js`) adds placeholder services, barbers, zones and products and refuses to run when `NODE_ENV=production`.
+- **Seeds**: `npm run db:seed` is production-safe (categories, default settings, owner from env; never overwrites edits). `npm run db:seed:demo` (`scripts/seed-demo.js`) adds placeholder services, zones and products, Uche as the single barber, and the client's photos as the Lookbook. It refuses to run when `NODE_ENV=production`.
 - **Dependencies**: `npm audit` highs fixed (body-parser, multer, zod 3 → 4). Remaining: `deepmerge-ts` inside Prisma's config loader (needs Prisma 7, a major upgrade; only merges our own config files, so no untrusted input) and moderates in the Tailwind build tool (dev only).
 
 **Deployment (Phase 6: Contabo VPS)**

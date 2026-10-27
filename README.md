@@ -1,6 +1,6 @@
-# Victory Barbershop
+# Verified Energy Auch
 
-Editorial marketing website and booking system for a barbershop in Lagos, Nigeria.
+Editorial marketing website and booking system for Verified Energy Auch ("VE Auch"), a barbershop in Lagos, Nigeria.
 Customers book an in-shop appointment or a home visit without creating an account,
 and pay on the day. One Node.js app serves the site, the booking engine and (soon)
 the owner's dashboard.
@@ -8,7 +8,7 @@ the owner's dashboard.
 > **Status:** Phases 1–4 complete: foundation, booking engine, public site, booking wizard,
 > confirmation and manage link, and the full admin dashboard. Phase 5 (production readiness) is in progress; Phase 6 deploys to a Contabo VPS.
 > See [Roadmap](#roadmap).
-> "Victory" and all copy, prices, zones and photos are **placeholders** until the client signs off.
+> The name, logo, barber and the Lookbook/Reels media are the client's (Verified Energy Auch, Uche). Other copy, prices, zones and the remaining stock photos are **placeholders** until the client signs off.
 
 **Contents:**
 [Features](#features) ·
@@ -179,10 +179,11 @@ address, socials, home-page copy) live in the `Setting` table. Defaults are in
 | `npm run db:deploy` | Apply migrations (production / CI) |
 | `npm run db:seed` | Base seed: categories, default settings, owner admin (production-safe, re-runnable) |
 | `npm run db:seed:demo` | Placeholder services, barbers, zones, products; only into an empty catalogue, never in production |
+| `npm run media:prepare` | Turn the client's originals in `media/client/` into web files: logo mark, badge, icons and share image (`public/images/brand`, `public/icons`), graded photos (`public/images/client`) and 12 s H.264 reels with posters (`public/media/reels`). Uses `ffmpeg-static` and headless Chrome; outputs are committed. `-- --only=brand|photos|videos` |
 | `npm run images:upload` | One-off: move bundled/legacy local photos to Cloudinary (`-- --dry-run` to preview) |
 | `npm run worker` / `npm run worker:once` | Jobs worker (sends, reminders, auto-cancel, cleanup) / run each job once |
 | `npm run db:reset` | Drop, re-migrate and re-seed the dev database ⚠️ |
-| `npm run record:demo` | Promo videos: `recordings/victory-demo-vertical.mp4` (1080×1920) and `victory-demo-landscape.mp4` (1920×1080), H.264 30 fps, ~55 s, plus one still per scene in `recordings/stills/` (all git-ignored). Builds a fresh `uchecut_demo` database with fake customers (0803 000 00xx), runs the app on its own port with `DEMO_MODE=1` and `NOTIFY_MODE=log`, captures via Chrome screencast and encodes with `ffmpeg-static`. Starts dark and switches theme 4 times at scene changes (`DEMO_SEED`, default 7). Options: `-- --only=vertical|landscape`, `-- --webm`, `-- --headed` |
+| `npm run record:demo` | Promo videos: `recordings/verified-energy-demo-vertical.mp4` (1080×1920) and `verified-energy-demo-landscape.mp4` (1920×1080), H.264 30 fps, ~55 s, plus one still per scene in `recordings/stills/` (all git-ignored). Builds a fresh `uchecut_demo` database with fake customers (0803 000 00xx), runs the app on its own port with `DEMO_MODE=1` and `NOTIFY_MODE=log`, captures via Chrome screencast and encodes with `ffmpeg-static`. Starts dark and switches theme 4 times at scene changes (`DEMO_SEED`, default 7). Options: `-- --only=vertical|landscape`, `-- --webm`, `-- --headed` |
 
 ---
 
@@ -257,7 +258,7 @@ Designed and built by [Cyberninja Innovations](https://cyberninjainnovations.com
 
 - **Design:** Gloock headings, DM Serif Display italic accents, Inter body text (16 px minimum on mobile). Palette: paper `#F4F1EC`, ink `#141414`, amber `#B8833E`.
 - **Accent words:** copy can mark one word with `*asterisks*`, which renders as an italic amber accent via `rich()`.
-- **Images:** on Cloudinary. Records store `publicId`, version, width and height; views build `f_auto,q_auto` URLs and srcsets with `imageUrl()` / `srcset()` from [src/lib/images.js](src/lib/images.js). Until `npm run images:upload` runs, `legacyImagePath` / `legacyPhotoPath` point at bundled `${base}-${width}.webp` files. Home-page photos are Settings → Site photos slots, falling back to the bundled Pexels placeholders ([CREDITS.md](public/images/site/CREDITS.md)).
+- **Images:** on Cloudinary. Records store `publicId`, version, width and height; views build `f_auto,q_auto` URLs and srcsets with `imageUrl()` / `srcset()` from [src/lib/images.js](src/lib/images.js). Until `npm run images:upload` runs, `legacyImagePath` / `legacyPhotoPath` point at bundled `${base}-${width}.webp` files. Home-page photos are Settings → Site photos slots, falling back to the bundled Pexels placeholders ([CREDITS.md](public/images/site/CREDITS.md)). The barber portrait, Lookbook, Reels, logo and icons come from the client's own media (`npm run media:prepare`).
 - **Motion:**
   - [boot.js](public/js/boot.js) sets pre-paint flags, with a 2.5 s failsafe.
   - [site.js](public/js/site.js) handles the menu, sticky nav, smooth scrolling, reveals, cursor and buttons.
@@ -384,6 +385,6 @@ Stop the other process, or set `PORT` in `.env`.
 
 ## License
 
-Proprietary. All rights reserved. Placeholder photography is from [Pexels](https://www.pexels.com/license/)
-and must be replaced with the client's own images before launch.
+Proprietary. All rights reserved. The logo, photos and videos in `media/client/` belong to the client. Remaining
+placeholder photography is from [Pexels](https://www.pexels.com/license/) and must be replaced with the client's own images before launch.
 # barbershop-Uchecut

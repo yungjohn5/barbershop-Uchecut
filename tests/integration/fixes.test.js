@@ -266,9 +266,9 @@ test('10. short bookings show the name on one line with a hover tooltip', async 
 
 describe('builder section and footer credit (Cyberninja Innovations)', () => {
   const URL =
-    'https://cyberninjainnovations.com/?utm_source=victory-barbershop&amp;utm_medium=referral&amp;utm_campaign=built-by';
+    'https://cyberninjainnovations.com/?utm_source=verified-energy-auch&amp;utm_medium=referral&amp;utm_campaign=built-by';
   const WA =
-    'https://wa.me/2349036257444?text=Hi%20Cyberninja%2C%20I%20saw%20the%20Victory%20Barbershop%20website';
+    'https://wa.me/2349036257444?text=Hi%20Cyberninja%2C%20I%20saw%20the%20Verified%20Energy%20Auch%20website';
   const year = new Date().getFullYear();
   const saveShop = (agent, csrf, extra) =>
     agent
@@ -322,7 +322,7 @@ describe('builder section and footer credit (Cyberninja Innovations)', () => {
     for (const url of ['/', '/book', '/does-not-exist']) {
       const html = (await request(app).get(url)).text;
       expect(html).toContain(
-        `© ${year} Victory Barbershop · Website by <a href="${URL}" target="_blank" rel="noopener"`,
+        `© ${year} Verified Energy Auch · Website by <a href="${URL}" target="_blank" rel="noopener"`,
       );
     }
     // not in the admin

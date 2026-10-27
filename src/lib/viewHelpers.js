@@ -50,7 +50,18 @@ const formatShortDate = (dateStr) =>
 /** "22 Oct 2026" in shop time. */
 const formatDate = (instant) => formatInTimeZone(new Date(instant), TIMEZONE, 'd MMM yyyy');
 
+/**
+ * The wordmark beside the logo, split like the client's lockup: "Verified Energy Auch" →
+ * { main: 'Verified Energy', sub: 'Auch' }. Names of one or two words stay whole.
+ */
+function brandParts(name = '') {
+  const words = String(name).trim().split(/\s+/).filter(Boolean);
+  if (words.length < 3) return { main: words.join(' '), sub: '' };
+  return { main: words.slice(0, 2).join(' '), sub: words.slice(2).join(' ') };
+}
+
 module.exports = {
+  brandParts,
   naira,
   duration,
   pad2,

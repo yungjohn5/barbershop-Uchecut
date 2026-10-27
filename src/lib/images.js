@@ -13,6 +13,8 @@ const DEFAULT_WIDTHS = [400, 800, 1200];
 // Widths the bundled/legacy local files exist in (path prefix → widths).
 const LEGACY_WIDTHS = [
   ['/images/site/hero', [800, 1400, 2200]],
+  ['/images/client/uche', [500, 810]], // the client's own photos (npm run media:prepare)
+  ['/images/client/look-', [480, 810]],
   ['/images/site/intro-portrait', [600, 1100]],
   ['/images/site/intro-still', [400, 800]],
   ['/images/site/intro-tools', [500, 900]],

@@ -15,6 +15,7 @@ if (process.env.NODE_ENV === 'production') {
 
 const { DEFAULT_SETTINGS } = require('../src/config/constants');
 const { seedDemoBookings } = require('./demo-bookings');
+const { PHOTOS } = require('../src/config/media');
 
 const prisma = new PrismaClient();
 const naira = (n) => n * 100; // → kobo
@@ -73,8 +74,8 @@ const services = [
     description: 'Traditional straight-razor shave with hot towels. In shop only.',
   },
   {
-    slug: 'victory-ritual',
-    name: 'The Victory Ritual',
+    slug: 'signature-ritual',
+    name: 'The Signature Ritual',
     category: 'signature-rituals',
     price: 18000,
     duration: 90,
@@ -101,24 +102,16 @@ const services = [
   },
 ];
 
+// The shop has one barber for now: Uche (photo from the client, npm run media:prepare).
 const barbers = [
   {
-    slug: 'tunde',
-    name: 'Tunde A.',
+    slug: 'uche',
+    name: 'Uche',
     doesHomeService: true,
     sortOrder: 1,
-    legacyPhotoPath: '/images/site/barber-tunde',
-    bio: 'Precise fades and razor-sharp line-ups. Calm, quick, and the barber who brings the chair to you on home visits.',
-    specialties: ['Skin fades', 'Line-ups', 'Home visits'],
-  },
-  {
-    slug: 'emeka',
-    name: 'Emeka O.',
-    doesHomeService: false,
-    sortOrder: 2,
-    legacyPhotoPath: '/images/site/barber-emeka',
-    bio: 'Two decades behind the chair. Patient scissor work, classic hot-towel shaves, and the steadiest hand for kids’ first cuts.',
-    specialties: ['Scissor cuts', 'Hot towel shaves', 'Kids'],
+    legacyPhotoPath: '/images/client/uche',
+    bio: 'Founder and head barber. Sharp fades, clean line-ups and bold colour — gold, platinum and copper — done properly.',
+    specialties: ['Fades & line-ups', 'Hair colour', 'Home visits'],
   },
 ];
 
@@ -167,21 +160,12 @@ const weeklyHours = [
   { weekday: 6, startMin: 600, endMin: 1080 },
 ];
 
-// Lookbook (Gallery). Images: public/images/site/look-NN-{600,1200}.webp; barber = slug or null.
-const gallery = [
-  ['Tools of the trade', null],
-  ['Clean neckline', 'tunde'],
-  ['Ready for the next chair', 'tunde'],
-  ['Taper, worked slowly', 'tunde'],
-  ['Clipper detail', null],
-  ['The mirror moment', 'emeka'],
-  ['Low fade in progress', 'tunde'],
-  ['Crown work', 'tunde'],
-  ['Line-up', 'tunde'],
-  ['First proper cut', 'emeka'],
-  ['Trimmer set to zero', 'tunde'],
-  ['Shape check', 'emeka'],
-];
+// Lookbook (Gallery): the client's own photos (src/config/media.js → public/images/client/).
+const gallery = PHOTOS.filter((p) => p.id.startsWith('look-')).map((p) => [
+  p.caption,
+  'uche',
+  p.id,
+]);
 
 const zones = [
   { name: 'Lekki', fee: 5000, buffer: 45, sortOrder: 1 },
@@ -291,9 +275,9 @@ async function main() {
   );
   if (!(await prisma.galleryItem.count())) {
     await prisma.galleryItem.createMany({
-      data: gallery.map(([caption, barber], i) => ({
+      data: gallery.map(([caption, barber, id], i) => ({
         caption,
-        legacyImagePath: `/images/site/look-${String(i + 1).padStart(2, '0')}`,
+        legacyImagePath: `/images/client/${id}`,
         barberId: barber ? barberIdBySlug[barber] : null,
         sortOrder: i + 1,
       })),
@@ -307,7 +291,7 @@ async function main() {
     address: ['Admiralty Way, Lekki Phase 1', 'Lagos, Nigeria'],
     phone: '+2348030000000',
     whatsapp: '2348030000000',
-    email: 'hello@victory.example',
+    email: 'hello@verified-energy.example',
   };
   const shopRow = await prisma.setting.findUnique({ where: { key: 'shop' } });
   const current = { ...DEFAULT_SETTINGS.shop, ...((shopRow && shopRow.value) || {}) };

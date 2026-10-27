@@ -13,8 +13,8 @@ Sign in at `/admin` with the owner account.
 
 | What | Example | Notes |
 | --- | --- | --- |
-| Shop name | Victory Barbershop | Used in the header, footer, emails, SMS and Google results |
-| Tagline | Sharp lines. Quiet confidence. | One line; also the Google/WhatsApp preview text |
+| Shop name | Verified Energy Auch | Used in the header, footer, emails, SMS and Google results |
+| Tagline | Precision. Confidence. Energy. | One line; also the Google/WhatsApp preview text |
 | Address | 12 Admiralty Way / Lekki Phase 1, Lagos | Up to 4 lines, shown in the footer and Google |
 | Phone | +234 803 123 4567 | Shown on the site and in messages |
 | WhatsApp number | 2348031234567 | Country code, no plus or spaces |
@@ -53,7 +53,9 @@ on the site until there's at least one active zone, plus a barber who does home 
 
 ## 5. Photos: nice to have, but they make the site
 
-The site ships with stock placeholder photos. Replace them with the shop's own.
+The logo, Uche's portrait, the Lookbook and the Reels already use the shop's own photos and
+videos. The other home-page photos and the service photos are still stock placeholders. Replace
+them with the shop's own.
 
 | Where | Admin page | Best size | Tips |
 | --- | --- | --- | --- |
@@ -63,7 +65,7 @@ The site ships with stock placeholder photos. Replace them with the shop's own.
 | Barber portraits | Barbers → edit | 1000 px+, portrait (3:4) | Same background and light for every barber |
 | Service photos | Services → edit | 1000 px+, portrait (4:5) | One clear subject per photo |
 | Products | Products | 800 px+, square | Plain background |
-| Gallery (home page Lookbook) | Gallery | 1200 px+ | Finished cuts, good light; the first 12 visible show on the home page. Replace the demo shots |
+| Gallery (home page Lookbook) | Gallery | 1200 px+ | Finished cuts, good light; the first 12 visible show on the home page. Six of the shop's photos are in place; add more as they come |
 
 JPG, PNG or WebP, up to 8 MB each. Photos are stored on Cloudinary and resized automatically.
 The hero photo also becomes the preview image when the site is shared on WhatsApp, X or

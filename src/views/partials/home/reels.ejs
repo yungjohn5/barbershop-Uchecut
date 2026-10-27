@@ -1,0 +1,58 @@
+<%#
+  Reels: the client's own upright clips (src/config/media.js → public/media/reels/).
+  A swipeable rail; each clip plays muted and looped only while it's on screen (home.js · reels),
+  loads nothing until then (preload="none" + poster), and has its own sound button.
+  With reduced motion nothing autoplays: a tap plays/pauses.
+%>
+<% if (locals.reels && reels.length) { %>
+<section id="reels" class="keep-dark relative overflow-hidden bg-ink text-paper grain" data-reels>
+  <div class="relative mx-auto max-w-[88rem] px-5 pt-24 sm:px-8 lg:px-10 lg:pt-32">
+    <div class="grid gap-8 lg:grid-cols-12 lg:items-end">
+      <div class="lg:col-span-7">
+        <p class="eyebrow !text-paper/55"><span class="eyebrow-num"><%= locals.sec ? sec() : '06' %></span>Reels <span class="text-paper/45">· from the shop floor</span></p>
+        <h2 class="mt-5 text-title" data-split><%- rich(copy.reelsTitle) %></h2>
+      </div>
+      <div class="flex items-end justify-between gap-6 lg:col-span-5" data-reveal>
+        <p class="max-w-sm text-[1.02rem] leading-relaxed text-paper/70"><%= copy.reelsText %></p>
+        <div class="hidden shrink-0 gap-2 md:flex">
+          <button type="button" class="icon-btn-light" data-reels-prev aria-label="Previous clips">←</button>
+          <button type="button" class="icon-btn-light" data-reels-next aria-label="More clips">→</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="reel-rail no-scrollbar" data-reels-rail role="list">
+    <% reels.forEach((r, i) => { %>
+      <figure class="reel" role="listitem" data-reel>
+        <video
+          class="reel-video"
+          src="/media/reels/<%= r.id %>.mp4"
+          poster="/media/reels/<%= r.id %>-poster.webp"
+          width="540"
+          height="960"
+          muted
+          loop
+          playsinline
+          preload="none"
+          aria-label="<%= r.caption %>"
+          data-reel-video
+        ></video>
+        <span class="reel-shade" aria-hidden="true"></span>
+        <button type="button" class="reel-sound" aria-pressed="false" aria-label="Sound on: <%= r.caption %>" data-reel-sound>
+          <svg class="reel-icon-off" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="m22 9-6 6M16 9l6 6"/></svg>
+          <svg class="reel-icon-on" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>
+        </button>
+        <figcaption class="reel-caption">
+          <span class="tabular-nums text-paper/55"><%= pad2(i + 1) %></span>
+          <span><%= r.caption %></span>
+        </figcaption>
+      </figure>
+    <% }) %>
+    <a href="/book" class="reel reel-cta" role="listitem">
+      <span class="font-serif text-[2rem] leading-[1.05]">Your cut <em class="accent">next</em>?</span>
+      <span class="btn-primary mt-6">Book now <span class="arrow" aria-hidden="true">→</span></span>
+    </a>
+  </div>
+</section>
+<% } %>

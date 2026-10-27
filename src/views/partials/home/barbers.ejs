@@ -1,15 +1,52 @@
+<% const solo = barbers.length === 1; %>
 <section id="barbers" class="relative bg-paper-deep">
   <div class="mx-auto max-w-[88rem] px-5 py-24 sm:px-8 lg:px-10 lg:py-32">
     <div class="grid gap-8 lg:grid-cols-12 lg:items-end">
       <div class="lg:col-span-7">
-        <p class="eyebrow"><span class="eyebrow-num"><%= locals.sec ? sec() : '04' %></span>The barbers</p>
+        <p class="eyebrow"><span class="eyebrow-num"><%= locals.sec ? sec() : '04' %></span><%= solo ? 'The barber' : 'The barbers' %></p>
         <h2 class="mt-5 text-title" data-split><%- rich(copy.barbersTitle) %></h2>
       </div>
       <p class="max-w-md text-[1.02rem] leading-relaxed text-ink/70 lg:col-span-4 lg:col-start-9" data-reveal>
-        Book a specific barber, or choose “any barber” and we’ll match you with whoever is free at your time.
+        <% if (solo) { %>Every cut here is by <%= barbers[0].name.split(' ')[0] %>, from the consultation to the finish.<% } else { %>Book a specific barber, or choose “any barber” and we’ll match you with whoever is free at your time.<% } %>
       </p>
     </div>
 
+    <% if (solo) { const b = barbers[0]; %>
+      <%# One barber: a feature layout instead of a half-empty grid. %>
+      <article class="mt-16 grid items-center gap-10 md:grid-cols-[1fr_1.1fr] md:gap-12 lg:gap-20" data-reveal>
+        <a href="/book?barber=<%= b.id %>" class="group relative block overflow-hidden bg-ink/5" data-cursor="Book" aria-label="Book with <%= b.name %>">
+          <% if (imageOf(b, 'photo')) { %>
+            <img
+              src="<%= imageUrl(imageOf(b, 'photo'), { w: 900 }) %>" <%- imgSize(imageOf(b, 'photo'), { w: 900 }) %>
+              srcset="<%= srcset(imageOf(b, 'photo'), [500, 900, 1200]) %>"
+              sizes="(min-width: 768px) 44vw, 92vw"
+              alt="Portrait of <%= b.name %>"
+              class="aspect-[4/5] w-full object-cover object-top"
+              loading="lazy"
+              data-parallax-img
+            />
+          <% } else { %>
+            <div class="aspect-[4/5] w-full"></div>
+          <% } %>
+          <% if (b.doesHomeService) { %>
+            <span class="absolute left-4 top-4 rounded-full bg-paper/90 px-3 py-1.5 text-xs font-medium text-ink backdrop-blur">Does home visits</span>
+          <% } %>
+          <span class="card-shade" aria-hidden="true"></span>
+        </a>
+        <div>
+          <p class="text-sm uppercase tracking-[0.2em] text-stone">Your barber</p>
+          <h3 class="mt-4 text-[clamp(3rem,6vw,5.5rem)] leading-[0.95]"><%= b.name %></h3>
+          <% if (b.specialties && b.specialties.length) { %>
+            <p class="mt-5 text-sm uppercase tracking-[0.14em] text-stone"><%= b.specialties.join(' · ') %></p>
+          <% } %>
+          <% if (b.bio) { %><p class="mt-6 max-w-lg text-[1.1rem] leading-relaxed text-ink/75"><%= b.bio %></p><% } %>
+          <div class="mt-9 flex flex-wrap gap-3">
+            <a href="/book?barber=<%= b.id %>" class="btn-primary">Book with <%= b.name.split(' ')[0] %> <span class="arrow" aria-hidden="true">→</span></a>
+            <% if (b.doesHomeService && homeOpen) { %><a href="/book?type=HOME" class="btn-ghost">Book a home visit</a><% } %>
+          </div>
+        </div>
+      </article>
+    <% } else { %>
     <div class="mt-16 grid gap-14 md:grid-cols-2 md:gap-8 lg:gap-12">
       <% barbers.forEach((b, i) => { %>
         <article class="group <%= i % 2 === 1 ? 'md:mt-28' : '' %>" data-reveal>
@@ -49,5 +86,6 @@
         </article>
       <% }) %>
     </div>
+    <% } %>
   </div>
 </section>

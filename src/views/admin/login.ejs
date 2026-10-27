@@ -3,7 +3,7 @@
     <img src="<%= imageUrl(siteImg('hero'), { w: 1400 }) %>" <%- imgSize(siteImg('hero'), { w: 1400 }) %> alt="" class="absolute inset-0 h-full w-full object-cover opacity-55" />
     <div class="absolute inset-0 bg-gradient-to-t from-night via-night/40 to-night/20" aria-hidden="true"></div>
     <div class="relative flex h-full flex-col justify-between p-12">
-      <a href="/" class="font-serif text-3xl"><%= shop.name.split(' ')[0] %></a>
+      <%- include('../partials/brand', { size: 'lg' }) %>
       <div>
         <p class="eyebrow !text-paper/60">Back office</p>
         <p class="mt-4 max-w-md font-serif text-5xl leading-[1.05]">Every chair, every visit, <em class="accent">in one place</em>.</p>
@@ -13,7 +13,7 @@
 
   <div class="flex items-center justify-center px-5 py-16 sm:px-10">
     <div class="w-full max-w-sm">
-      <a href="/" class="font-serif text-3xl lg:hidden"><%= shop.name.split(' ')[0] %></a>
+      <div class="lg:hidden"><%- include('../partials/brand', { size: 'md' }) %></div>
       <p class="eyebrow mt-10 lg:mt-0">Admin</p>
       <h1 class="mt-4 text-4xl leading-tight">Sign in</h1>
       <p class="mt-3 text-ink/65">For shop staff only.</p>

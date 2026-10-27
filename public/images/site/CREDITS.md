@@ -1,5 +1,10 @@
 # Placeholder photography
 
+The client's own media (logo, barber portrait, Lookbook photos and Reels) lives in
+`media/client/`, and its web versions are in `public/images/brand`, `public/images/client` and
+`public/media/reels` (`npm run media:prepare`). It belongs to Verified Energy Auch and is not
+listed here.
+
 All images in this folder are **placeholders** until the client's own shoot is ready
 (see docs/ARCHITECTURE.md → "Photography is the design's backbone").
 

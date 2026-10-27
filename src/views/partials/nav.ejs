@@ -10,7 +10,7 @@
         <a href="<%= href %>" class="link-u opacity-80 hover:opacity-100"><%= label %></a>
       <% }) %>
     </nav>
-    <a href="/" class="font-serif text-[1.75rem] leading-none xl:absolute xl:left-1/2 xl:-translate-x-1/2" aria-label="<%= shop.name %> home"><%= shop.name.split(' ')[0] %></a>
+    <%- include('brand', { size: 'md', cls: 'xl:absolute xl:left-1/2 xl:-translate-x-1/2' }) %>
     <div class="flex items-center gap-3">
       <a href="/#visit" class="link-u hidden text-[0.92rem] opacity-80 hover:opacity-100 xl:inline">Visit Us</a>
       <%- include('theme-toggle', { tone: light ? 'light' : 'dark', id: light ? 'hero' : 'nav' }) %>

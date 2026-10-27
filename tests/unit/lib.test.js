@@ -39,10 +39,10 @@ describe('normaliseNgPhone', () => {
 });
 
 describe('ids', () => {
-  test('reference format VB-XXXXX without look-alike characters', () => {
+  test('reference format VE-XXXXX without look-alike characters', () => {
     for (let i = 0; i < 200; i += 1) {
       const ref = generateReference();
-      expect(ref).toMatch(/^VB-[A-Z2-9]{5}$/);
+      expect(ref).toMatch(/^VE-[A-Z2-9]{5}$/);
       for (const ch of ref.slice(3)) expect(REF_ALPHABET).toContain(ch);
     }
     expect(REF_ALPHABET).not.toMatch(/[01OIL]/);

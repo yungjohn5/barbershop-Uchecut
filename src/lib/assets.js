@@ -36,10 +36,10 @@ function createAsset({ memo = true } = {}) {
   };
 }
 
-// Photos, icons and fonts aren't fingerprinted but rarely change in place (a new site photo
-// is a new upload): cache them for 30 days in every environment.
+// Photos, videos, icons and fonts aren't fingerprinted but rarely change in place (a new site
+// photo is a new upload): cache them for 30 days in every environment.
 const THIRTY_DAYS = 'public, max-age=2592000';
-const LONG_LIVED = /^\/(images|icons|fonts)\//;
+const LONG_LIVED = /^\/(images|media|icons|fonts)\//;
 
 /**
  * express.static setHeaders: a year + immutable for fingerprinted URLs (?v=…), 30 days for

@@ -1,0 +1,18 @@
+<%#
+  Logo lockup: the client's VE crown mark (public/images/brand/mark.*, from `npm run media:prepare`)
+  beside the shop name from Settings, split like the logo ("Verified Energy" / "AUCH").
+  Params: href (default '/'), size ('sm' | 'md' | 'lg'), name (false = mark only), cls
+%>
+<% const bp = brandParts(shop.name); const bsize = locals.size || 'md'; %>
+<a href="<%= locals.href || '/' %>" class="brand brand-<%= bsize %> <%= locals.cls || '' %>" aria-label="<%= shop.name %><%= (locals.href || '/') === '/' ? ', home' : '' %>">
+  <picture>
+    <source srcset="/images/brand/mark.webp" type="image/webp" />
+    <img src="/images/brand/mark.png" alt="" width="240" height="260" class="brand-mark" decoding="async" />
+  </picture>
+  <% if (locals.name !== false) { %>
+    <span class="brand-name">
+      <span class="brand-main"><%= bp.main %></span>
+      <% if (bp.sub) { %><span class="brand-sub"><%= bp.sub %></span><% } %>
+    </span>
+  <% } %>
+</a>

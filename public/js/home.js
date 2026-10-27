@@ -182,6 +182,69 @@
     est.hidden = false;
   }
 
+  // ------------------------------------------------------------------ reels
+  // Each clip plays (muted, looped) only while mostly on screen, so nothing downloads until
+  // it's seen; one sound button at a time; reduced motion: no autoplay, tap to play/pause.
+  var reelsRail = $('[data-reels-rail]');
+  if (reelsRail) {
+    var reels = $$('[data-reel]', reelsRail);
+    var autoplay = !Site.reduce && 'IntersectionObserver' in window;
+    var play = function (v) {
+      var p = v.play();
+      if (p && p.catch) p.catch(function () {}); // autoplay refused: the poster stays
+    };
+    if (autoplay) {
+      var watcher = new IntersectionObserver(
+        function (entries) {
+          entries.forEach(function (e) {
+            if (e.isIntersecting && e.intersectionRatio >= 0.55) play(e.target);
+            else e.target.pause();
+          });
+        },
+        { threshold: [0, 0.55] },
+      );
+      reels.forEach(function (r) {
+        watcher.observe($('[data-reel-video]', r));
+      });
+    }
+    reels.forEach(function (r) {
+      var video = $('[data-reel-video]', r);
+      var sound = $('[data-reel-sound]', r);
+      if (!autoplay) {
+        video.addEventListener('click', function () {
+          if (video.paused) play(video);
+          else video.pause();
+        });
+      }
+      sound.addEventListener('click', function () {
+        var on = video.muted;
+        reels.forEach(function (o) {
+          var ov = $('[data-reel-video]', o);
+          ov.muted = true;
+          $('[data-reel-sound]', o).setAttribute('aria-pressed', 'false');
+        });
+        video.muted = !on;
+        sound.setAttribute('aria-pressed', String(on));
+        if (on) play(video); // sound on also means "play this one"
+      });
+    });
+    var step = function (dir) {
+      var first = reels[0];
+      var w = first ? first.getBoundingClientRect().width + 20 : 300;
+      reelsRail.scrollBy({ left: dir * w * 2, behavior: Site.reduce ? 'auto' : 'smooth' });
+    };
+    var prev = $('[data-reels-prev]');
+    var nextBtn = $('[data-reels-next]');
+    if (prev)
+      prev.addEventListener('click', function () {
+        step(-1);
+      });
+    if (nextBtn)
+      nextBtn.addEventListener('click', function () {
+        step(1);
+      });
+  }
+
   if (!Site.motion) return;
 
   Site.ready.then(function () {

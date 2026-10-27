@@ -11,7 +11,7 @@ const schema = z.object({
   SMTP_PORT: z.coerce.number().int().default(587),
   SMTP_USER: z.string().optional().default(''),
   SMTP_PASS: z.string().optional().default(''),
-  MAIL_FROM: z.string().default('Victory Barbershop <bookings@example.com>'),
+  MAIL_FROM: z.string().default('Verified Energy Auch <bookings@example.com>'),
   TERMII_API_KEY: z.string().optional().default(''),
   TERMII_SENDER_ID: z.string().optional().default(''),
   TERMII_BASE_URL: z.string().url().default('https://api.ng.termii.com'),
@@ -39,7 +39,7 @@ const schema = z.object({
     .default(''),
   CLOUDINARY_FOLDER: z
     .string()
-    .regex(/^[a-z0-9_-]+(\/[a-z0-9_-]+)*$/i, 'use a folder path like victory/dev')
+    .regex(/^[a-z0-9_-]+(\/[a-z0-9_-]+)*$/i, 'use a folder path like verified-energy/dev')
     .optional(),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).optional(),
 });
@@ -75,10 +75,11 @@ function productionProblems(e) {
   if (!e.CLOUDINARY_URL) problems.push('CLOUDINARY_URL is required in production (images).');
   if (e.CLOUDINARY_FOLDER && !/prod/.test(e.CLOUDINARY_FOLDER)) {
     problems.push(
-      `CLOUDINARY_FOLDER is "${e.CLOUDINARY_FOLDER}"; use the production folder (e.g. victory/prod).`,
+      `CLOUDINARY_FOLDER is "${e.CLOUDINARY_FOLDER}"; use the production folder (e.g. verified-energy/prod).`,
     );
   }
-  if (e.DEMO_MODE === '1') problems.push('DEMO_MODE is for recordings only; unset it in production.');
+  if (e.DEMO_MODE === '1')
+    problems.push('DEMO_MODE is for recordings only; unset it in production.');
   if (!e.APP_URL.startsWith('https://'))
     problems.push('APP_URL must start with https:// in production.');
   if ((e.NOTIFY_MODE || 'live') === 'live' && /@example\.(com|org|net)\b/i.test(e.MAIL_FROM || ''))
@@ -95,7 +96,8 @@ if (!parsed.success) {
 const env = parsed.data;
 env.isProd = env.NODE_ENV === 'production';
 env.NOTIFY_MODE = env.NOTIFY_MODE || (env.NODE_ENV === 'production' ? 'live' : 'log');
-env.CLOUDINARY_FOLDER = env.CLOUDINARY_FOLDER || (env.isProd ? 'victory/prod' : 'victory/dev');
+env.CLOUDINARY_FOLDER =
+  env.CLOUDINARY_FOLDER || (env.isProd ? 'verified-energy/prod' : 'verified-energy/dev');
 env.cloudinaryCloud = env.CLOUDINARY_URL ? env.CLOUDINARY_URL.split('@').pop() : '';
 env.notifyAllowlist = env.NOTIFY_ALLOWLIST.split(',')
   .map((x) => x.trim().toLowerCase())

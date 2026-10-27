@@ -86,7 +86,7 @@ describe('booking wizard', () => {
       .type('form')
       .send({ _csrf: csrf, name: 'Ada Obi', phone: '0803 123 4567', email: 'ada@example.com' })
       .expect(302);
-    const ref = /\/book\/confirmed\/(VB-[A-Z2-9]{5})$/.exec(done.headers.location)[1];
+    const ref = /\/book\/confirmed\/(VE-[A-Z2-9]{5})$/.exec(done.headers.location)[1];
 
     const confirmed = await agent.get(`/book/confirmed/${ref}`).expect(200);
     expect(confirmed.text).toContain('You’re booked.');

@@ -50,6 +50,13 @@ describe('view helpers', () => {
   test('pad2 pads to two digits', () => {
     expect(pad2(3)).toBe('03');
   });
+
+  test('brandParts splits the shop name like the logo', () => {
+    const { brandParts } = require('../../src/lib/viewHelpers');
+    expect(brandParts('Verified Energy Auch')).toEqual({ main: 'Verified Energy', sub: 'Auch' });
+    expect(brandParts('  Sharp  Cuts ')).toEqual({ main: 'Sharp Cuts', sub: '' });
+    expect(brandParts()).toEqual({ main: '', sub: '' });
+  });
 });
 
 describe('home copy settings', () => {

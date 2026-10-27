@@ -13,8 +13,8 @@ const DEFAULT_SETTINGS = {
   allowBufferOutsideShift: false,
   slotStepMin: 15,
   shop: {
-    name: 'Victory Barbershop',
-    tagline: 'Sharp lines. Quiet confidence. Timeless craft.',
+    name: 'Verified Energy Auch',
+    tagline: 'Precision. Confidence. Energy.',
     address: ['Placeholder address', 'Lagos, Nigeria'],
     phone: '+2348000000000',
     whatsapp: '2348000000000',
@@ -33,7 +33,7 @@ const DEFAULT_SETTINGS = {
   siteImages: {},
   // Home page copy (editable from the dashboard in Phase 4). Placeholder text until the client signs off.
   home: {
-    heroLines: ['Sharp Lines.', 'Quiet Confidence.', 'Timeless Craft.'],
+    heroLines: ['Precision.', 'Confidence.', 'Energy.'],
     heroText:
       'A Lagos grooming house built on precision. Clean lines, considered details, and a calm room where the craft speaks louder than the noise.',
     introTitle: 'The Modern *Ritual* of Grooming',
@@ -52,12 +52,14 @@ const DEFAULT_SETTINGS = {
       'The detail | Razor line-up, beard shaped to your face, neckline cleaned. The part people notice.',
       'The finish | Hot towel, a cooling tonic and a look in the mirror together. You leave when you’re happy.',
     ],
+    reelsTitle: 'See The *Work*.',
+    reelsText: 'Real cuts and real colour, filmed on the shop floor. Tap a clip for sound.',
     lookbookTitle: 'Fresh From *The Chair*.',
     lookbookText:
       'Recent work from the shop floor. Show your barber a picture you like; we’ll tell you honestly how it will sit on your hair.',
     craftTitle: 'We Don’t Follow Trends Blindly. We Adapt Them, *Carefully*.',
     craftText:
-      'Our barbers are trained professionals with a deep respect for the discipline. Each brings their own eye; all work to one standard: quality without compromise.',
+      'Every cut is done by a trained professional with a deep respect for the discipline, and held to one standard: quality without compromise.',
     craftNote: 'Book ahead and your chair is ready when you walk in. No waiting on the bench.',
     homeTitle: 'The Chair *Comes* To You.',
     barbersTitle: 'The Hands Behind *The Cut*.',

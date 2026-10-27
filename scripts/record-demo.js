@@ -4,8 +4,8 @@
 // fake 0803 000 00xx numbers, no real customer data), starts the app against it with
 // DEMO_MODE=1 (setup-only UI hidden) and NOTIFY_MODE=log (nothing is ever sent), then
 // records two videos into recordings/ (git-ignored):
-//   victory-demo-vertical.mp4   1080×1920  (viewport 540×960 at DPR 2, phone UA) Reels/TikTok/Status
-//   victory-demo-landscape.mp4  1920×1080                                           LinkedIn/X
+//   verified-energy-demo-vertical.mp4   1080×1920  (viewport 540×960 at DPR 2, phone UA) Reels/TikTok/Status
+//   verified-energy-demo-landscape.mp4  1920×1080                                           LinkedIn/X
 // plus one still per scene in recordings/stills/.
 //
 // How: frames come from CDP Page.startScreencast at device resolution, each with its wall
@@ -37,7 +37,11 @@ const FFMPEG = require('ffmpeg-static');
 const ROOT = path.join(__dirname, '..');
 const OUT = path.join(ROOT, 'recordings');
 const STILLS = path.join(OUT, 'stills');
-const ADMIN = { email: 'owner@victory.example', password: 'demo-owner-2026!', name: 'Ada Okoro' };
+const ADMIN = {
+  email: 'owner@verified-energy.example',
+  password: 'demo-owner-2026!',
+  name: 'Ada Okoro',
+};
 const SEED = Number(process.env.DEMO_SEED || 7);
 const MAX_HOLD = 1500; // longest on-screen pause, ms
 
@@ -49,7 +53,7 @@ const debug = Boolean(process.env.DEMO_DEBUG);
 
 const FORMATS = {
   vertical: {
-    file: 'victory-demo-vertical',
+    file: 'verified-energy-demo-vertical',
     viewport: { width: 540, height: 960 },
     deviceScaleFactor: 2,
     isMobile: true,
@@ -59,7 +63,7 @@ const FORMATS = {
     size: { width: 1080, height: 1920 },
   },
   landscape: {
-    file: 'victory-demo-landscape',
+    file: 'verified-energy-demo-landscape',
     viewport: { width: 1920, height: 1080 },
     deviceScaleFactor: 1,
     isMobile: false,
@@ -671,7 +675,7 @@ function scenes({ page, d, rec, base, desktop, ids }) {
           after: 350,
         });
         await next(page, d, rec, /\/book\/time/);
-        await d.click(page.locator('a.barber-chip', { hasText: 'Emeka' }), { after: 0 });
+        await d.click(page.locator('a.barber-chip', { hasText: 'Uche' }), { after: 0 });
         await d.offCamera(async () => {});
         await pickDateAndTime(page, d, { minDate: lagosDate(1) });
         await next(page, d, rec, /\/book\/details/);
@@ -1139,7 +1143,7 @@ async function main() {
     ],
     env,
   );
-  const ids = { homeBarber: await barberIdBySlug(db.url, 'tunde') };
+  const ids = { homeBarber: await barberIdBySlug(db.url, 'uche') };
 
   console.log(`Starting the app on ${base} (DEMO_MODE=1, NOTIFY_MODE=log)…`);
   const server = await startServer(env, base);

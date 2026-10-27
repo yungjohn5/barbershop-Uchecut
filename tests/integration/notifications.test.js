@@ -149,7 +149,7 @@ describe('enqueue', () => {
     expect(alert[0]).toMatchObject({ channel: 'EMAIL', status: 'PENDING' });
     const { TEMPLATES } = require('../../src/services/notifyTemplates');
     expect(TEMPLATES['owner-rescheduled'].subject(alert[0].payload)).toMatch(
-      /^Moved: .+ → .+ · VB-/,
+      /^Moved: .+ → .+ · VE-/,
     );
   });
 

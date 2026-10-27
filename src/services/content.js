@@ -4,6 +4,13 @@ const settingsService = require('./settings');
 const { formatInTimeZone } = require('date-fns-tz');
 const { TIMEZONE } = require('../config/constants');
 const { minutesToHHMM } = require('../lib/time');
+const fs = require('fs');
+const path = require('path');
+const { REELS } = require('../config/media');
+
+// Reels that have been prepared (npm run media:prepare); checked once at start-up.
+const REELS_DIR = path.join(__dirname, '..', '..', 'public', 'media', 'reels');
+const availableReels = REELS.filter((r) => fs.existsSync(path.join(REELS_DIR, `${r.id}.mp4`)));
 
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -146,6 +153,7 @@ async function getHomeContent({ db = prisma, now = new Date() } = {}) {
     hours: hoursSummary(hours),
     weeklyHours: hours, // raw union of shifts, for the BarberShop JSON-LD
     gallery, // Lookbook section (hidden while empty)
+    reels: availableReels, // Reels section (hidden while none are prepared)
     ritual: ritualSteps(settings.home.ritualSteps),
   };
 }

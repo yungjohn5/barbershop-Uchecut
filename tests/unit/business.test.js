@@ -288,6 +288,8 @@ describe('settings forms', () => {
       ritualSteps: ['One | a', 'Two | b', 'Three | c', 'Four | d'].join('\n'),
       lookbookTitle: 'a',
       lookbookText: 'a',
+      reelsTitle: 'a',
+      reelsText: 'a',
     };
     expect(() => rowsFor('home', { ...copy, heroLines: 'One\nTwo' })).toThrow(
       expect.objectContaining({
